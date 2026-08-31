@@ -5,12 +5,12 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-08-31T20:53:15Z
-road             zig
+built            2026-08-31T21:01:42Z
+road             both
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
 COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-fieldslot
-  revision       02186d04 +dirty  wasm plug: an unknown name refuses instead of pretending to be a local
+  revision       9632bb87  wasm plug: a guard's scrutinee bump leaked into its sibling branches
 
 subject          codexwasm-subject.codex  2925012 bytes
   sha256         e543d4f0c4ca1440fc2ee1b9d4bb15f260305e655fe999e192413374469679aa

@@ -25,6 +25,7 @@ Line numbers are against the pin in `PROVENANCE.md`.
 | 9 | ~45 emitted runtime helpers are unprefixed, and collide with user definitions | **a name a program may not use, with no warning** | open |
 | 10 | a builtin with no arm emits a dangling funcref instead of a diagnostic | **looks like a complete module** | **fixed** |
 | 11 | a guard's scrutinee bump leaked into its sibling branches | wrong module, from ordinary code | **fixed** |
+| 12 | a `let` binding is a function-scoped local named after the source | **silent wrong answers in ordinary code** | open, diagnosed |
 
 3 and 5 are fixed on `wasm-plug-buffered-read`, and **guarded there rather
 than here**: `codex/plugs/wasm/check-emitted-runtime.ps1` asserts the emitted
@@ -402,3 +403,75 @@ the bisect that located it went through three variants that were all fine.
 Two of my own steps along the way were wrong — the first hypothesis blamed the
 ctor binders, and one bisect round measured a stale binary and reported a
 mismatch that had already been fixed.
+
+## 12. A `let` is emitted as a function-scoped local named after the source
+
+**Codex `let` is lexically scoped. Wasm locals are function-scoped and flat.**
+The emitter maps a binding to `$name`, so two bindings that share a name in one
+function share one local — and a `let` anywhere in a function makes that name a
+local *everywhere* in it.
+
+Two symptoms, one cause. Both are **silent wrong answers in ordinary code with
+no devices, no `Real`, and no concurrency involved** — the worst class on a
+target that is hard to debug.
+
+### Symptom 1 — an inner `let` clobbers the outer one
+
+```
+shadow (n) =
+ let v = n
+ in let w = (let v = n * 3 in v + 1)
+ in w + v                              -- want 9, wasm gives 13
+```
+
+The emitted function declares **one** `(local $v)`:
+
+```
+(local.set $v (local.get $n))                              ; outer v = 2
+(local.set $w (local.set $v (mul n 3)) (add (get $v) 1))   ; inner v = 6, w = 7
+(i64.add (local.get $w) (local.get $v))                    ; 7 + 6 = 13
+```
+
+### Symptom 2 — a `let` hides a top-level definition for the whole function
+
+```
+glob : Text
+glob = "GLOBAL"
+
+hide (n) =
+ let w = (let glob = n * 10 in glob + 1)
+ in glob                               -- want "GLOBAL", wasm gives ""
+```
+
+`collect-locals-expr` finds the nested `let glob` and puts `glob` in
+`ctx.bound`; `emit-wat-name` consults that first — *"A NAME BOUND IN THIS
+FUNCTION IS A LOCAL, WHATEVER ELSE THE TREE CALLS IT"* — so the trailing
+reference to the global becomes `(local.get $glob)`, an Integer 20 printed as
+Text. That comment was added to fix a parameter shadowing a top-level
+definition, and it is right about parameters; it is wrong about a `let` in a
+nested arm, which is not in scope there at all.
+
+### The four corpus programs, all this
+
+| | |
+|---|---|
+| `let-shadow-scope` | symptom 1, exactly |
+| `act-let-scope` | symptom 1, in `arm-local` |
+| `scope-let-arm-global` | symptom 2, exactly |
+| `inline-single-caller` | symptom 2, and it is the sharpest: `free` wants 101 and gets 1. `opening` binds a local `isc-g` for the *shadowed* sub-test, so after the single-caller pass splices `isc-add-g`'s body in, its reference to the **global** `isc-g` resolves to that local and reads 0 before the let assigns it. The test's own prose says "Must still answer 101." |
+
+**The IR does not disambiguate them** — both bindings are `(let "v" ...)`, with
+the scoping carried by nesting rather than by name — so this is the plug's to
+fix, and the zig plug and bare metal both get it right.
+
+### The fix, and why it is not a one-liner
+
+Alpha-rename before emission: one IR→IR pre-pass in `emit-wat-def`, walking the
+body with a scope map, renaming any `IrLet` whose name is already in scope and
+rewriting `IrName` references to match. Doing it as a **pre-pass** rather than
+inside the emitter matters — `collect-locals-expr` and `emit-wat-expr` both walk
+the body and would otherwise have to agree on the renaming independently, and
+today's finding 11 is what happens when two walkers disagree by one.
+
+It is about a hundred lines: the walk has to rebuild every `IRExpr`
+constructor. Not started.
