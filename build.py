@@ -321,6 +321,30 @@ def refuse_halt(diag_path, what):
         die(f'{what}: the harness halted on errors in the subject; no module emitted')
 
 
+def emitted_runtime_invariants(wat):
+    """The plug's OWN check, run from its own tree, on what we just emitted.
+
+    This is deliberately not reimplemented here. The properties it asserts --
+    one growth policy with a floor, a reader that fills a buffer -- belong to
+    `codex/plugs/wasm`, and a copy of them in this repository would be a
+    second thing to keep in step and would let the plug's copy rot while ours
+    stayed green. Calling the checkout's script is the same arrangement as
+    calling its bundler.
+    """
+    check = cobblestone.root() / 'codex' / 'plugs' / 'wasm' / 'check-emitted-runtime.ps1'
+    if not check.is_file():
+        _notes.append(f'{check.name} is not in this checkout -- the emitted-runtime '
+                      f'invariants were NOT checked')
+        say('  NOTE: no check-emitted-runtime.ps1 in the checkout; invariants unchecked')
+        return
+    r = subprocess.run([str(PWSH), '-NoProfile', '-File', str(check), str(wat)],
+                       capture_output=True, text=True)
+    for line in (r.stdout or '').strip().splitlines():
+        say('  ' + line)
+    if r.returncode != 0:
+        die('the emitted runtime broke an invariant the plug asserts about itself')
+
+
 def presence(wat, what):
     """Baseline-free: is this the artifact at all, or something plausible?
 
@@ -372,6 +396,7 @@ def road_zig(force):
     say(f'  {time.time() - t0:.0f}s, exit {rc}')
     refuse_halt(DIAG, 'the native binary')
     presence(WAT, 'generation 1 (zig road)')
+    emitted_runtime_invariants(WAT)
 
 
 def road_self(force):
@@ -381,6 +406,7 @@ def road_self(force):
     run_module(WASM, SUBJECT, WAT, DIAG, what='generation 1 (self road)')
     refuse_halt(DIAG, 'the tracked module')
     presence(WAT, 'generation 1 (self road)')
+    emitted_runtime_invariants(WAT)
 
 
 def assemble(force):

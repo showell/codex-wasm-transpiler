@@ -21,7 +21,16 @@ Line numbers are against the pin in `PROVENANCE.md`.
 | 5 | `memory.grow` is called ~56,000 times to reach 3.7 GB | **ergonomics — 12x on node, and browsers pay it** | **fixed** |
 | 6 | the runtime prelude is emitted whole, never shaken | surface | open, and small |
 
-3 and 5 are fixed on `wasm-plug-buffered-read`.
+3 and 5 are fixed on `wasm-plug-buffered-read`, and **guarded there rather
+than here**: `codex/plugs/wasm/check-emitted-runtime.ps1` asserts the emitted
+runtime's invariants on any `.wat`, `wasm-e2e.ps1` calls it per subject, and
+`build.py` calls the checkout's copy rather than keeping one of its own. The
+guard lives with the plug because that is where a regression would happen and
+who would have to see it — a reviewer needs nothing from this repository.
+
+It is shown to fire: four violations against a module emitted before the
+fixes, and one each against the floor lowered to a page, the clamp deleted, a
+second `memory.grow` inlined, and the reader back to a byte per call.
 
 ---
 
