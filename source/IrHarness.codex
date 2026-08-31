@@ -1,0 +1,18 @@
+Chapter: CodexWasmHarness
+
+ THE PLUG'S OWN ROAD, with a file for a wire. `codex/plugs/wasm/WasmPlug.codex`
+ reads IR text off the serial line and emits; this reads the same IR text from
+ stdin, so a corpus of `.ir` files can be swept without compiling anything.
+
+ It carries no front end on purpose -- the point is to exercise the EMITTER
+ over many programs, and the corpus already holds their IR. The front end is
+ still bundled and simply prunes away unreachable, which is why the binary this
+ builds is 577 KB of zig against the full transpiler's 2.4 MB.
+
+ `corpus_sweep.py` is the only caller.
+
+  opening : [Console, FileSystem] Nothing = act
+    src <- read-file-uni "/dev/stdin"
+    let parsed = parse-ir-chapter src
+    in emit-wasm-chapter-stream (parsed.chapter) (parsed.type-defs)
+  end

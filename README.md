@@ -151,6 +151,29 @@ cd tools && npm ci && cd ..
 ./build.py --prove-gate         # show the comparison can actually FAIL
 ```
 
+## Checking it against programs we did not choose
+
+Everything above is checked against the compiler's own source, 29 units of a
+ported game, and two samples — thirty programs, all chosen by what we happened
+to be working on. `./corpus_sweep.py` runs 580 chosen by somebody else, in
+about three minutes, and grades them three ways:
+
+```
+    emitted a module: 580 of 580
+    assembled ok: 568   REFUSED: 12
+     338  MATCH        (against the hand-verified .expected)
+     162  TRAP         (a builtin with no wasm form, refused deliberately)
+      26  DIFFER
+```
+
+**`wat2wasm` is the instrument.** It is this emitter's type checker, and it
+sees a class of defect nothing else does: a builtin the plug has no arm for is
+not emitted as a bad call — the name is treated as a value, reaches the funcref
+path, and comes out as `call_indirect` against a local nothing declared. A grep
+cannot find that; the assembler names it and the line.
+
+`docs/the-corpus-sweep.md` is the census and `FINDINGS.md` is what it found.
+
 ## Just want a compiler?
 
 You do not need any of the above. `generated/codexwasm.wasm` is in this
@@ -169,6 +192,10 @@ anything.
 
 ```
 build.py         the driver: six stages, two gates, no guests
+corpus_sweep.py  580 programs through the emitter in three minutes: emit,
+                 assemble, and run against a hand-verified .expected
+probe_memory.py  where the memory goes, phase by phase
+probe_emit.py    the same, one level down, inside emission
 cobblestone.py   where the sister checkout is, and which one it is
 source/          the parts that are ours: the chapter list, the driver chapter,
                  and a stub the chapter list needs
