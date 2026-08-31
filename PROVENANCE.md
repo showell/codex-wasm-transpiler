@@ -25,13 +25,25 @@ error, not a search; `$CODEXZIG` set-but-empty is an error, because that is
 what a failed candidate build leaves behind and falling back to some other
 transpiler would report on a binary nobody named.
 
-## The pins, as of the first build (2026-08-31)
+## The pins, as of 2026-08-31
 
 ```
-COBBLESTONE_ROOT  ~/showell_repos/cobblestone-wasmpin   detached at 15ef1862
+COBBLESTONE_ROOT  ~/showell_repos/cobblestone-wasmread  branch wasm-plug-buffered-read
+                  at cac5851b, which is 15ef1862 plus this project's own plug fixes
 CODEXZIG          ~/showell_repos/codexzig-safari/generated/local/codexzig
-                  built in that worktree at 432b80a, from the same 15ef1862
+                  built in that worktree at 432b80a, from 15ef1862
 ```
+
+`~/showell_repos/cobblestone-wasmpin`, detached at `15ef1862`, is the pin this
+project started from and is kept as the last revision that is somebody else's
+work alone.
+
+**The current pin is a BRANCH and the build says so on every run**, which is
+the arrangement rather than an oversight: `wasm-plug-buffered-read` is ours and
+under active development, so detaching would mean re-attaching to edit. What
+the NOTE buys is that nobody reads a `generated/PROVENANCE` from this period
+believing the revision could not have moved. Detach it when the branch stops
+moving.
 
 **Detached is the requirement, not a preference.** A worktree with a branch
 checked out moves when somebody works on that branch — and `15ef1862` is the
@@ -57,6 +69,7 @@ size dies at 4 GiB mid-emit. They are sent as
 were open when this was written.
 
 ```
+cac5851b  wasm plug: the emitted runtime made 2.9 million host calls and 56,000 grows   <- OURS
 15ef1862  plugs: the mask split's failure mode was impossible, and the ceiling is a gate now
 2a53929f  wasm plug: a guard needs its OWN scrutinee local, and a mention is not a call
 e6f09556  wasm plug: neither env import is reachable, and the comment said one was fixed
@@ -72,6 +85,12 @@ e8486215  wasm plug: Real is an f64, not an i64 with f64 bits in it
 13edc9a6  zig plug: run.ps1 creates its output directory and falls back to the seed
 37d7eed7  zig plug: emit real-to-int and real-from-int, the f64 conversions
 ```
+
+`WasmEmitter.codex` at `15ef1862` is **byte-identical** to PR 111's tip — the
+PR was cherry-picked from Update 53 rather than cut from the integration
+branch, so the shas differ and the content does not. Every quadratic-to-linear
+fix the safari work found is therefore in this tree, the list-literal halving
+included. `cac5851b` is one commit of our own on top, not yet sent.
 
 **There is no version of this project that waits for them to land.** Building
 on unlanded work is not a shortcut taken here; it is the situation, and the

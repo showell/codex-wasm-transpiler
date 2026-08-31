@@ -216,16 +216,14 @@ def preflight(road):
 
 def bundle(force):
     head('1  bundle the subject')
-    inputs = [SOURCE / 'bundle_codexwasm.ps1',
-              SOURCE / 'CodexWasmHarness.codex',
-              SOURCE / 'BootPaintStubs.codex']
-    # The chapter bodies live in the checkout, so the bundle is also a
-    # function of a revision the fingerprint cannot hash cheaply. The
-    # revision is stamped into PROVENANCE, and --force is the lever.
-    if fresh(SUBJECT, inputs, force):
-        say(f'{SUBJECT.name} is current ({SUBJECT.stat().st_size} bytes) -- not rebundling')
-        check_input_size(SUBJECT)
-        return
+    # NEVER CACHED, and that is the point. The bundle is a function of the
+    # CHECKOUT as much as of source/, and a fingerprint over source/ alone
+    # says "current" for a subject whose chapters have all changed underneath
+    # it -- silently, in exactly the situation where somebody is measuring a
+    # plug change and every downstream number would then be about the old one.
+    # Hashing the checkout is not the fix either: a dirty worktree keeps its
+    # sha. Bundling costs a second, so the honest answer is to do it every
+    # time and let the SUBJECT's own sha drive every stage below.
     r = subprocess.run([str(PWSH), '-NoProfile', '-File',
                         str(SOURCE / 'bundle_codexwasm.ps1'), '-OutFile', str(SUBJECT)],
                        capture_output=True, text=True)
@@ -234,7 +232,6 @@ def bundle(force):
         die('the bundler refused')
     say((r.stdout or '').strip().splitlines()[-1] if r.stdout.strip() else 'bundled')
     say(f'{SUBJECT.name}: {SUBJECT.stat().st_size} bytes, sha {sha(SUBJECT)[:16]}')
-    stamp(SUBJECT, inputs)
     check_input_size(SUBJECT)
 
 

@@ -10,8 +10,8 @@ are three gates and not one.
 
 | ceiling | what it is | where we are | how it fails |
 |---|---|---|---|
-| **4 GiB linear memory** | wasm32's address space | 3,694.7 MB — **90.2%** | trap, then worse: `bump_alloc`'s own arithmetic is i32 and wraps at exactly 4 GiB (FINDINGS 4) |
-| **4 MiB input** | `$read_file_uni`'s fixed buffer | 2,904,749 B — **69.3%** | **silently**, compiling a prefix of the program (FINDINGS 1) |
+| **4 GiB linear memory** | wasm32's address space | 3,716.1 MB — **90.7%** | trap, then worse: `bump_alloc`'s own arithmetic is i32 and wraps at exactly 4 GiB (FINDINGS 4) |
+| **4 MiB input** | `$read_file_uni`'s fixed buffer | 2,908,990 B — **69.4%** | **silently**, compiling a prefix of the program (FINDINGS 1) |
 | **3072 MB guest** | the seed's boot stub, if the guest road is ever built | unmeasured | the guest parks in `hlt` with nothing on the wire |
 
 ## Is it the emitter or the front end? Mostly the front end.
@@ -84,3 +84,23 @@ So the ceiling gate answers *will this die* at 95%, and the ratchet answers
 deliberately with `--rebank`. A bank is a decision. A stage output that some
 earlier run overwrote on its way past is not a baseline, however much it looks
 like one.
+
+## Growing the memory is not free, and it is not a memory cost
+
+The allocator used to call `memory.grow` once per 64 KB of heap — 56,000 times
+to reach 3.7 GB. wasmtime does not notice; V8's cost per grow rises with the
+memory it already holds, so **167 s of a 223 s compile was `memory.grow`**.
+Growing in 16 MB steps took the fixed-point check from 223 s to 18 s under
+node. `FINDINGS.md` item 5 has the microbenchmark.
+
+It is filed here because it is memory-shaped and it is not a memory PROBLEM:
+it cost time, not bytes. What it cost in bytes is the other direction and small
+— a fixed 16 MB step wastes at most 16 MB, and with the 64 KB read buffer
+beside it the peak moved 3,694.7 → 3,716.1 MB, or 0.58%, well inside the
+ratchet. That is the trade and it was taken deliberately.
+
+**The lesson generalises past this plug.** A number that is fine on the host
+you develop against and ruinous on the host you ship to will not show up in any
+gate that measures the artifact — only in one that measures the artifact ON
+THAT HOST. This project runs the fixed point under node for that reason, and
+the browser leg will want its own.

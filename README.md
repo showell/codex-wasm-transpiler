@@ -20,13 +20,15 @@ for byte.**
 generated/codexwasm-subject.codex   the compiler + the wasm emitter + a driver
         |  compiled by codexwasm
         v
-generated/codexwasm.wat             6,754,407 bytes of WebAssembly text
+generated/codexwasm.wat             6,760,737 bytes of WebAssembly text
         |  assembled by wabt
         v
-generated/codexwasm.wasm            835,443 bytes  <-- THE ARTIFACT
+generated/codexwasm.wasm            836,901 bytes  <-- THE ARTIFACT
         |  handed the same subject again
         v
-        the same 6,754,407 bytes, or it is a finding
+        the same 6,760,737 bytes, or it is a finding
+
+The whole check is 18 seconds of node and the whole build is 71 seconds warm.
 ```
 
 Every chapter of the Codex compiler and the whole of `codex/plugs/wasm` run to
@@ -83,9 +85,9 @@ has to fit at once. The compiler-sized subject sits close to that wall:
 
 | | |
 |---|---|
-| peak linear memory, compiling the subject | **3,694.7 MB** |
+| peak linear memory, compiling the subject | **3,716.1 MB** |
 | the wasm32 ceiling | 4,096 MB |
-| headroom | **9.8%** |
+| headroom | **9.3%** |
 
 That is the number this project is organised around. Two gates, because one
 number cannot answer two questions:
@@ -104,6 +106,16 @@ reclaimed, final linear memory **is** peak linear memory, and
 The first version of this build had one gate at 90% and it fired on its first
 run, at 90.2%. That is the distinction above, paid for within an hour of being
 written.
+
+**A third ceiling is the silent one**: the emitted `$read_file_uni` holds 4 MiB
+and truncates past it with no diagnostic, so `build.py` gates the SUBJECT's
+size as well. It is at 69.4%. `FINDINGS.md` item 1.
+
+**Speed is a memory story here too.** The emitted allocator used to grow linear
+memory one page at a time — 56,000 calls to `memory.grow` to reach 3.7 GB —
+and V8's cost per grow rises with the memory it already holds. Growing in
+16 MB steps took this check from 223 s to 18 s under node, where wasmtime had
+never noticed. A browser pays what node pays. `FINDINGS.md` item 5.
 
 ## Requirements
 
