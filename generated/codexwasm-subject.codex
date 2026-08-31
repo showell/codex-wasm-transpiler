@@ -61042,6 +61042,52 @@ Section: Roots
   cwm-emit-roots : List Text
   cwm-emit-roots = ["opening", "vb-capacity-auto", "vb-read-auto", "vb-write-auto", "fat16-servicer-read", "fat16-servicer-write"]
 
+ A DECLARED EXPORT IS A ROOT, and until this it was not.
+
+ `wasm-exports` lets a chapter name the functions it means to be called from
+ outside. The emitter reads that list -- but it reads it AFTER pruning, and a
+ function written to be called from JavaScript has no callers inside the
+ chapter, which is exactly what `ir-prune-unreachable-roots` deletes. The
+ declaration survived and the function it named did not, so the module
+ carried a comment saying the export was missing and nothing else.
+
+ A root is precisely "this is live because something outside calls it", so
+ the export list belongs in the roots and this reads it out of the IR before
+ pruning. `wasm-exports` itself is rooted too, or the pruner removes the
+ declaration before the emitter can read it.
+
+ `opening` STAYS FIRST. `ir-prune-roots-indexed` returns the chapter unpruned
+ when the FIRST root names no definition, so the head of this list has to be
+ one that always exists; the five after it are inherited from opening.codex's
+ own list and name nothing in this subject, which is harmless only because
+ they are not first.
+
+ THIS DOES NOT SAVE A DEFINITION WITH EXACTLY ONE CALLER. Inlining runs
+ before pruning and `keep-single-caller` folds such a definition into its one
+ caller, and no root can reach back past that. Zero callers -- the case this
+ fixes -- is never an inline candidate, because there is nothing to inline
+ into.
+
+  cwm-text-list-of : IRExpr -> List Text
+  cwm-text-list-of (e) =
+   when e
+    is IrList (es) (ty) (sp) -> cwm-text-list-elems es 0 []
+    is otherwise -> []
+
+  cwm-text-list-elems : List IRExpr, Integer, List Text -> List Text
+  cwm-text-list-elems (es) (i) (acc) =
+   if i >= list-length es then acc
+   else when list-at es i
+    is IrTextLit (s) (sp) -> cwm-text-list-elems es (i + 1) (list-push acc s)
+    is otherwise -> cwm-text-list-elems es (i + 1) acc
+
+  cwm-declared-exports : List IRDef, Integer -> List Text
+  cwm-declared-exports (defs) (i) =
+   if i >= list-length defs then []
+   else let d = list-at defs i
+   in if (d.name) == "wasm-exports" then cwm-text-list-of (d.body)
+      else cwm-declared-exports defs (i + 1)
+
 Section: Driver
 
  The lift is opening.codex:1713-1720, and it is on that path only since
@@ -61096,7 +61142,9 @@ Section: Driver
       annotations = ch.annotations,
       ground-effects = ch.ground-effects
     }
-    in let pruned = ir-prune-unreachable-roots ir cwm-emit-roots
+    in let cwm-exports = cwm-declared-exports (ir.defs) 0
+    in let cwm-roots = cwm-emit-roots & list-push cwm-exports "wasm-exports"
+    in let pruned = ir-prune-unreachable-roots ir cwm-roots
     in act
       write-binary (cwm-report cwm-bag)
       emit-wasm-chapter-stream pruned (ch.type-defs)

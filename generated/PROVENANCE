@@ -5,19 +5,19 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-08-31T19:08:48Z
+built            2026-08-31T19:20:04Z
 road             zig
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
 COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-fieldslot
   revision       7ee23eb9  wasm plug: a chapter can say what it exports, instead of a 484-name coincidence
 
-subject          codexwasm-subject.codex  2916477 bytes
-  sha256         6aeaa66d746126e62e0c91929470cc57da5d97af2e447f9cb6392def6a0d05b1
-artifact         codexwasm.wat  6502493 bytes
-  sha256         3028abfaf7058a1162e6cedab43f920eda42bc6a3d0d6fe0318581920b59d70c
-assembled        codexwasm.wasm  805260 bytes
-  sha256         0b62ff1e5b4ed1dc28cc9aaafea44dbf2b3b76e068bda50e2b709411d66596e0
+subject          codexwasm-subject.codex  2918754 bytes
+  sha256         a13f9f22cc8d4377e6555800234c20bf025540fe34ac84c8472fb7902a7e1186
+artifact         codexwasm.wat  6506334 bytes
+  sha256         39e90513d7702399490a9d12d07fc161db3a9a765cfe0a594ed3665ec2997f43
+assembled        codexwasm.wasm  805663 bytes
+  sha256         2ffccbdcd2776ab82371cee10bb3d32cdfe389a1e022ada31566bf758cc84e94
 
 codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codexzig
   sha256         a2ae42e212907369851852d616cd168284a9a49fab641c8761d659b533974f13

@@ -20,7 +20,7 @@ Line numbers are against the pin in `PROVENANCE.md`.
 | 4 | the bump allocator's ceiling arithmetic is i32 and wraps | ceiling behaviour, read but not executed | open |
 | 5 | `memory.grow` is called ~56,000 times to reach 3.7 GB | **ergonomics — 12x on node, and browsers pay it** | **fixed** |
 | 6 | the runtime prelude is emitted whole, never shaken | surface | open, and small |
-| 7 | a declared export can be INLINED AWAY, silently | **surprise, and it hits the browser case hardest** | open, now visible |
+| 7 | a declared export is deleted unless the driver ROOTS it | **it hits the browser case hardest** | **fixed** in this driver |
 
 3 and 5 are fixed on `wasm-plug-buffered-read`, and **guarded there rather
 than here**: `codex/plugs/wasm/check-emitted-runtime.ps1` asserts the emitted
@@ -192,7 +192,7 @@ cosmetic, because `zig build-exe` dead-strips anyway. Here the prelude
 1.4% of `codexwasm`. Recorded because the difference between the two plugs is
 real and somebody will otherwise measure it again; not worth an afternoon.
 
-## 7. A declared export can be inlined away
+## 7. A declared export is deleted unless the driver roots it — FIXED
 
 `wasm-exports` lets a chapter say what it exports (safari-codex
 `WASM_FINDINGS` 5, fixed on `wasm-slot-from-type`). Declaring one does not
@@ -202,25 +202,49 @@ make it survive, and there are two ways to lose it before the emitter looks.
 definition nothing calls, `wasm-exports` included, so a driver that prunes has
 to root both.
 
-**Inlining is the one that will surprise people**, because the definition is
-reachable and still disappears. Measured while building the feature: a chapter
-declaring `["greet", "twice"]` where `twice` has exactly one caller exports
-only `greet` — the single-caller inline pass folded `twice` into its caller
-and deleted it. Give `twice` a second caller and both export.
-
 **The worst case is the normal case.** A function written to be called from
 JavaScript typically has *no* callers inside the chapter at all, which is
-precisely the shape both passes remove. So the first thing a newcomer does —
-write a function, declare it exported, call it from a page — is the thing most
-likely to produce a module without it.
+exactly what dead-code elimination removes. So the first thing a newcomer
+does — write a function, declare it exported, call it from a page — was the
+thing most likely to produce a module without it.
 
-Neither is fixed. Both are the driver's to fix, and both are now *visible*: a
-declared name that matches no surviving definition emits a comment into the
-module naming it. Without that, "you spelled it wrong" and "the optimiser ate
-it" are both discovered in a browser console with no way to tell them apart.
+**The fix is that a declared export is a root**, which is what a root already
+means: this is live because something outside calls it. `CodexWasmHarness`
+reads `wasm-exports` out of the IR *before* pruning and adds those names, plus
+`wasm-exports` itself, to the roots it hands `ir-prune-unreachable-roots`.
+Twelve lines of driver, no compiler change, no plug change.
 
-The real fix is for the export declaration to be a root — the pipeline should
-be told that these names are live because something outside the program calls
-them, which is exactly what a root means. That is a driver change plus an
-argument about where the list belongs, and it is worth making before anybody
-is invited to write Codex for the web.
+**It fixes more than predicted, and the wrong prediction is the useful part.**
+Reading `keep-single-caller` — which keeps a candidate only when its call
+count is exactly 1 — I wrote that a one-caller export is folded into its
+caller and lost before any root can help, and that only the zero-caller case
+was fixable. Measured, that is wrong: **inlining substitutes and pruning
+deletes.** The pass copies the body to the call site, leaving the definition
+unreferenced, and it is the *pruner* that removes it — which is precisely what
+a root prevents.
+
+| in-chapter call sites | before rooting | after |
+|---|---|---|
+| 0 | deleted | **exported** |
+| 1 | deleted | **exported** |
+| 2+ | exported | exported |
+
+End to end, from JavaScript, on a module built this way:
+
+```
+  exports available: __heap_reset, disk_reserve, _start, greet, twice
+  greet(21) = 42
+  twice(5) = 20
+  twice(100) = 400
+```
+
+`twice` is the one whose body was inlined into `opening` — `$opening` calls
+`$greet` directly now — and it survives only because it is rooted, and it
+still computes. Two passes had been read as one mechanism because they have
+the same effect on the common case.
+
+**What is still the driver's problem** is that every driver has to do this.
+`opening.codex` has its own hardcoded roots list, so the two-guest arm would
+need the same change there. That is the argument for the export declaration
+being an input to the pipeline the way the entry point is, rather than
+something each driver remembers.
