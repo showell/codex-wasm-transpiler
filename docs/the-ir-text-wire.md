@@ -93,12 +93,16 @@ it was tried.
 directly silently wrong. The plug change is on `wasm-slot-from-type` and is
 byte-identical to the current emitter everywhere it was measured.
 
-**Not settled**: whether the wire carries anything else that some other
-consumer needs. The zig plug discards slots, so nothing here changes for it —
-but `CodexZigHarness` takes the same round trip and its stated reason is the
-type-parameter claim above, which is not in the code and which nobody has
-re-derived. Before removing the wire from a driver that is not ours, that
-question needs its own answer.
+**Not settled, and worth doing**: whether the wire carries anything else that
+some other consumer needs. The zig plug discards slots, so nothing here
+changes for it — but `CodexZigHarness` takes the same round trip and its
+stated reason is the type-parameter claim above, which is not in the code and
+which nobody has re-derived. **The same experiment runs there unchanged**:
+build a driver with the round trip removed, emit the same subject, and require
+byte-identity. If it holds, codexzig gets whatever its own wire rows cost —
+and if it does not, the diff names the derivation this one could not find.
+Agreed as a follow-up on 2026-08-31; deliberately not done in the same session
+as the wasm work, to keep one variable at a time.
 
 **Done, and it held.** The wire came out of `source/CodexWasmHarness.codex`
 and the fixed point survived it:

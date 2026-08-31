@@ -5,19 +5,19 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-08-31T18:54:22Z
+built            2026-08-31T19:08:48Z
 road             zig
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
 COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-fieldslot
-  revision       c36cf69b  wasm plug: the receiver's type is the authority for a field slot, not the wire
+  revision       7ee23eb9  wasm plug: a chapter can say what it exports, instead of a 484-name coincidence
 
-subject          codexwasm-subject.codex  2910887 bytes
-  sha256         0b92e0b38898da1d866b01ec11896edbb0d2d2dd3f731cf1028f755a543da082
-artifact         codexwasm.wat  6494295 bytes
-  sha256         a63f2bd3ec587b513762fadee5385a5f45bf67a4593f23572f75f280fc98b65b
-assembled        codexwasm.wasm  804360 bytes
-  sha256         171652cfb9ac082f094a63738c5e9755af64ea4ce6e6f17b04d9137cc2f356ab
+subject          codexwasm-subject.codex  2916477 bytes
+  sha256         6aeaa66d746126e62e0c91929470cc57da5d97af2e447f9cb6392def6a0d05b1
+artifact         codexwasm.wat  6502493 bytes
+  sha256         3028abfaf7058a1162e6cedab43f920eda42bc6a3d0d6fe0318581920b59d70c
+assembled        codexwasm.wasm  805260 bytes
+  sha256         0b62ff1e5b4ed1dc28cc9aaafea44dbf2b3b76e068bda50e2b709411d66596e0
 
 codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codexzig
   sha256         a2ae42e212907369851852d616cd168284a9a49fab641c8761d659b533974f13
@@ -26,8 +26,8 @@ codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codex
                  binary ran.
 
 MEMORY -- the first priority, measured rather than estimated.
-  peak           2772.2 MB of linear memory
-  ceiling        67.7% of wasm32's hard 4 GiB
+  peak           2788.2 MB of linear memory
+  ceiling        68.1% of wasm32's hard 4 GiB
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
   bank           2906849280
