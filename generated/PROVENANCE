@@ -1,0 +1,33 @@
+codex-wasm-transpiler -- what produced the artifacts beside this file.
+
+THE AXES. Anything that can change a byte of generated/codexwasm.wat is
+named here. A build that cannot say what it measured is not evidence, and
+the fixed point cannot supply the difference -- it holds just as well
+against the wrong source.
+
+built            2026-08-31T17:01:17Z
+road             zig
+host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
+
+COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-wasmpin
+  revision       15ef1862  plugs: the mask split's failure mode was impossible, and the ceiling is a gate now
+
+subject          codexwasm-subject.codex  2904749 bytes
+  sha256         58e5522a2063e55efe217c7783c305224b8f235d67e4db0c595f59b5a2cf0d0b
+artifact         codexwasm.wat  6754407 bytes
+  sha256         134203308c0a110d67d864e9b4db5be3d9b3f60f0a33bb64c2754ff6794f4425
+assembled        codexwasm.wasm  835443 bytes
+  sha256         3e53a67124b6b9e44a3d23b0e0cb2864ed83641a07e6e1322ccadf901924eb58
+
+codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codexzig
+  sha256         a2ae42e212907369851852d616cd168284a9a49fab641c8761d659b533974f13
+  NOTE           the zig road puts codexzig in the trusted base. Its own
+                 provenance is its repository's; this records only which
+                 binary ran.
+
+MEMORY -- the first priority, measured rather than estimated.
+  peak           3694.7 MB of linear memory
+  ceiling        90.2% of wasm32's hard 4 GiB
+  ceiling gate   refuse above 95.0% -- will it die
+  ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
+  bank           3874160640

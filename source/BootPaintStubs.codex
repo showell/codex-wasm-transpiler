@@ -1,0 +1,26 @@
+Chapter: BootPaint
+
+ The two definitions Core/PhaseAllocator.codex cites, and nothing else.
+
+ Update 42 gave PhaseAllocator `cites Codex chapter BootPaint (bp-rtc-seconds,
+ bp-log-phase)`. A cite names a CHAPTER rather than a symbol, so every subject
+ carrying the real PhaseAllocator has to answer for a chapter of that name or
+ plug-build-lib refuses the bundle with exit 3. It refuses correctly; the
+ harness was the thing at fault for not listening.
+
+ The real chapter is 341 lines that ground Device.Port and paint a progress
+ strip onto a screen these subjects do not have. What PhaseAllocator actually
+ wants from it is a clock reading and a log line, and it spends both on a
+ report nothing in a subject reads.
+
+ A stub is the honest choice here rather than the convenient one. Carrying the
+ real chapter would put a WALL CLOCK inside the subject: phase-took would
+ return however long that particular boot happened to take, so the emitted zig
+ would differ between two identical builds and the fixed point could never
+ hold. Zero is the only reading that keeps the artifact deterministic.
+
+  bp-rtc-seconds : Integer -> Integer
+  bp-rtc-seconds (mode) = 0
+
+  bp-log-phase : Text, Integer, Integer -> Integer
+  bp-log-phase (label) (secs) (mb) = 0

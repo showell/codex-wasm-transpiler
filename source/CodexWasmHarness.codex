@@ -1,0 +1,157 @@
+Chapter: CodexWasmHarness
+
+ THE NATIVE FOURTH ARM. This is `CodexZigHarness` with one line changed: where
+ that one ends `print-text (emit-zig-chapter ...)`, this one ends
+ `emit-wasm-chapter-stream ...`. Everything above the last line -- the front
+ end, the IR pipeline, the lambda lift, the halt gate, the roots, and the trip
+ out through the IR TEXT WIRE and back -- is the ladder's, verbatim, because
+ the property that makes it worth having is that this program runs the same
+ code in the same order as the pipeline it stands in for.
+
+ THE WIRE ROUND TRIP IS THE LOAD-BEARING PART and it is not an optimisation
+ waiting to be removed. `emit-wasm-chapter-stream` takes an `IRChapter`, which
+ the front end is holding already, so the seam looks like a direct hand-off.
+ It is not: the text wire DERIVES what the AST does not carry --
+ `IRTextEmitter.codex:404-406` computes a record's implicit type parameters
+ from its field types as it serialises -- and the ladder's own history is that
+ the direct hand-off worked on 85 programs and then emitted a monomorphic
+ record whose fields still said `a`. Going through the wire in memory is also
+ exactly what the GUEST arm does, which is what makes the two comparable at
+ all: `harness/wasm_arm.py` compiles to IR on the seed and parses that text
+ back before emitting, and so does this.
+
+ A COPY, and copies go stale. `PROVENANCE.md` names the commit. If the
+ compiler's front end changes shape, this breaks loudly at the transpile --
+ which is the honest direction, and is why nothing here is paraphrased.
+
+Section: Halt
+
+ The driver this stands in for does not emit when the bag has errors:
+ opening.codex:1676-1678 prints the codegen error header and the notices,
+ and then `if bag-has-errors (fe.bag) then print-line-uni "CODEGEN-HALTED:
+ errors in bag; no IR emitted"`. This harness skipped that gate until
+ 2026-08-25, and a cold read found what it costs: a file reading `this is
+ not codex at all` produced 36,697 bytes of plausible wasm and exit 0, and so
+ did a program calling a function that does not exist. For a tool that is
+ handed to other people, the first thing they will feed it is a program with
+ a mistake in it.
+
+ The bags are the ones the driver merges, reached from what the frontend
+ already binds: lex errors from `toks.errors` (opening.codex:449 wraps the
+ same list), the parse bag from `doc.parse-bag` (:485), the resolve bag from
+ `rr.bag`, and the type checker's from `cr.state.bag` -- which is what
+ `check-bag0` at :620 merges. The PRINTERS are not reachable: they live in
+ opening.codex, which cannot be bundled beside a harness defining `opening`,
+ so this prints the count and the first error rather than the driver's full
+ report.
+
+ CODEGEN-HALTED is the marker the rest of the tree already refuses on by
+ name (ast/f4_boot.py), which is why the text is that and not a new word.
+
+  cwm-halted : List Diagnostic -> Text
+  cwm-halted (es) =
+   let n = list-length es
+   in let e0 = list-at es 0
+   in "CODEGEN-HALTED: " & show n & " error(s); no wasm emitted; first CDX" & show (e0.code) & " " & (e0.message) & "
+"
+
+  cwm-sev-word : Integer -> Text
+  cwm-sev-word (s) = if s == sev-warning then "warning" else "notice"
+
+  cwm-notice-line : Diagnostic -> Text
+  cwm-notice-line (d) = "CDX" & show (d.code) & " " & cwm-sev-word (d.severity) & ": " & (d.message)
+
+  cwm-line-bytes : Text -> List Integer
+  cwm-line-bytes (t) = list-push (text-to-utf8-bytes t) 10
+
+  cwm-notices : List Diagnostic, Integer, List Integer -> List Integer
+  cwm-notices (ds) (i) (acc) =
+   if i >= list-length ds then acc
+   else let d = list-at ds i
+   in if (d.severity) == sev-info then cwm-notices ds (i + 1) acc
+   else cwm-notices ds (i + 1) (acc & cwm-line-bytes (cwm-notice-line d))
+
+  cwm-info-count : List Diagnostic, Integer, Integer -> Integer
+  cwm-info-count (ds) (i) (n) =
+   if i >= list-length ds then n
+   else let d = list-at ds i
+   in if (d.severity) == sev-info then cwm-info-count ds (i + 1) (n + 1)
+   else cwm-info-count ds (i + 1) n
+
+  cwm-report : DiagnosticBag -> List Integer
+  cwm-report (b) =
+   let ds = bag-diagnostics b
+   in let body = cwm-notices ds 0 []
+   in let n = cwm-info-count ds 0 0
+   in if n == 0 then body
+   else body & cwm-line-bytes ("codexwasm: " & show n & " info diagnostics not shown")
+
+
+Section: Roots
+
+ opening.codex:1316, copied because that chapter cannot ride along.
+
+  cwm-emit-roots : List Text
+  cwm-emit-roots = ["opening", "vb-capacity-auto", "vb-read-auto", "vb-write-auto", "fat16-servicer-read", "fat16-servicer-write"]
+
+Section: Driver
+
+ The lift is opening.codex:1713-1720, and it is on that path only since
+ Update 50 -- the release names it in four words, "the DDC witness holds
+ after the lambda-lift break". Before that a plug never received a
+ `__lam_N`, which is also why nothing noticed these harnesses had none: the
+ codexzig fixed point held because NEITHER arm lifted, so the property was
+ never tested against a subject carrying a lifted lambda, and the first
+ time it was, it failed. It goes between the IR pipeline and
+ ir-prune-unreachable-roots, where the driver puts it -- pruning first drops
+ the lifted definitions, which are reachable only from the bodies the lift
+ rewrote. The ceiling is 0 and emit_harness.py says why it is not the
+ driver's.
+
+  opening : [Console, FileSystem] Nothing = act
+    src <- read-file-uni "/dev/stdin"
+    let mountain-base = init-phase-allocator
+    in let deck-base = __heap-save
+    in let deck-set = __deck-set deck-base
+    in let deck-adv = __heap-advance 536870912
+    in let toks = tokenize src 1
+    in let scan = scan-document (make-parse-state (toks.tokens) src)
+    in let assignments = build-all-assignments src (scan.def-headers) 0 []
+    in let colliding = find-colliding-names assignments
+    in let renames = build-global-rename-table assignments colliding
+    in let doc = parse-document (make-parse-state (toks.tokens) src) 0
+    in let dr = desugar-document src doc (doc.chapter-title) 0
+    in let ch0 = dr.dr-chapter
+    in let ch = scope-achapter ch0 colliding assignments 0
+    in let rr = resolve-chapter ch colliding assignments 0
+    in let cr = check-chapter ch renames colliding assignments 0
+    in let resolved-et = for e in (sort-expr-types ((cr.state).expr-types)) -> ExprTypeEntry { key = e.key, ty = deep-resolve (cr.state) (e.ty) }
+    in let cst = __record-set (cr.state) "expr-types" resolved-et
+    in let resolved-env = for b in ((cr.env).bindings) -> TypeBinding { name = b.name, bound-type = deep-resolve cst (b.bound-type) }
+    in let bound = for b in (sort-bindings (cr.types & resolved-env)) -> TypeBinding { name = b.name, bound-type = deep-resolve cst (b.bound-type) }
+    in let ir-raw = lower-chapter ch bound cst (rr.ctor-names) renames colliding assignments 0
+    in let passed = run-ir-pipeline default-ir-pipeline ir-raw False
+    in let ir0 = passed.chapter
+    in let ir = lift-lambdas ir0 0
+    in let cwm-bset = skip-list-text-from-list builtin-names
+    in let cwm-shadow-bag = bag-from-list (check-shadowed-builtins (scan.def-headers) cwm-bset 0 (list-length (scan.def-headers)) [])
+    in let cwm-collide-bag = bag-from-list (check-cross-chapter-collisions (scan.def-headers) colliding assignments 0 (list-length (scan.def-headers)) [])
+    in let cwm-entry-bag = bag-from-list (check-entry-point-duplicate assignments)
+    in let cwm-bag = bag-merge-all [bag-from-list (toks.errors), doc.parse-bag, rr.bag, cr.state.bag, cwm-shadow-bag, cwm-collide-bag, cwm-entry-bag]
+    in if bag-has-errors cwm-bag then print-text (cwm-halted (bag-errors cwm-bag))
+    else let meta = IRTextMeta {
+      chapter-title = ch.chapter-title,
+      prose = ch.prose,
+      section-titles = ch.section-titles,
+      ctor-names = rr.ctor-names,
+      prose-blocks = ch.prose-blocks,
+      annotations = ch.annotations,
+      ground-effects = ch.ground-effects
+    }
+    in let ir-text = emit-ir-chapter (ir-prune-unreachable-roots ir cwm-emit-roots) meta (ch.type-defs)
+    in let parsed = parse-ir-chapter ir-text
+    in act
+      write-binary (cwm-report cwm-bag)
+      emit-wasm-chapter-stream (parsed.chapter) (parsed.type-defs)
+    end
+  end

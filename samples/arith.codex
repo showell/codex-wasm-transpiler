@@ -1,0 +1,87 @@
+Chapter: Arith
+  cites Foreword chapter Console
+
+ A small Codex program with answers you can check by hand.
+
+ It exists so that "the transpiler really transpiles" is something you can
+ verify rather than take on faith. Not one of the numbers it prints appears
+ anywhere in this source: 42, 92, 610, 5050 and 63 are all computed, and 92
+ is computed by backtracking search over a chessboard. A transpiler that
+ echoed its input, or emitted a fixed prelude, could not produce them.
+
+ Run `./build.py` and it transpiles, builds and runs this, then compares the
+ output to samples/arith.expected. The zig it produced is kept beside it, in
+ generated/arith.zig, so you can read what it actually emitted.
+
+Section: Recursion
+
+  fib : Integer -> Integer
+  fib (n) = if n < 2 then n else fib (n - 1) + fib (n - 2)
+
+  sum-to : Integer -> Integer
+  sum-to (n) = if n == 0 then 0 else n + sum-to (n - 1)
+
+Section: Higher Order
+
+  triple : Integer -> Integer
+  triple = (\x -> x * 3)
+
+  twice : (Integer -> Integer), Integer -> Integer
+  twice (f) (x) = f (f x)
+
+Section: Matching
+
+  size-of : Integer -> Text
+  size-of (n) = when n
+    is 0 -> "none"
+    is 1 -> "one"
+    is otherwise -> if n < 10 then "few" else "many"
+
+Section: Bounded Integers
+
+  Score = record {
+    v : Integer between 0 and 100 clamping
+  }
+
+Section: Eight Queens
+
+ Backtracking, column by column. `placed` holds the row of each queen already
+ placed, most recent first, so the queen at index i is exactly i + 1 columns
+ away and a diagonal attack is a row difference equal to that distance.
+
+  q-abs : Integer -> Integer
+  q-abs (x) = if x < 0 then -x else x
+
+  q-ok : Integer, List Integer, Integer -> Boolean
+  q-ok (row) (placed) (i) =
+    if i == list-length placed then True
+    else let r = list-at placed i
+      in if r == row then False
+      else if q-abs (r - row) == i + 1 then False
+      else q-ok row placed (i + 1)
+
+  q-rows : Integer, List Integer -> Integer
+  q-rows (row) (placed) =
+    if row > 8 then 0
+    else let here = if q-ok row placed 0 then q-solve ([row] & placed) else 0
+      in here + q-rows (row + 1) placed
+
+  q-solve : List Integer -> Integer
+  q-solve (placed) = if list-length placed == 8 then 1 else q-rows 1 placed
+
+Section: Body
+
+  opening : [Console] Nothing = act
+    print-line-uni "hello, world"
+    print-line-uni ("six-times-seven: " & show (6 * 7))
+    print-line-uni ("eight-queens: " & show (q-solve []))
+    print-line-uni ("fib-15: " & show (fib 15))
+    print-line-uni ("sum-to-100: " & show (sum-to 100))
+    print-line-uni ("twice-triple-7: " & show (twice triple 7))
+    print-line-uni ("size-of: " & size-of 0 & "/" & size-of 1 & "/" & size-of 5 & "/" & size-of 50)
+    print-line-uni ("clamped-250: " & show (Score { v = 250 }).v)
+    let xs = [1, 2, 3] & [4, 5]
+    in print-line-uni ("list-length: " & show (list-length xs))
+  end
+
+Page 1
