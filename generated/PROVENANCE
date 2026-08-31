@@ -5,8 +5,8 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-08-31T17:01:17Z
-road             zig
+built            2026-08-31T17:11:01Z
+road             self
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
 COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-wasmpin
@@ -18,12 +18,6 @@ artifact         codexwasm.wat  6754407 bytes
   sha256         134203308c0a110d67d864e9b4db5be3d9b3f60f0a33bb64c2754ff6794f4425
 assembled        codexwasm.wasm  835443 bytes
   sha256         3e53a67124b6b9e44a3d23b0e0cb2864ed83641a07e6e1322ccadf901924eb58
-
-codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codexzig
-  sha256         a2ae42e212907369851852d616cd168284a9a49fab641c8761d659b533974f13
-  NOTE           the zig road puts codexzig in the trusted base. Its own
-                 provenance is its repository's; this records only which
-                 binary ran.
 
 MEMORY -- the first priority, measured rather than estimated.
   peak           3694.7 MB of linear memory
