@@ -21,6 +21,9 @@ Line numbers are against the pin in `PROVENANCE.md`.
 | 5 | `memory.grow` is called ~56,000 times to reach 3.7 GB | **ergonomics — 12x on node, and browsers pay it** | **fixed** |
 | 6 | the runtime prelude is emitted whole, never shaken | surface | open, and small |
 | 7 | a declared export is deleted unless the driver ROOTS it | **it hits the browser case hardest** | **fixed** in this driver |
+| 8 | `when` over a `Boolean` emitted `(i64.const True)` | **the construct never worked on this target** | **fixed** |
+| 9 | ~45 emitted runtime helpers are unprefixed, and collide with user definitions | **a name a program may not use, with no warning** | open |
+| 10 | a builtin with no arm emits a dangling funcref instead of a diagnostic | **looks like a complete module** | open |
 
 3 and 5 are fixed on `wasm-plug-buffered-read`, and **guarded there rather
 than here**: `codex/plugs/wasm/check-emitted-runtime.ps1` asserts the emitted
@@ -271,3 +274,62 @@ the same effect on the common case.
 need the same change there. That is the argument for the export declaration
 being an input to the pipeline the way the entry point is, rather than
 something each driver remembers.
+
+## 8. `when` over a `Boolean` emitted `(i64.const True)` — FIXED
+
+`IrLitPat` carries the literal's TEXT, so a `when` on a Boolean gives
+`(lit-pat "True" boolean)` and the emitter spliced that straight into
+`(i64.const True)`. `wat2wasm` refuses it: *unexpected token "True", expected
+a numeric literal*. **`when` over a Boolean had never worked on this target.**
+
+The zig plug has had `zig-lit-pat-text` for exactly this since it was written;
+the wasm plug had no equivalent. Found by assembling the ladder's 580-program
+corpus, where three programs are this.
+
+A `Text` literal pattern is the same shape and is **not** fixed: it needs a
+string-table entry and a text comparison rather than `i64.eq`. One corpus
+program, `literal-subpattern`.
+
+## 9. The emitted runtime shares a flat namespace with user definitions
+
+Four corpus programs define a function whose sanitised name is already an
+emitted runtime helper — `text-compare`, `text-eq` — and the module is refused
+for redefinition. Those two names are not unlucky: **about 45 of the runtime's
+helpers carry no prefix at all** — `list_at`, `char_at`, `substring`,
+`bump_alloc`, `fn_arity`, `read_byte`, `bool_to_text` and the rest. Roughly
+half the runtime already uses `cx_` and the other half does not.
+
+Every unprefixed name is a name a program may not use, and nothing says so.
+The failure is at least loud — wasm forbids duplicate names, so it is a
+refusal rather than a silent substitution — but it is loud in the assembler,
+about a function the user did write.
+
+The fix is mechanical: one prefix, every helper, every call site. It is worth
+doing carefully rather than quickly, because it moves every byte of every
+module, and the fixed point is the only thing that would notice a slip.
+
+## 10. A builtin with no arm emits a dangling funcref, not a diagnostic
+
+161 of the corpus's 169 assembly refusals are this, across 48 distinct
+builtins. A builtin the plug has no arm for is not emitted as a bad call —
+the name is treated as a value, reaches the funcref path, and comes out as
+`call_indirect` against a local nothing declared.
+
+**Most of the 48 are device access and should not have a wasm form** —
+`port-out-32` (35 programs), `read-mmio-32` (17), `gpu-mem-write`,
+`net-send-raw`, `process-spawn`, `uefi-read-key-ex`. A module cannot do port
+I/O and no arm will change that.
+
+**So the defect is the failure mode rather than the absence.** An unsupported
+builtin should be refused at emission with a diagnostic naming it, the way the
+halt gate refuses a program with errors. Instead the plug produces a module
+that looks complete and the user learns from `wat2wasm`, in a message about an
+undefined local variable that names the builtin only because the builtin
+happens to be the variable.
+
+Some of the 48 are not device builtins at all and are simply holes:
+`vec-splat` and `vec-load-at` (safari's open finding 7), `text-to-unicode-bytes`,
+`unicode-bytes-to-text`, `real-approx-to-bits`, `sort-ascending`, `ask`,
+`write-file`, `fail`.
+
+`docs/the-corpus-sweep.md` is the whole census.
