@@ -25,6 +25,10 @@ A grep cannot find that. The assembler names it and the line.
 | assembled | **411** |
 | **refused by the assembler** | **169 — 29%** |
 
+**After the two fixes below: 566 assemble and 14 refuse.** 417 modules are
+byte-identical across the change and nothing that assembled before refuses
+now.
+
 Nothing failed to *emit*. Every refusal is a module the plug produced happily
 and the assembler would not take.
 

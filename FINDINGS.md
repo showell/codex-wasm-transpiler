@@ -23,7 +23,8 @@ Line numbers are against the pin in `PROVENANCE.md`.
 | 7 | a declared export is deleted unless the driver ROOTS it | **it hits the browser case hardest** | **fixed** in this driver |
 | 8 | `when` over a `Boolean` emitted `(i64.const True)` | **the construct never worked on this target** | **fixed** |
 | 9 | ~45 emitted runtime helpers are unprefixed, and collide with user definitions | **a name a program may not use, with no warning** | open |
-| 10 | a builtin with no arm emits a dangling funcref instead of a diagnostic | **looks like a complete module** | open |
+| 10 | a builtin with no arm emits a dangling funcref instead of a diagnostic | **looks like a complete module** | **fixed** |
+| 11 | a nested scrutinee local is used and not declared | wrong module | open, narrowed |
 
 3 and 5 are fixed on `wasm-plug-buffered-read`, and **guarded there rather
 than here**: `codex/plugs/wasm/check-emitted-runtime.ps1` asserts the emitted
@@ -308,7 +309,7 @@ The fix is mechanical: one prefix, every helper, every call site. It is worth
 doing carefully rather than quickly, because it moves every byte of every
 module, and the fixed point is the only thing that would notice a slip.
 
-## 10. A builtin with no arm emits a dangling funcref, not a diagnostic
+## 10. A builtin with no arm emitted a dangling funcref, not a diagnostic — FIXED
 
 161 of the corpus's 169 assembly refusals are this, across 48 distinct
 builtins. A builtin the plug has no arm for is not emitted as a bad call —
@@ -333,3 +334,45 @@ Some of the 48 are not device builtins at all and are simply holes:
 `write-file`, `fail`.
 
 `docs/the-corpus-sweep.md` is the whole census.
+
+**Fixed by making the fall-through refuse.** A name that is not bound in the
+function, is not a constructor and has no arity is not a local — there is
+nothing for it to be — and both the bare-name path and the apply path emitted
+`(local.get $name)` anyway. They now emit
+`(unreachable) (; no wasm form for port-out-32 ;)`.
+
+`unreachable` rather than an assembly error, because it is stack-polymorphic:
+**the module assembles**, every path that does not reach the builtin runs, and
+a path that does reach it traps rather than doing something plausible. The
+comment is `(; ;)` and not `;;` deliberately — a line comment would eat the
+rest of the line, and this emitter writes very long ones.
+
+The plug already had this idea: `wat-no-such-thing` refuses four hardware
+builtins exactly this way, and its prose says *"there is no approximation of a
+disk sector or an I/O port that is better than refusing."* It had four names on
+it. The corpus found 48.
+
+| the corpus, before | after |
+|---|---|
+| assembled 411 of 580 | **assembled 566 of 580** |
+| refused **169** | refused **14** |
+
+417 modules are byte-identical across the change and no program that assembled
+before refuses now, so nothing that worked was disturbed.
+
+## 11. A nested scrutinee local is used and not declared
+
+Visible only once finding 10's noise was cleared. `lang-smoke` and
+`plug-oracle-arith` declare `(local $_s)` and then read `$_ss` and `$_sss`.
+
+The scrutinee locals are unary — `_s`, `_ss`, `_sss` — and the prose says the
+naming exists *"so that the collector can shift one"*. `wat-shift-scrut` is
+real and is wired: `collect-locals-branches-loop` shifts the locals it collects
+from a branch's **guard**, which is safari's finding 10 fix. What is not
+established is why two levels of that still come out short — the shift looks
+like it should compose as the recursion unwinds.
+
+Narrowed, not diagnosed, and deliberately left that way: guessing at the
+mechanism is how three earlier calls today went wrong. What is certain is that
+the declaration and the use disagree, and `wat2wasm` refuses by name — so this
+fails loudly rather than silently, which is why it can wait.
