@@ -114,9 +114,11 @@
         (local.set $cc (if (result i32) (i32.lt_u (local.get $b) (i32.const 128))
           (then (i32.load8_u (i32.add (i32.const 5937) (local.get $b))))
           (else (i32.const 0))))
-        (if (i32.lt_s (local.get $n) (local.get $cap)) (then
-          (i32.store8 (i32.add (i32.add (local.get $buf) (i32.const 4)) (local.get $n)) (local.get $cc))
-          (local.set $n (i32.add (local.get $n) (i32.const 1)))))))
+        (if (i32.ge_u (local.get $n) (local.get $cap)) (then
+          (drop (call $bump_alloc (local.get $cap)))
+          (local.set $cap (i32.shl (local.get $cap) (i32.const 1)))))
+        (i32.store8 (i32.add (i32.add (local.get $buf) (i32.const 4)) (local.get $n)) (local.get $cc))
+        (local.set $n (i32.add (local.get $n) (i32.const 1)))))
       (br $rlc)))
     (if (i32.lt_s (local.get $b) (i32.const 0)) (then (return (i64.const 0))))
     (i32.store (local.get $buf) (local.get $n))
@@ -142,16 +144,18 @@
 
   (func $read_serial_cce (param $ignored i64) (result i64)
     (local $buf i32) (local $n i32) (local $b i32) (local $cap i32)
-    (local.set $cap (i32.const 4194304))
+    (local.set $cap (i32.const 1048576))
     (local.set $buf (call $bump_alloc (i32.add (local.get $cap) (i32.const 4))))
     (local.set $n (i32.const 0))
     (block $rsd (loop $rsc
       (local.set $b (call $read_byte))
       (br_if $rsd (i32.lt_s (local.get $b) (i32.const 0)))
       (br_if $rsd (i32.eqz (local.get $b)))
-      (if (i32.lt_s (local.get $n) (local.get $cap)) (then
-        (i32.store8 (i32.add (i32.add (local.get $buf) (i32.const 4)) (local.get $n)) (local.get $b))
-        (local.set $n (i32.add (local.get $n) (i32.const 1)))))
+      (if (i32.ge_u (local.get $n) (local.get $cap)) (then
+        (drop (call $bump_alloc (local.get $cap)))
+        (local.set $cap (i32.shl (local.get $cap) (i32.const 1)))))
+      (i32.store8 (i32.add (i32.add (local.get $buf) (i32.const 4)) (local.get $n)) (local.get $b))
+      (local.set $n (i32.add (local.get $n) (i32.const 1)))
       (br $rsc)))
     (i32.store (local.get $buf) (local.get $n))
     (i64.extend_i32_u (local.get $buf)))
@@ -196,7 +200,7 @@
 
   (func $read_file_uni (param $ignored i64) (result i64)
     (local $buf i32) (local $n i32) (local $b i32) (local $cap i32) (local $cc i32)
-    (local.set $cap (i32.const 4194304))
+    (local.set $cap (i32.const 1048576))
     (local.set $buf (call $bump_alloc (i32.add (local.get $cap) (i32.const 4))))
     (local.set $n (i32.const 0))
     (block $rfd (loop $rfc
@@ -208,9 +212,11 @@
         (local.set $cc (if (result i32) (i32.lt_u (local.get $b) (i32.const 128))
           (then (i32.load8_u (i32.add (i32.const 5937) (local.get $b))))
           (else (local.get $b))))
-        (if (i32.lt_s (local.get $n) (local.get $cap)) (then
-          (i32.store8 (i32.add (i32.add (local.get $buf) (i32.const 4)) (local.get $n)) (local.get $cc))
-          (local.set $n (i32.add (local.get $n) (i32.const 1)))))))
+        (if (i32.ge_u (local.get $n) (local.get $cap)) (then
+          (drop (call $bump_alloc (local.get $cap)))
+          (local.set $cap (i32.shl (local.get $cap) (i32.const 1)))))
+        (i32.store8 (i32.add (i32.add (local.get $buf) (i32.const 4)) (local.get $n)) (local.get $cc))
+        (local.set $n (i32.add (local.get $n) (i32.const 1)))))
       (br $rfc)))
     (i32.store (local.get $buf) (local.get $n))
     (i64.extend_i32_u (local.get $buf)))

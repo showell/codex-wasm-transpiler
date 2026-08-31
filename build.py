@@ -111,13 +111,18 @@ MAX_PCT = float(os.environ.get('CXWASM_MAX_PCT', '95'))
 DRIFT_PCT = float(os.environ.get('CXWASM_DRIFT_PCT', '2'))
 BANK = GEN / 'MEMORY.bank'
 
-# A THIRD CEILING, and the only silent one. `$read_file_uni` allocates a fixed
-# 4 MiB buffer and then reads the wire to its end storing only while there is
-# room -- so a larger source is compiled as a PREFIX of itself, with no
-# diagnostic and exit 0. FINDINGS.md item 1. The gate is here because this is
-# the only place that knows how big the subject got.
-INPUT_CAP = 4 * 1024 * 1024
-INPUT_PCT = float(os.environ.get('CXWASM_INPUT_PCT', '90'))
+# THE THIRD CEILING IS GONE, and this reports where the subject sits rather
+# than refusing. The emitted readers used to reserve a fixed 4 MiB and discard
+# the rest of the wire; they now extend by re-bumping, so there is no cap to
+# be near. What is left is a number worth printing, because the size of the
+# subject is the one input every measurement below is a function of.
+#
+# The gate that used to live here is deleted rather than kept for
+# completeness: an item that stops catching anything is a tax. The property it
+# guarded is now asserted where it belongs, on the emitted module, by
+# codex/plugs/wasm/check-emitted-runtime.ps1 -- which this build already runs
+# and which fails if a reader goes back to reserving once.
+INPUT_WAS_CAPPED_AT = 4 * 1024 * 1024
 
 _t0 = time.time()
 _notes = []
@@ -236,20 +241,11 @@ def bundle(force):
 
 
 def check_input_size(path):
-    """The read buffer's cap, which nothing else in the chain will mention.
-
-    Checked on the way IN rather than inferred from the way out: a truncated
-    source that still parses emits a perfectly good module for a program
-    nobody wrote, and every gate downstream of here would call it green.
-    """
+    """How big the subject got, and how that compares to the old cap."""
     size = pathlib.Path(path).stat().st_size
-    pct = 100.0 * size / INPUT_CAP
-    say(f'{pathlib.Path(path).name}: {pct:.1f}% of the wasm reader\'s {INPUT_CAP}-byte buffer')
-    if pct > INPUT_PCT:
-        die(f'{pathlib.Path(path).name} is {size} bytes, {pct:.1f}% of the 4 MiB the\n'
-            f'         emitted `$read_file_uni` can hold. Past it the source is\n'
-            f'         TRUNCATED IN SILENCE and compiled as a prefix of itself.\n'
-            f'         FINDINGS.md item 1. Fix the plug; do not raise the gate.')
+    say(f'{pathlib.Path(path).name}: {size} bytes '
+        f'({100.0 * size / INPUT_WAS_CAPPED_AT:.0f}% of the 4 MiB the emitted readers '
+        f'used to be capped at -- they grow now)')
 
 
 def check_memory(stderr_text, what, ratchet=False, rebank=False):

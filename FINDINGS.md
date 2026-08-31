@@ -14,7 +14,7 @@ Line numbers are against the pin in `PROVENANCE.md`.
 
 | # | finding | kind | status |
 |---|---|---|---|
-| 1 | a source over 4 MiB is silently truncated | **silent wrong answer** | open, gated here |
+| 1 | a source over 4 MiB was truncated, and the error blamed the wrong thing | **misleading diagnostic** (not silent, as first written) | **fixed** |
 | 2 | `print-text` and `write-binary` both land on fd 1 | divergence from the zig plug | open, worked around here |
 | 3 | `read-file-uni` costs one host call per byte | ergonomics | **fixed** — and it was not the slowness |
 | 4 | the bump allocator's ceiling arithmetic is i32 and wraps | ceiling behaviour, read but not executed | open |
@@ -35,7 +35,7 @@ second `memory.grow` inlined, and the reader back to a byte per call.
 
 ---
 
-## 1. A source over 4 MiB is silently truncated
+## 1. A source over 4 MiB was truncated, and the error named the wrong cause — FIXED
 
 `wat-rt-read-file` allocates a fixed 4,194,304-byte buffer and then reads the
 wire to its end, storing only while there is room:
@@ -46,11 +46,34 @@ wire to its end, storing only while there is room:
 (if (i32.lt_s (local.get $n) (local.get $cap)) (then  ... store ... )))
 ```
 
-**The loop keeps consuming and keeps discarding.** There is no diagnostic, no
-truncation marker and no non-zero exit; the compiler is handed a PREFIX of the
-program and compiles it. What comes out is a module for a program nobody
-wrote — which, for a prefix that happens to parse, is the worst available
-outcome.
+**The loop keeps consuming and keeps discarding**, so the compiler is handed a
+PREFIX of the program.
+
+**This entry originally called that a silent wrong answer. Measured, it is
+not, and the difference matters.** A prefix that no longer defines what it
+references fails the halt gate, so what a user actually gets is:
+
+```
+CODEGEN-HALTED: 2 error(s); no wasm emitted; first CDX3002 Undefined name: final-answer
+```
+
+about a file that plainly defines `final-answer`. Loud, and pointing at the
+wrong thing — nothing anywhere mentions the input, and the one fact that would
+explain the error is the one fact not reported. It is genuinely silent only
+when the prefix is self-consistent, and then the dropped tail was unreachable
+and the module is right anyway.
+
+That is a smaller defect than first written and still worth fixing, because
+this project's own subject is 2.92 MB and grows every time a paragraph is
+added to the driver.
+
+**Fixed**: both readers now extend by re-bumping, `read-file-raw`'s own idiom
+from two functions below. The second one, `$read_serial_cce`, is the one that
+mattered most and not for source — it is how `WasmPlug.codex` receives IR
+TEXT, which runs several times the size of its program. Measured after: the
+same 4,605,510-byte unit reads to the end and emits a 78,196-byte module,
+**byte-identical to the uncapped native compile of the same unit**, which
+runs and prints what it should.
 
 `read-file-raw`, two functions below, has the fix already: it grows by bumping
 again rather than truncating, because consecutive `$bump_alloc` calls with
