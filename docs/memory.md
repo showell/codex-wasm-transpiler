@@ -54,23 +54,85 @@ repository reads and does not own.
 wasm side about 5% higher. So the native binary is a fair, fast proxy for the
 number that actually matters, which makes iterating on this cheap.
 
+## Where it actually goes, phase by phase
+
+`./probe_memory.py` writes `__heap-save` marks into a copy of the driver, builds
+that, and runs it on the real subject. The bump heap never reclaims, so the
+frontier at a mark **is** the running total and the difference between two marks
+is exactly what that phase allocated — no sampling, no profiler.
+
+| phase | this phase, MB | % |
+|---|---|---|
+| tokenize | 53.0 | 1.7% |
+| scan | 33.8 | 1.1% |
+| parse (`doc`) | 107.3 | 3.5% |
+| scope (`ch`) | 8.8 | 0.3% |
+| **resolve names (`rr`)** | **315.4** | **10.4%** |
+| **type check (`cr`)** | **698.7** | **23.0%** |
+| lower + IR pipeline + lift | 37.9 | 1.3% |
+| **emit IR text** | **344.6** | **11.3%** |
+| **parse IR text back** | **605.0** | **19.9%** |
+| everything else in the front end | 8.6 | 0.3% |
+| **emit (a FLOOR, not a peak)** | **828.2** | **27.2%** |
+| | **3,042.5** | |
+
+Two independent instruments agree on the split: the probe has 2,214 MB retained
+when emission starts, plus the 512 MB deck reservation, against the runner's
+2,852 MB at the first `fd_write` — within the ~5% the native and wasm arms
+differ by.
+
+### The IR text wire is the biggest single thing, and it is ours
+
+**`emit IR text` plus `parse IR text back` is 949.6 MB — 31% of everything.**
+The driver emits the whole IR as text and parses it straight back, in memory,
+and `CodexWasmHarness.codex` argues at length that this is load-bearing rather
+than an optimisation waiting to be removed: the wire DERIVES what the AST does
+not carry, because `IRTextEmitter.codex` computes a record's implicit type
+parameters from its field types as it serialises. The direct hand-off worked on
+85 programs and then emitted a monomorphic record whose fields still said `a`.
+
+So the round trip is not wrong. What the measurement says is what it COSTS, and
+a third of the budget is a lot to pay for a derivation that happens as a side
+effect of serialising. The fix that would keep the property and drop the cost is
+to do that derivation on the `IRChapter` directly — which is a compiler change
+and a good one on its own terms, since a derivation that only happens during
+serialisation is invisible to every consumer that does not serialise.
+
+Nothing here should be attacked before that is understood, because it is the
+one row where the cost buys something a reader would not expect.
+
+### Type checking is the biggest phase that is nobody's design decision
+
+**698.7 MB, 23%**, with name resolution behind it at 315.4 MB. Together they are
+a third of the budget and they are plain compiler work on a 2.9 MB program.
+This is the part that is genuinely upstream and genuinely just large.
+
+### Emission retains 828 MB despite streaming
+
+`emit-wasm-chapter-stream` brackets every definition in
+`__heap-save`/`__heap-restore`, so a definition's working set is released before
+the next one starts — and yet the frontier is 828 MB higher after emission than
+before it. That is what is allocated OUTSIDE the brackets: the string table, the
+data sections, the runtime text, the type definitions and the two import scans
+are all built before streaming begins and held for its duration.
+
+**That number has not been broken down and it is the next thing to measure**,
+because unlike the two rows above it, it is in a file this project can change.
+
 ## What is still unmeasured, and the instrument for it
 
-**The split inside that 2,731 MB floor.** How much is the front end and how
-much is the zig emitter is exactly what would say whether there is anything
-worth attacking on this side of the fence.
+**The 828 MB emission retains outside its per-definition brackets.** The phase
+probe stops at the boundary of `emit-wasm-chapter-stream`; breaking that row
+down means marks inside the emitter, which is an emitter change rather than a
+driver change. It is the largest number left that this project can act on
+alone.
 
-The instrument exists and costs no guest. The bump heap never reclaims, so
-`__heap-save` **is** the running total of everything allocated so far, and the
-difference between two phase boundaries is what that phase cost — exactly,
-with no sampling. safari-codex's `harness/mem_probe.py` writes those marks into
-a harness mechanically rather than by hand, for the reason that a
-hand-instrumented pair of harnesses can differ somewhere else and nobody would
-see it.
-
-Doing that here means a harness variant, which means a different subject and a
-different artifact — a build variant, not the tracked one. That is the next
-piece of work on this file.
+**A dropped phase is invisible**, which is why `probe_memory.py` refuses when
+the driver has a binding its pass did not account for: the table would simply
+be shorter and the missing cost would fold into the row above. That guard was
+earned twice — safari's copy found its own `else let` blind spot after a year,
+and the first run of ours put `deck-adv` in the prologue skip-list, which made
+the first row the baseline and reported tokenize as 0.0 MB.
 
 ## Why the ratchet exists
 

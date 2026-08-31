@@ -38,12 +38,13 @@ const MODULE_FIRST_LINE = '(module\n';
 
 function parseArgs(argv) {
   const [wasm, input, ...rest] = argv;
-  const opt = { wasm, input, out: null, diag: null, raw: false };
+  const opt = { wasm, input, out: null, diag: null, raw: false, memlog: null };
   for (let i = 0; i < rest.length; i++) {
     // --raw takes no value: a program that is not a compiler prints no
     // `(module` line, and splitting its output at one would report an empty
     // artifact for a run that worked perfectly. samples/ go through this.
     if (rest[i] === '--raw') { opt.raw = true; continue; }
+    if (rest[i] === '--memlog') { opt.memlog = rest[++i]; continue; }
     if (rest[i] === '--out') opt.out = rest[++i];
     else if (rest[i] === '--diag') opt.diag = rest[++i];
     else throw new Error(`unknown argument ${rest[i]}`);
@@ -71,11 +72,20 @@ if (isMainThread) {
   // what `memory.grow` does. Checking byteLength is cheaper than rebuilding
   // two views per call, and there are millions of calls.
   let bytes = null, view = null, seen = -1;
+  // EVERY GROW THIS SEES IS A FREE SAMPLE. The views have to be rebuilt when
+  // the buffer is replaced anyway, so noticing that costs nothing -- and a
+  // module whose allocator only ever grows gives (time, size) pairs that are
+  // an allocation profile. It samples only at host calls, so the front end,
+  // which does no I/O between reading its input and reporting, appears as one
+  // gap; that gap's END is the boundary this project most wants, because the
+  // driver writes its diagnostics immediately before it emits.
+  const grows = [];
   const refresh = () => {
     if (memory.buffer.byteLength !== seen) {
       seen = memory.buffer.byteLength;
       bytes = new Uint8Array(memory.buffer);
       view = new DataView(memory.buffer);
+      if (opt.memlog) grows.push([Date.now() - started, seen]);
     }
   };
 
@@ -85,8 +95,10 @@ if (isMainThread) {
   const stdout = [];
   const stderr = [];
 
+  let firstWrite = null;
   const fd_write = (fd, iovs, n, nwritten) => {
     refresh();
+    if (firstWrite === null) firstWrite = [Date.now() - started, memory.buffer.byteLength];
     let total = 0;
     for (let i = 0; i < n; i++) {
       const p = view.getUint32(iovs + i * 8, true);
@@ -115,7 +127,7 @@ if (isMainThread) {
     return 0;
   };
 
-  const started = Date.now();
+  let started = Date.now();
   const instance = new WebAssembly.Instance(
     new WebAssembly.Module(readFileSync(opt.wasm)),
     { wasi_snapshot_preview1: { fd_write, fd_read } });
@@ -145,7 +157,13 @@ if (isMainThread) {
     `CXWASM-MEM bytes=${memory.buffer.byteLength} mb=${mb.toFixed(1)} ` +
     `ceiling_pct=${(100 * memory.buffer.byteLength / 4294967296).toFixed(1)} ` +
     `seconds=${((Date.now() - started) / 1000).toFixed(1)} ` +
-    `read=${inPos} wrote=${out.length}\n`);
+    `read=${inPos} wrote=${out.length}` +
+    (firstWrite ? ` frontend_s=${(firstWrite[0] / 1000).toFixed(1)} frontend_mb=${(firstWrite[1] / 1048576).toFixed(1)}` : '') +
+    `\n`);
+  if (opt.memlog) {
+    writeFileSync(opt.memlog,
+      'ms,bytes\n' + grows.map(([m, b]) => `${m},${b}`).join('\n') + '\n');
+  }
 
   if (trapped) {
     process.stderr.write(`CXWASM-TRAP ${trapped}\n`);

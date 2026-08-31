@@ -26,7 +26,7 @@
 # the harness emits IR text and parses it straight back, because the wire
 # DERIVES what the AST does not carry. CodexWasmHarness.codex has the argument.
 
-param([string]$OutFile)
+param([string]$OutFile, [string]$Harness)
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $repo = (& python3 (Join-Path $here '..' 'cobblestone.py')).Trim()
@@ -113,7 +113,11 @@ foreach ($ch in @('codex/compiler/Core/OffsetTable.codex',
 # names a chapter rather than a symbol, so a subject carrying PhaseAllocator
 # must answer for one. BootPaintStubs.codex says why it is a stub.
 Add-PlugChapter -Lines $lines -Path (Join-Path $here 'BootPaintStubs.codex') -Quire 'Parsmi'
-Add-PlugChapter -Lines $lines -Path (Join-Path $here 'CodexWasmHarness.codex') -Quire 'Parsmi'
+# -Harness is for probe_memory.py, which bundles an INSTRUMENTED copy of the
+# driver. It defaults to the real one, so nothing that does not pass it can
+# accidentally measure or ship a probe.
+$harnessPath = if ($Harness) { $Harness } else { Join-Path $here 'CodexWasmHarness.codex' }
+Add-PlugChapter -Lines $lines -Path $harnessPath -Quire 'Parsmi'
 
 # All 14 pages of the X86-64 Code Generator chapter are present, so the
 # 'Page N of 14' trailers stand as upstream wrote them. Upstream rewrites
