@@ -20,13 +20,13 @@ for byte.**
 generated/codexwasm-subject.codex   the compiler + the wasm emitter + a driver
         |  compiled by codexwasm
         v
-generated/codexwasm.wat             6,502,493 bytes of WebAssembly text
+generated/codexwasm.wat             6,507,030 bytes of WebAssembly text
         |  assembled by wabt
         v
 generated/codexwasm.wasm            805260 bytes  <-- THE ARTIFACT
         |  handed the same subject again
         v
-        the same 6,502,493 bytes, or it is a finding
+        the same 6,507,030 bytes, or it is a finding
 
 The whole check is 15 seconds of node and the whole build is 40 seconds warm.
 ```
@@ -85,9 +85,9 @@ has to fit at once. The compiler-sized subject sits close to that wall:
 
 | | |
 |---|---|
-| peak linear memory, compiling the subject | **2,788.2 MB** |
+| peak linear memory, compiling the subject | **2,180.2 MB** |
 | the wasm32 ceiling | 4,096 MB |
-| headroom | **31.9%** |
+| headroom | **46.8%** |
 
 It was 3,716.1 MB and 9.3% this morning. What moved it was not the emitter:
 the driver used to emit the whole IR as text and parse it straight back, and

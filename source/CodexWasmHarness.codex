@@ -209,16 +209,7 @@ Section: Driver
     in let cwm-entry-bag = bag-from-list (check-entry-point-duplicate assignments)
     in let cwm-bag = bag-merge-all [bag-from-list (toks.errors), doc.parse-bag, rr.bag, cr.state.bag, cwm-shadow-bag, cwm-collide-bag, cwm-entry-bag]
     in if bag-has-errors cwm-bag then print-text (cwm-halted (bag-errors cwm-bag))
-    else let meta = IRTextMeta {
-      chapter-title = ch.chapter-title,
-      prose = ch.prose,
-      section-titles = ch.section-titles,
-      ctor-names = rr.ctor-names,
-      prose-blocks = ch.prose-blocks,
-      annotations = ch.annotations,
-      ground-effects = ch.ground-effects
-    }
-    in let cwm-exports = cwm-declared-exports (ir.defs) 0
+    else let cwm-exports = cwm-declared-exports (ir.defs) 0
     in let cwm-roots = cwm-emit-roots & list-push cwm-exports "wasm-exports"
     in let pruned = ir-prune-unreachable-roots ir cwm-roots
     in act

@@ -5,26 +5,32 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-08-31T19:35:10Z
-road             self
+built            2026-08-31T19:55:34Z
+road             zig
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
 COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-fieldslot
-  revision       4e141340  wasm plug: the two text readers grow instead of discarding what will not fit
+  revision       0faaf191  wasm plug: two more quadratic joins in emission, 608 MB
 
-subject          codexwasm-subject.codex  2921303 bytes
-  sha256         d2ce7fadcaf87163f6df87bc047deef2fc05b53d6c9f38769ea1bd55df21b4e2
-artifact         codexwasm.wat  6507620 bytes
-  sha256         bd43e18fb706c849442675c8c13e2f920ea63f5b3f331500470e8146df79d967
-assembled        codexwasm.wasm  805935 bytes
-  sha256         568a6df174e39c4834ee7666bd0d3327a4fcdef3602223b54cb9adbdd3b3e3d1
+subject          codexwasm-subject.codex  2922574 bytes
+  sha256         728a0a2564302222df3875b95cb2441a53f751f82738e27d386a933d85089b6d
+artifact         codexwasm.wat  6507030 bytes
+  sha256         61e38b0add61dfb41df2a3a623306737930abfd4e243eea738041d7b1605084b
+assembled        codexwasm.wasm  805839 bytes
+  sha256         7cf8ea47170468495f7e8d210b4aa55ba9b5cc965096deb9caeef2bad5a59465
+
+codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codexzig
+  sha256         a2ae42e212907369851852d616cd168284a9a49fab641c8761d659b533974f13
+  NOTE           the zig road puts codexzig in the trusted base. Its own
+                 provenance is its repository's; this records only which
+                 binary ran.
 
 MEMORY -- the first priority, measured rather than estimated.
-  peak           2788.2 MB of linear memory
-  ceiling        68.1% of wasm32's hard 4 GiB
+  peak           2180.2 MB of linear memory
+  ceiling        53.2% of wasm32's hard 4 GiB
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
-  bank           2906849280
+  bank           2286092288
 
 NOTES
   - checkout is on refs/heads/wasm-slot-from-type, not detached -- it can move under a build

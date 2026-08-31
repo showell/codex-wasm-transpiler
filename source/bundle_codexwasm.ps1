@@ -26,7 +26,7 @@
 # the harness emits IR text and parses it straight back, because the wire
 # DERIVES what the AST does not carry. CodexWasmHarness.codex has the argument.
 
-param([string]$OutFile, [string]$Harness)
+param([string]$OutFile, [string]$Harness, [string]$Emitter)
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $repo = (& python3 (Join-Path $here '..' 'cobblestone.py')).Trim()
@@ -106,7 +106,12 @@ foreach ($ch in @('codex/compiler/Core/OffsetTable.codex',
                   'codex/compiler/Emit/CodexEmitter.codex',
                   'codex/plugs/common/IRTextParser.codex',
                   'codex/plugs/wasm/WasmEmitter.codex')) {
-    Add-PlugChapter -Lines $lines -Path (Join-Path $repo $ch) -Quire 'Parsmi'
+    # -Emitter is for probe_emit.py, which bundles an INSTRUMENTED copy of the
+    # emitter. It defaults to the checkout's, so nothing that does not pass it
+    # can accidentally measure or ship a probe.
+    $path = if ($Emitter -and $ch -eq 'codex/plugs/wasm/WasmEmitter.codex') { $Emitter }
+            else { Join-Path $repo $ch }
+    Add-PlugChapter -Lines $lines -Path $path -Quire 'Parsmi'
 }
 
 # Update 42 gave PhaseAllocator a cite of Codex chapter BootPaint, and a cite

@@ -10,8 +10,8 @@ are three gates and not one.
 
 | ceiling | what it is | where we are | how it fails |
 |---|---|---|---|
-| **4 GiB linear memory** | wasm32's address space | 2,772.2 MB — **67.7%** | trap, then worse: `bump_alloc`'s own arithmetic is i32 and wraps at exactly 4 GiB (FINDINGS 4) |
-| **4 MiB input** | `$read_file_uni`'s fixed buffer | 2,908,990 B — **69.4%** | **silently**, compiling a prefix of the program (FINDINGS 1) |
+| **4 GiB linear memory** | wasm32's address space | 2,180.2 MB — **53.2%** | trap, then worse: `bump_alloc`'s own arithmetic is i32 and wraps at exactly 4 GiB (FINDINGS 4) |
+| ~~4 MiB input~~ | the emitted readers grow now — `FINDINGS.md` 1 | gone | **silently**, compiling a prefix of the program (FINDINGS 1) |
 | **3072 MB guest** | the seed's boot stub, if the guest road is ever built | unmeasured | the guest parks in `hlt` with nothing on the wire |
 
 ## Is it the emitter or the front end? Mostly the front end.
@@ -171,3 +171,32 @@ you develop against and ruinous on the host you ship to will not show up in any
 gate that measures the artifact — only in one that measures the artifact ON
 THAT HOST. This project runs the fixed point under node for that reason, and
 the browser leg will want its own.
+
+## Where it goes now, and it has inverted
+
+Re-measured after the wire came out and emission's two quadratic joins were
+halved:
+
+| phase | this phase, MB | % |
+|---|---|---|
+| tokenize + scan | 86.9 | 5.7% |
+| parse (`doc`) | 107.5 | 7.1% |
+| **resolve names (`rr`)** | **315.5** | **20.9%** |
+| **type check (`cr`)** | **701.1** | **46.5%** |
+| lower + IR pipeline + lift + prune | 40.2 | 2.7% |
+| **emit** (a floor) | **239.4** | **15.9%** |
+| | **1,509.3** | |
+
+Against the first measurement of the day: 3,042.5 MB total, of which the IR
+text wire was 949.6 and emission 828.2. Both are gone or nearly so — emission
+is down 589 MB from two functions.
+
+**Type checking and name resolution are now 1,017 MB, 67% of everything**, and
+both are the compiler front end. This project reads that code and does not own
+it. What is left on this side of the fence is emission's 239 MB, of which
+85.2 is one undiagnosed step and 24.9 is a type-def walk named in
+`the-quadratic-join.md`.
+
+So the honest position: **the wasm plug is no longer where this program's
+memory goes.** Everything further is upstream, or is a question about what the
+compiler retains between phases rather than what any emitter does.
