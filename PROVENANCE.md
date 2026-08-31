@@ -47,9 +47,13 @@ the NOTE buys is that nobody reads a `generated/PROVENANCE` from this period
 believing the revision could not have moved. Detach it when the branch stops
 moving.
 
-**Detached is the requirement, not a preference.** A worktree with a branch
-checked out moves when somebody works on that branch — and `15ef1862` is the
-tip of `safari`, which safari-codex develops on. `build.py` prints a NOTE and
+**Detached is the requirement, not a preference, and it has now been paid off
+once.** A worktree with a branch checked out moves when somebody works on that
+branch. `15ef1862` WAS the tip of `safari`, which safari-codex develops on; on
+2026-08-31 that project re-pinned onto our nine commits and fast-forwarded
+`safari` to `9632bb87`. Our own checkout did not move, because it is detached at
+`15ef1862` in `cobblestone-wasmpin` rather than sharing theirs — which is
+exactly the failure this rule was written against, arriving three days later. `build.py` prints a NOTE and
 carries it into `generated/PROVENANCE` when the checkout it was given is on a
 branch, because a build whose source moved underneath it looks exactly like a
 build whose source did not.
