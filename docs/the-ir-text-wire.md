@@ -100,6 +100,17 @@ type-parameter claim above, which is not in the code and which nobody has
 re-derived. Before removing the wire from a driver that is not ours, that
 question needs its own answer.
 
-**Not done here**: this project's own harness still takes the round trip. The
-plug change is what makes dropping it safe; dropping it is a separate step,
-worth 27% of the ceiling.
+**Done, and it held.** The wire came out of `source/CodexWasmHarness.codex`
+and the fixed point survived it:
+
+| | before | after |
+|---|---|---|
+| peak linear memory | 3,716.1 MB | **2,772.2 MB** |
+| of the wasm32 ceiling | 90.7% | **67.7%** |
+| the check, under node | 18.1 s | 15.5 s |
+| the artifact | 836,901 B | 804,360 B |
+| the fixed point | holds | **holds** |
+
+The artifact got smaller as well as cheaper, which is the pruner rather than a
+surprise: with nothing calling `emit-ir-chapter` or `parse-ir-chapter`, the IR
+text machinery is unreachable from the entry point and never emitted.

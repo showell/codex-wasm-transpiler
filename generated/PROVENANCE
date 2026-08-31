@@ -5,26 +5,32 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-08-31T17:59:20Z
-road             self
+built            2026-08-31T18:54:22Z
+road             zig
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
-COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-wasmread
-  revision       fa6b0f5d  wasm plug: assert the two runtime properties the e2e bed cannot see
+COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-fieldslot
+  revision       c36cf69b  wasm plug: the receiver's type is the authority for a field slot, not the wire
 
-subject          codexwasm-subject.codex  2908990 bytes
-  sha256         06cfd955ced9780861a42ba6d1108828e214b63b769e64389cc2b79ca07bfa25
-artifact         codexwasm.wat  6760737 bytes
-  sha256         79b209a09130411f14c6575380ff4fe1b22bdbab95f6126031add941c3a4e6a1
-assembled        codexwasm.wasm  836901 bytes
-  sha256         c0d9bd0a5f3f85ae8fbc532401fc30a7cbb40a6b6e98de6d72b9ead5b649bca2
+subject          codexwasm-subject.codex  2910887 bytes
+  sha256         0b92e0b38898da1d866b01ec11896edbb0d2d2dd3f731cf1028f755a543da082
+artifact         codexwasm.wat  6494295 bytes
+  sha256         a63f2bd3ec587b513762fadee5385a5f45bf67a4593f23572f75f280fc98b65b
+assembled        codexwasm.wasm  804360 bytes
+  sha256         171652cfb9ac082f094a63738c5e9755af64ea4ce6e6f17b04d9137cc2f356ab
+
+codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codexzig
+  sha256         a2ae42e212907369851852d616cd168284a9a49fab641c8761d659b533974f13
+  NOTE           the zig road puts codexzig in the trusted base. Its own
+                 provenance is its repository's; this records only which
+                 binary ran.
 
 MEMORY -- the first priority, measured rather than estimated.
-  peak           3716.1 MB of linear memory
-  ceiling        90.7% of wasm32's hard 4 GiB
+  peak           2772.2 MB of linear memory
+  ceiling        67.7% of wasm32's hard 4 GiB
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
-  bank           3896639488
+  bank           2906849280
 
 NOTES
-  - checkout is on refs/heads/wasm-plug-buffered-read, not detached -- it can move under a build
+  - checkout is on refs/heads/wasm-slot-from-type, not detached -- it can move under a build

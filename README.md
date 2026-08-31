@@ -20,15 +20,15 @@ for byte.**
 generated/codexwasm-subject.codex   the compiler + the wasm emitter + a driver
         |  compiled by codexwasm
         v
-generated/codexwasm.wat             6,760,737 bytes of WebAssembly text
+generated/codexwasm.wat             6,494,295 bytes of WebAssembly text
         |  assembled by wabt
         v
-generated/codexwasm.wasm            836,901 bytes  <-- THE ARTIFACT
+generated/codexwasm.wasm            804,360 bytes  <-- THE ARTIFACT
         |  handed the same subject again
         v
-        the same 6,760,737 bytes, or it is a finding
+        the same 6,494,295 bytes, or it is a finding
 
-The whole check is 18 seconds of node and the whole build is 71 seconds warm.
+The whole check is 15 seconds of node and the whole build is 40 seconds warm.
 ```
 
 Every chapter of the Codex compiler and the whole of `codex/plugs/wasm` run to
@@ -85,9 +85,15 @@ has to fit at once. The compiler-sized subject sits close to that wall:
 
 | | |
 |---|---|
-| peak linear memory, compiling the subject | **3,716.1 MB** |
+| peak linear memory, compiling the subject | **2,772.2 MB** |
 | the wasm32 ceiling | 4,096 MB |
-| headroom | **9.3%** |
+| headroom | **32.3%** |
+
+It was 3,716.1 MB and 9.3% this morning. What moved it was not the emitter:
+the driver used to emit the whole IR as text and parse it straight back, and
+that round trip cost 944 MB for a derivation the plug can do itself.
+`docs/the-ir-text-wire.md` is the measurement and `docs/memory.md` is how it
+was found.
 
 That is the number this project is organised around. Two gates, because one
 number cannot answer two questions:

@@ -28,8 +28,10 @@ transpiler would report on a binary nobody named.
 ## The pins, as of 2026-08-31
 
 ```
-COBBLESTONE_ROOT  ~/showell_repos/cobblestone-wasmread  branch wasm-plug-buffered-read
-                  at cac5851b, which is 15ef1862 plus this project's own plug fixes
+COBBLESTONE_ROOT  ~/showell_repos/cobblestone-fieldslot  branch wasm-slot-from-type
+                  at c36cf69b, which is 15ef1862 plus this project's own plug work:
+                  the buffered reader and 16 MB grow step, and the field slot
+                  resolved from the receiver's type rather than from the wire
 CODEXZIG          ~/showell_repos/codexzig-safari/generated/local/codexzig
                   built in that worktree at 432b80a, from 15ef1862
 ```
@@ -69,7 +71,9 @@ size dies at 4 GiB mid-emit. They are sent as
 were open when this was written.
 
 ```
-cac5851b  wasm plug: the emitted runtime made 2.9 million host calls and 56,000 grows   <- OURS
+c36cf69b  wasm plug: the receiver's type is the authority for a field slot, not the wire  <- OURS
+fa6b0f5d  wasm plug: assert the two runtime properties the e2e bed cannot see           <- OURS
+cac5851b  wasm plug: the emitted runtime made 2.9 million host calls and 56,000 grows    <- OURS
 15ef1862  plugs: the mask split's failure mode was impossible, and the ceiling is a gate now
 2a53929f  wasm plug: a guard needs its OWN scrutinee local, and a mention is not a call
 e6f09556  wasm plug: neither env import is reachable, and the comment said one was fixed

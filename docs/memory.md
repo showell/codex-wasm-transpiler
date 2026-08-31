@@ -10,7 +10,7 @@ are three gates and not one.
 
 | ceiling | what it is | where we are | how it fails |
 |---|---|---|---|
-| **4 GiB linear memory** | wasm32's address space | 3,716.1 MB — **90.7%** | trap, then worse: `bump_alloc`'s own arithmetic is i32 and wraps at exactly 4 GiB (FINDINGS 4) |
+| **4 GiB linear memory** | wasm32's address space | 2,772.2 MB — **67.7%** | trap, then worse: `bump_alloc`'s own arithmetic is i32 and wraps at exactly 4 GiB (FINDINGS 4) |
 | **4 MiB input** | `$read_file_uni`'s fixed buffer | 2,908,990 B — **69.4%** | **silently**, compiling a prefix of the program (FINDINGS 1) |
 | **3072 MB guest** | the seed's boot stub, if the guest road is ever built | unmeasured | the guest parks in `hlt` with nothing on the wire |
 
@@ -81,7 +81,7 @@ when emission starts, plus the 512 MB deck reservation, against the runner's
 2,852 MB at the first `fd_write` — within the ~5% the native and wasm arms
 differ by.
 
-### The IR text wire is the biggest single thing, and it is ours
+### The IR text wire is the biggest single thing, and it is ours — REMOVED
 
 **`emit IR text` plus `parse IR text back` is 949.6 MB — 31% of everything.**
 The driver emits the whole IR as text and parses it straight back, in memory,
@@ -98,8 +98,13 @@ to do that derivation on the `IRChapter` directly — which is a compiler change
 and a good one on its own terms, since a derivation that only happens during
 serialisation is invisible to every consumer that does not serialise.
 
-Nothing here should be attacked before that is understood, because it is the
-one row where the cost buys something a reader would not expect.
+**It was removed on 2026-08-31 and the fixed point held**: 3,716.1 MB to
+2,772.2 MB, 90.7% of the ceiling to 67.7%, byte-identical output on 30
+programs. The derivation turned out to be a field slot rather than a type
+parameter, and the plug can do it itself from the receiver's type — which bare
+metal already does and the zig plug discards. `docs/the-ir-text-wire.md` is
+the whole account. The table above is the state BEFORE that change; the two
+wire rows are now zero and every other row is unmoved.
 
 ### Type checking is the biggest phase that is nobody's design decision
 

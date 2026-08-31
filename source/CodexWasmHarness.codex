@@ -8,17 +8,33 @@ Chapter: CodexWasmHarness
  the property that makes it worth having is that this program runs the same
  code in the same order as the pipeline it stands in for.
 
- THE WIRE ROUND TRIP IS THE LOAD-BEARING PART and it is not an optimisation
- waiting to be removed. `emit-wasm-chapter-stream` takes an `IRChapter`, which
- the front end is holding already, so the seam looks like a direct hand-off.
- It is not: the text wire DERIVES what the AST does not carry --
- `IRTextEmitter.codex:404-406` computes a record's implicit type parameters
- from its field types as it serialises -- and the ladder's own history is that
- the direct hand-off worked on 85 programs and then emitted a monomorphic
- record whose fields still said `a`. Going through the wire in memory is also
- exactly what the GUEST arm does, which is what makes the two comparable at
- all: `harness/wasm_arm.py` compiles to IR on the seed and parses that text
- back before emitting, and so does this.
+ THE WIRE ROUND TRIP IS GONE, and this is the record of what it was doing.
+
+ This driver used to emit the whole IR as text and parse it straight back
+ before emitting, and said that was load-bearing: that the wire DERIVED what
+ the AST does not carry, naming a computation of implicit type parameters in
+ `IRTextEmitter`. That claim is not in the code -- both sides quote and parse
+ the tparam list they are given. What the wire really derived was a positional
+ FIELD SLOT, resolved against the receiver's record type and written into the
+ field name as `parse-bag/14`, and the wasm plug read it rather than computing
+ it. Its fallback when there was none searched every type-def by NAME and took
+ the first match, which is wrong for the 59 field names in this subject that
+ occur at more than one slot -- 73% of the emitted bytes.
+
+ The plug now asks the receiver's type first and keeps the wire's number as a
+ fallback (`wasm-slot-from-type`), which is the same number bare metal
+ computes for itself in `X86_64Compound` and the same one the zig plug throws
+ away. With that, the round trip derives nothing this arm needs.
+
+ It cost 945 MB of 3,532 MB -- 27% -- and dropping it is byte-identical on
+ the compiler's own 2.9 MB source and on 29 units of the safari port up to
+ 13.5 MB of WAT. `docs/the-ir-text-wire.md` is the measurement.
+
+ THIS DRIVER IS NO LONGER THE SAME SHAPE AS THE GUEST ARM, and that is the
+ cost paid. safari-codex's `harness/wasm_arm.py` compiles to IR on the seed
+ and parses that text back before emitting; this one does not, so the two are
+ no longer step-for-step comparable. The byte comparison above is what stands
+ in for that, and it is a stronger check than the resemblance was.
 
  A COPY, and copies go stale. `PROVENANCE.md` names the commit. If the
  compiler's front end changes shape, this breaks loudly at the transpile --
@@ -148,10 +164,9 @@ Section: Driver
       annotations = ch.annotations,
       ground-effects = ch.ground-effects
     }
-    in let ir-text = emit-ir-chapter (ir-prune-unreachable-roots ir cwm-emit-roots) meta (ch.type-defs)
-    in let parsed = parse-ir-chapter ir-text
+    in let pruned = ir-prune-unreachable-roots ir cwm-emit-roots
     in act
       write-binary (cwm-report cwm-bag)
-      emit-wasm-chapter-stream (parsed.chapter) (parsed.type-defs)
+      emit-wasm-chapter-stream pruned (ch.type-defs)
     end
   end
