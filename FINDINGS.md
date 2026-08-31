@@ -24,7 +24,7 @@ Line numbers are against the pin in `PROVENANCE.md`.
 | 8 | `when` over a `Boolean` emitted `(i64.const True)` | **the construct never worked on this target** | **fixed** |
 | 9 | ~45 emitted runtime helpers are unprefixed, and collide with user definitions | **a name a program may not use, with no warning** | open |
 | 10 | a builtin with no arm emits a dangling funcref instead of a diagnostic | **looks like a complete module** | **fixed** |
-| 11 | a nested scrutinee local is used and not declared | wrong module | open, narrowed |
+| 11 | a guard's scrutinee bump leaked into its sibling branches | wrong module, from ordinary code | **fixed** |
 
 3 and 5 are fixed on `wasm-plug-buffered-read`, and **guarded there rather
 than here**: `codex/plugs/wasm/check-emitted-runtime.ps1` asserts the emitted
@@ -360,19 +360,45 @@ it. The corpus found 48.
 417 modules are byte-identical across the change and no program that assembled
 before refuses now, so nothing that worked was disturbed.
 
-## 11. A nested scrutinee local is used and not declared
+## 11. A guard's scrutinee bump leaked into its sibling branches — FIXED
 
 Visible only once finding 10's noise was cleared. `lang-smoke` and
 `plug-oracle-arith` declare `(local $_s)` and then read `$_ss` and `$_sss`.
 
-The scrutinee locals are unary — `_s`, `_ss`, `_sss` — and the prose says the
-naming exists *"so that the collector can shift one"*. `wat-shift-scrut` is
-real and is wired: `collect-locals-branches-loop` shifts the locals it collects
-from a branch's **guard**, which is safari's finding 10 fix. What is not
-established is why two levels of that still come out short — the shift looks
-like it should compose as the recursion unwinds.
+`emit-wat-guard-test` gave a guard its own scrutinee by writing
 
-Narrowed, not diagnosed, and deliberately left that way: guessing at the
-mechanism is how three earlier calls today went wrong. What is certain is that
-the declaration and the use disagree, and `wat2wasm` refuses by name — so this
-fails loudly rather than silently, which is why it can wait.
+```
+emit-wat-expr (__record-set ctx "scrut-depth" (ctx.scrut-depth + 1)) guard
+```
+
+**`__record-set` mutates in place and returns the same record.** So once one
+branch's guard had been emitted, the shared `ctx` carried the bumped depth into
+every sibling branch and into the enclosing match. A second guarded branch read
+its tag and its constructor binders from `$_ss`, a third from `$_sss`, while the
+scrutinee had been stored in `$_s` and nothing declared the others.
+
+The minimal case is two guarded constructor branches:
+
+```
+when s is C (r) when r > 10 -> ... is R (n) when n > 5 -> ... is otherwise -> ...
+```
+
+Fixed by building a fresh `WasmCtx` for the guard. The guard still gets its own
+depth — which is what safari's finding 10 asked for, and that property is tested
+here and holds: a `when` inside a guard gets `$_ss`, the branches below still
+read `$_s`, and the answers come out right.
+
+**Finding 10's fix introduced this one**, by reaching for `__record-set` to
+express "the same context but one deeper". And the compiler *has* a diagnostic
+for the hazard — CDX6020, thirteen of them in this very build — but it inspects
+`__record-set` only inside a record construction's **field**, not passed as an
+argument to a call whose caller keeps using the original. That blind spot is a
+compiler-side lead.
+
+**How it was found is worth as much as the fix.** It was invisible until
+finding 10's noise was cleared; then the corpus named two programs; then a
+hand-written test found a *different* shape the corpus does not contain; and
+the bisect that located it went through three variants that were all fine.
+Two of my own steps along the way were wrong — the first hypothesis blamed the
+ctor binders, and one bisect round measured a stale binary and reported a
+mismatch that had already been fixed.

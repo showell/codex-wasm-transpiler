@@ -5,19 +5,19 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-08-31T20:42:37Z
+built            2026-08-31T20:53:15Z
 road             zig
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
 COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-fieldslot
-  revision       8460e035 +dirty  wasm plug: a Boolean literal pattern is 1 or 0, not the word
+  revision       02186d04 +dirty  wasm plug: an unknown name refuses instead of pretending to be a local
 
-subject          codexwasm-subject.codex  2924927 bytes
-  sha256         fdff066acb9005921f933db188bb208465da5f1d5b8e4c5fc733175822ba073c
-artifact         codexwasm.wat  6508080 bytes
-  sha256         e395717c780161f445d1388075c34aebec9bc6c011e659e4066f39b71f0b839d
-assembled        codexwasm.wasm  805990 bytes
-  sha256         7eee2d55ef3807e0012c2218d5f8f7600f8a1f3688193db5f48abc49d7a0dabf
+subject          codexwasm-subject.codex  2925012 bytes
+  sha256         e543d4f0c4ca1440fc2ee1b9d4bb15f260305e655fe999e192413374469679aa
+artifact         codexwasm.wat  6508721 bytes
+  sha256         1256477de7ced6fade73201062b829fce363dba5ed9a4abce37527c24172663b
+assembled        codexwasm.wasm  806060 bytes
+  sha256         4ef33bdbef945d509e789307ca03aa3848ca6aa11662060fb1cad3ffeea25d9e
 
 codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codexzig
   sha256         a2ae42e212907369851852d616cd168284a9a49fab641c8761d659b533974f13
