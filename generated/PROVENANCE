@@ -5,25 +5,19 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-08-31T21:01:42Z
-road             both
+built            2026-09-01T00:45:28Z
+road             self
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
 COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-fieldslot
   revision       9632bb87  wasm plug: a guard's scrutinee bump leaked into its sibling branches
 
-subject          codexwasm-subject.codex  2925012 bytes
-  sha256         e543d4f0c4ca1440fc2ee1b9d4bb15f260305e655fe999e192413374469679aa
-artifact         codexwasm.wat  6508721 bytes
-  sha256         1256477de7ced6fade73201062b829fce363dba5ed9a4abce37527c24172663b
-assembled        codexwasm.wasm  806060 bytes
-  sha256         4ef33bdbef945d509e789307ca03aa3848ca6aa11662060fb1cad3ffeea25d9e
-
-codexzig         /home/steve/showell_repos/codexzig-safari/generated/local/codexzig
-  sha256         a2ae42e212907369851852d616cd168284a9a49fab641c8761d659b533974f13
-  NOTE           the zig road puts codexzig in the trusted base. Its own
-                 provenance is its repository's; this records only which
-                 binary ran.
+subject          codexwasm-subject.codex  2925013 bytes
+  sha256         f6491a011e7edf9b918e9773949a1d34987a97133c043a0de4bc5ad0dae34125
+artifact         codexwasm.wat  6508722 bytes
+  sha256         b7fd495be0a06c5947f5798c240a38ed2f207d9be0a82209a2fe35e8de62bb08
+assembled        codexwasm.wasm  806061 bytes
+  sha256         4dde1d141a1d29693ebb36f7710d6c1bcfeeb7af989c205c8864422c5fe97755
 
 MEMORY -- the first priority, measured rather than estimated.
   peak           2180.2 MB of linear memory

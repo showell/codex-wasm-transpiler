@@ -61110,8 +61110,7 @@ Section: Halt
   cwm-halted (es) =
    let n = list-length es
    in let e0 = list-at es 0
-   in "CODEGEN-HALTED: " & show n & " error(s); no wasm emitted; first CDX" & show (e0.code) & " " & (e0.message) & "
-"
+   in "CODEGEN-HALTED: " & show n & " error(s); no wasm emitted; first CDX" & show (e0.code) & " " & (e0.message) & "\n"
 
   cwm-sev-word : Integer -> Text
   cwm-sev-word (s) = if s == sev-warning then "warning" else "notice"
