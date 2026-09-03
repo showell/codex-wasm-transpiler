@@ -5,11 +5,11 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-09-01T00:45:28Z
+built            2026-09-03T21:10:51Z
 road             self
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
-COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-fieldslot
+COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-wasm53
   revision       9632bb87  wasm plug: a guard's scrutinee bump leaked into its sibling branches
 
 subject          codexwasm-subject.codex  2925013 bytes
@@ -25,6 +25,3 @@ MEMORY -- the first priority, measured rather than estimated.
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
   bank           2286092288
-
-NOTES
-  - checkout is on refs/heads/wasm-slot-from-type, not detached -- it can move under a build
