@@ -183,36 +183,13 @@ Section: Driver
     in let deck-base = __heap-save
     in let deck-set = __deck-set deck-base
     in let deck-adv = __heap-advance 536870912
-    in let toks = tokenize src 1
-    in let scan = scan-document (make-parse-state (toks.tokens) src)
-    in let assignments = build-all-assignments src (scan.def-headers) 0 []
-    in let colliding = find-colliding-names assignments
-    in let renames = build-global-rename-table assignments colliding
-    in let doc = parse-document (make-parse-state (toks.tokens) src) 0
-    in let dr = desugar-document src doc (doc.chapter-title) 0
-    in let ch0 = dr.dr-chapter
-    in let ch = scope-achapter ch0 colliding assignments 0
-    in let rr = resolve-chapter ch colliding assignments 0
-    in let cr = check-chapter ch renames colliding assignments 0
-    in let resolved-et = for e in (sort-expr-types ((cr.state).expr-types)) -> ExprTypeEntry { key = e.key, ty = deep-resolve (cr.state) (e.ty) }
-    in let cst = __record-set (cr.state) "expr-types" resolved-et
-    in let resolved-env = for b in ((cr.env).bindings) -> TypeBinding { name = b.name, bound-type = deep-resolve cst (b.bound-type) }
-    in let bound = for b in (sort-bindings (cr.types & resolved-env)) -> TypeBinding { name = b.name, bound-type = deep-resolve cst (b.bound-type) }
-    in let ir-raw = lower-chapter ch bound cst (rr.ctor-names) renames colliding assignments 0
-    in let passed = run-ir-pipeline default-ir-pipeline ir-raw False
-    in let ir0 = passed.chapter
-    in let ir = lift-lambdas ir0 0
-    in let cwm-bset = skip-list-text-from-list builtin-names
-    in let cwm-shadow-bag = bag-from-list (check-shadowed-builtins (scan.def-headers) cwm-bset 0 (list-length (scan.def-headers)) [])
-    in let cwm-collide-bag = bag-from-list (check-cross-chapter-collisions (scan.def-headers) colliding assignments 0 (list-length (scan.def-headers)) [])
-    in let cwm-entry-bag = bag-from-list (check-entry-point-duplicate assignments)
-    in let cwm-bag = bag-merge-all [bag-from-list (toks.errors), doc.parse-bag, rr.bag, cr.state.bag, cwm-shadow-bag, cwm-collide-bag, cwm-entry-bag]
-    in if bag-has-errors cwm-bag then print-text (cwm-halted (bag-errors cwm-bag))
-    else let cwm-exports = cwm-declared-exports (ir.defs) 0
+    in let fe = compile-frontend-cdx src "Codex_Codex" compile-flags-default
+    in if bag-has-errors (fe.bag) then print-text (cwm-halted (bag-errors (fe.bag)))
+    else let cwm-exports = cwm-declared-exports ((fe.cdx-ir).defs) 0
     in let cwm-roots = cwm-emit-roots & list-push cwm-exports "wasm-exports"
-    in let pruned = ir-prune-unreachable-roots ir cwm-roots
+    in let pruned = ir-prune-unreachable-roots (fe.cdx-ir) cwm-roots
     in act
-      write-binary (cwm-report cwm-bag)
-      emit-wasm-chapter-stream pruned (ch.type-defs)
+      write-binary (cwm-report (fe.bag))
+      emit-wasm-chapter-stream pruned (fe.type-defs)
     end
   end

@@ -5,23 +5,32 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-09-03T21:10:51Z
-road             self
+built            2026-09-05T14:23:29Z
+road             zig
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
-COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-wasm53
-  revision       9632bb87  wasm plug: a guard's scrutinee bump leaked into its sibling branches
+COBBLESTONE_ROOT /home/steve/showell_repos/u56sat
+  revision       cc6eab7e  fix: the ll-copy fragment split a definition from its signature
 
-subject          codexwasm-subject.codex  2925013 bytes
-  sha256         f6491a011e7edf9b918e9773949a1d34987a97133c043a0de4bc5ad0dae34125
-artifact         codexwasm.wat  6508722 bytes
-  sha256         b7fd495be0a06c5947f5798c240a38ed2f207d9be0a82209a2fe35e8de62bb08
-assembled        codexwasm.wasm  806061 bytes
-  sha256         4dde1d141a1d29693ebb36f7710d6c1bcfeeb7af989c205c8864422c5fe97755
+subject          codexwasm-subject.codex  3398748 bytes
+  sha256         a44f4a809ca2fcf4bf2f340127ac91a3426b715d2f0a8fdfd11fd27e75486d25
+artifact         codexwasm.wat  8205003 bytes
+  sha256         26deae47b758b7d01b14afebd72c6f7c30373280b58552596e547ef6fcd2c349
+assembled        codexwasm.wasm  1032943 bytes
+  sha256         d310e73b6ea119ac404a9da9f27bcbc8ca0a157836cc4435e454a5b087d266c5
+
+codexzig         /home/steve/showell_repos/codex-zig-transpiler/generated/local/codexzig
+  sha256         ed15d8e44bf6362859138cd99db2deea447d13ef743cfca7573880f2882ddf16
+  NOTE           the zig road puts codexzig in the trusted base. Its own
+                 provenance is its repository's; this records only which
+                 binary ran.
 
 MEMORY -- the first priority, measured rather than estimated.
-  peak           2180.2 MB of linear memory
-  ceiling        53.2% of wasm32's hard 4 GiB
+  peak           1655.1 MB of linear memory
+  ceiling        40.4% of wasm32's hard 4 GiB
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
   bank           2286092288
+
+NOTES
+  - checkout is on refs/heads/u56-candidate-saturday, not detached -- it can move under a build

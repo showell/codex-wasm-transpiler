@@ -105,6 +105,16 @@ foreach ($ch in @('codex/compiler/Core/OffsetTable.codex',
                   'codex/compiler/IR/LirTargets.codex',
                   'codex/compiler/Emit/CodexEmitter.codex',
                   'codex/plugs/common/IRTextParser.codex',
+                  # THE DRIVER, not a copy of it. The harness calls
+                  # compile-frontend-cdx, so the subject carries Chapter:
+                  # Opening and the foreword chapters it cites. CCE is not
+                  # listed, for the reason stated at the top of this file.
+                  'codex/foreword/core/Maybe.codex',
+                  'codex/foreword/core/Wrap64.codex',
+                  'codex/foreword/core/Fat16.codex',
+                  'codex/foreword/core/ImportGate.codex',
+                  'codex/foreword/core/FactDisk.codex',
+                  'codex/compiler/opening.codex',
                   'codex/plugs/wasm/WasmEmitter.codex')) {
     # -Emitter is for probe_emit.py, which bundles an INSTRUMENTED copy of the
     # emitter. It defaults to the checkout's, so nothing that does not pass it
