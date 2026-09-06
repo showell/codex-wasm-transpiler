@@ -102,12 +102,14 @@ def main():
     ap.add_argument('--corpus', default=str(LADDER / 'corpus'))
     ap.add_argument('--emit-only', action='store_true')
     ap.add_argument('--reuse', action='store_true', help='reuse the IR driver binary')
+    ap.add_argument('--tests', default=None,
+                    help='where the .expected files are; default is the checkout under test')
     args = ap.parse_args()
     corpus = pathlib.Path(args.corpus)
     irs = sorted(corpus.glob('*.ir'))
     if not irs:
         raise SystemExit(f'no .ir files in {corpus}')
-    tests = cobblestone.root() / 'codex' / 'test'
+    tests = pathlib.Path(args.tests) if args.tests else cobblestone.root() / 'codex' / 'test'
     work = LOCAL / 'sweep'
     work.mkdir(parents=True, exist_ok=True)
     binary = LOCAL / 'codexwasm-ir'
