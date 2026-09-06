@@ -5,22 +5,22 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-09-05T14:23:29Z
-road             zig
+built            2026-09-06T22:18:46Z
+road             both
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
-COBBLESTONE_ROOT /home/steve/showell_repos/u56sat
-  revision       cc6eab7e  fix: the ll-copy fragment split a definition from its signature
+COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-addrfix
+  revision       422405d0  compiler-backlog COMPILER-54: fifteen foreword chapters are CRLF and cannot be read as wri
 
-subject          codexwasm-subject.codex  3398748 bytes
-  sha256         a44f4a809ca2fcf4bf2f340127ac91a3426b715d2f0a8fdfd11fd27e75486d25
-artifact         codexwasm.wat  8205003 bytes
-  sha256         26deae47b758b7d01b14afebd72c6f7c30373280b58552596e547ef6fcd2c349
+subject          codexwasm-subject.codex  3401410 bytes
+  sha256         922a2cca00c29c2e986341d321be7abefdbef35b2ebc3cc67f5c6395dda6672e
+artifact         codexwasm.wat  8205448 bytes
+  sha256         b5b084b67488225e71e0fae98c5ab24a8a98e275854d7814ef7efd5de9a8f9ba
 assembled        codexwasm.wasm  1032943 bytes
   sha256         d310e73b6ea119ac404a9da9f27bcbc8ca0a157836cc4435e454a5b087d266c5
 
 codexzig         /home/steve/showell_repos/codex-zig-transpiler/generated/local/codexzig
-  sha256         ed15d8e44bf6362859138cd99db2deea447d13ef743cfca7573880f2882ddf16
+  sha256         5d292c1dfb7f42b328287b974ebd7855fcc68df02fa8b5f3b1dd4d274fcf675d
   NOTE           the zig road puts codexzig in the trusted base. Its own
                  provenance is its repository's; this records only which
                  binary ran.
@@ -33,4 +33,4 @@ MEMORY -- the first priority, measured rather than estimated.
   bank           2286092288
 
 NOTES
-  - checkout is on refs/heads/u56-candidate-saturday, not detached -- it can move under a build
+  - checkout is on refs/heads/u56-candidate-sunday, not detached -- it can move under a build
