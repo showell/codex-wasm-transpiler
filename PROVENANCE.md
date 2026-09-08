@@ -12,7 +12,7 @@ This file is the standing policy. That file is the receipt.
 
 | axis | what it is | how it is pinned |
 |---|---|---|
-| the chapters | the Codex compiler and `codex/plugs/wasm/WasmEmitter.codex` | `$COBBLESTONE_ROOT`, a **detached** worktree; the revision is stamped |
+| the chapters | the Codex compiler and `codex/plugs/wasm/WasmEmitter.codex` | `$COBBLESTONE_ROOT`; the revision and dirty flag are stamped, and the build refuses if either moves while it runs |
 | the chapter LIST | which chapters make the subject | `source/bundle_codexwasm.ps1`, ours, in this repository |
 | the bundling RULES | how cites and quires resolve | the checkout's own `plug-build-lib.ps1` — deliberately not copied |
 | the driver | what the program does with them | `source/CodexWasmHarness.codex`, ours |

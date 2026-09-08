@@ -168,6 +168,23 @@ def stamp(out, inputs):
 
 # ----------------------------------------------------------------- preflight
 
+_pin_at_start = None
+
+
+def checkout_state(root):
+    """The checkout's exact state: its HEAD, and whether anything is modified.
+
+    A sha alone does not reproduce a build from a dirty tree, so the dirty
+    flag is part of the identity rather than a footnote.
+    """
+    def git(*a):
+        r = subprocess.run(('git', '-C', str(root)) + a, capture_output=True, text=True)
+        return r.stdout.strip() if r.returncode == 0 else ''
+    head_sha = git('rev-parse', 'HEAD')[:12] or '(no git)'
+    dirty = bool(git('status', '--porcelain'))
+    return f'{head_sha}{" DIRTY" if dirty else ""}'
+
+
 def module_pin():
     """The revision that built the tracked generated/codexwasm.wasm.
 
@@ -193,14 +210,14 @@ def preflight(road):
     root = cobblestone.root()
     say(f'checkout   {root}')
     say(f'           {cobblestone.revision(root)}')
-    # A worktree with a branch checked out can move under a running build;
-    # detached at a named rev is what this repository asks for, so a build
-    # that is not on one says so rather than discovering it later.
-    branch = subprocess.run(['git', '-C', str(root), 'symbolic-ref', '-q', 'HEAD'],
-                            capture_output=True, text=True).stdout.strip()
-    if branch:
-        _notes.append(f'checkout is on {branch}, not detached -- it can move under a build')
-        say(f'  NOTE: on {branch}. This repository asks for a DETACHED pin; see PROVENANCE.md')
+    # WHAT MATTERS IS THAT THE CHECKOUT DOES NOT MOVE UNDER THE BUILD, and
+    # being detached is only a proxy for it -- a detached HEAD can be moved
+    # too, and neither state stops a file being edited mid-read. The exact
+    # state is taken here and checked again at the end, which covers a commit,
+    # a branch switch and an edit alike.
+    global _pin_at_start
+    _pin_at_start = checkout_state(root)
+    say(f'state      {_pin_at_start}')
 
     for tool, why in ((PWSH, 'the checkout\'s bundler is PowerShell'),
                       (pathlib.Path(shutil.which('node') or '/nonexistent'), 'the module runs under node')):
@@ -638,6 +655,12 @@ def main():
     sample_ok = True
     if not args.no_sample:
         sample_ok = run_sample()
+
+    moved = checkout_state(root)
+    if moved != _pin_at_start:
+        die(f'THE CHECKOUT MOVED UNDER THIS BUILD: {_pin_at_start} -> {moved}.\n'
+            '         Every measurement above is attributed to a tree that is no\n'
+            '         longer there. Nothing is written; re-run against a still one.')
 
     if not args.check_only:
         write_provenance(root, road, mem)

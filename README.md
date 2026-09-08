@@ -135,15 +135,18 @@ never noticed. A browser pays what node pays. `FINDINGS.md` item 5.
 | `$CODEXZIG` + `zig` 0.16.0 | only for `--road zig` | not needed to use the artifact |
 
 **This repository is coupled to Cobblestone and always will be.** The
-discipline is not to pretend otherwise: point `$COBBLESTONE_ROOT` at a
-worktree that is DETACHED at a named revision, so nothing moves under a build,
-and let `generated/PROVENANCE` record which one every artifact came from.
-`PROVENANCE.md` has the pins and the reasoning. The variable is deliberately
-not `$CODEX_ROOT`, which is the ambient checkout and whose HEAD moves all day.
+discipline is not to pretend otherwise: `generated/PROVENANCE` records which
+checkout every artifact came from, and the build refuses if that checkout
+MOVES while it runs -- a commit, a branch switch or an edit alike, since the
+sha and the dirty flag are both taken at the start and checked at the end. A
+detached worktree is one way to hold a checkout still and a good one, but it
+is not required and it is not sufficient: a detached HEAD can be moved too,
+and neither state stops a file being edited mid-read. The variable is
+deliberately not `$CODEX_ROOT`, which is the ambient checkout and whose HEAD
+moves all day.
 
 ```
-git -C <cobblestone> worktree add --detach ~/showell_repos/cobblestone-wasmpin <rev>
-export COBBLESTONE_ROOT=~/showell_repos/cobblestone-wasmpin
+export COBBLESTONE_ROOT=~/showell_repos/<a cobblestone checkout>
 cd tools && npm ci && cd ..
 ./build.py                      # self road: check the artifact against itself
 ./build.py --road zig           # re-derive it from source, through codexzig
