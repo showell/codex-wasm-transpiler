@@ -25,45 +25,6 @@ error, not a search; `$CODEXZIG` set-but-empty is an error, because that is
 what a failed candidate build leaves behind and falling back to some other
 transpiler would report on a binary nobody named.
 
-## The pins, as of 2026-08-31
-
-```
-COBBLESTONE_ROOT  ~/showell_repos/cobblestone-fieldslot  branch wasm-slot-from-type
-                  at c36cf69b, which is 15ef1862 plus this project's own plug work:
-                  the buffered reader and 16 MB grow step, and the field slot
-                  resolved from the receiver's type rather than from the wire
-CODEXZIG          ~/showell_repos/codexzig-safari/generated/local/codexzig
-                  built in that worktree at 432b80a, from 15ef1862
-```
-
-`~/showell_repos/cobblestone-wasmpin`, detached at `15ef1862`, is the pin this
-project started from and is kept as the last revision that is somebody else's
-work alone.
-
-**The current pin is a BRANCH and the build says so on every run**, which is
-the arrangement rather than an oversight: `wasm-plug-buffered-read` is ours and
-under active development, so detaching would mean re-attaching to edit. What
-the NOTE buys is that nobody reads a `generated/PROVENANCE` from this period
-believing the revision could not have moved. Detach it when the branch stops
-moving.
-
-**Detached is the requirement, not a preference, and it has now been paid off
-once.** A worktree with a branch checked out moves when somebody works on that
-branch. `15ef1862` WAS the tip of `safari`, which safari-codex develops on; on
-2026-08-31 that project re-pinned onto our nine commits and fast-forwarded
-`safari` to `9632bb87`. Our own checkout did not move, because it is detached at
-`15ef1862` in `cobblestone-wasmpin` rather than sharing theirs — which is
-exactly the failure this rule was written against, arriving three days later. `build.py` prints a NOTE and
-carries it into `generated/PROVENANCE` when the checkout it was given is on a
-branch, because a build whose source moved underneath it looks exactly like a
-build whose source did not.
-
-**One worktree per consumer, and never the shared checkout.** The box already
-holds `cobblestone-safari` (safari-codex's, on a branch it advances),
-`cobblestone-pin` (codex-zig-transpiler's), and now `cobblestone-wasmpin`
-(ours). Three worktrees of one repository is not duplication; it is what stops
-one project's `git checkout` from silently re-pointing the other two.
-
 ## The uncomfortable part: this cannot be reproduced from upstream
 
 `15ef1862` is Update 53 — upstream `58b08c38` — plus **fourteen unlanded

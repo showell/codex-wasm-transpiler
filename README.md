@@ -139,7 +139,7 @@ discipline is not to pretend otherwise: point `$COBBLESTONE_ROOT` at a
 worktree that is DETACHED at a named revision, so nothing moves under a build,
 and let `generated/PROVENANCE` record which one every artifact came from.
 `PROVENANCE.md` has the pins and the reasoning. The variable is deliberately
-not `$CODEX_ROOT`, which belongs to the ladder and whose HEAD moves all day.
+not `$CODEX_ROOT`, which is the ambient checkout and whose HEAD moves all day.
 
 ```
 git -C <cobblestone> worktree add --detach ~/showell_repos/cobblestone-wasmpin <rev>
@@ -192,10 +192,8 @@ anything.
 
 ```
 build.py         the driver: six stages, two gates, no guests
-corpus_sweep.py  580 programs through the emitter in three minutes: emit,
-                 assemble, and run against a hand-verified .expected
-probe_memory.py  where the memory goes, phase by phase
-probe_emit.py    the same, one level down, inside emission
+corpus_sweep.py  a corpus through the emitter: emit, assemble, and run
+                 against a hand-verified .expected. --corpus is required
 cobblestone.py   where the sister checkout is, and which one it is
 source/          the parts that are ours: the chapter list, the driver chapter,
                  and a stub the chapter list needs
@@ -231,6 +229,9 @@ repositories away.
   ways. Its fourth arm is where `codex/plugs/wasm` was first made to run at
   all, and `CodexWasmHarness.codex` was written there. Every wasm-plug defect
   this project inherits is written up in its `WASM_FINDINGS.md`.
-- **codex-zig-ladder** — the verification ladder: it compiles the compiler two
-  ways and requires the answers to agree. That is a *comparison* machine. This
-  repository holds one *invariant*, and is deliberately much smaller.
+- **cobblestone-qemu** — Codex on real x86 under QEMU. The only place
+  `address-of`, boxing, the deck and memory are real rather than modelled, and
+  therefore the authority whenever this project's answers turn on one of them.
+- **rust-codex-compiler** — an independent front end. It is the only arm that
+  can see a defect ABOVE the IR, because it does not inherit upstream's
+  frontend the way both of this project's roads do.

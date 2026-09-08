@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Put a whole corpus of Codex programs through the emitter, and grade it.
 
-    ./corpus_sweep.py                    # emit, assemble, run, compare
-    ./corpus_sweep.py --emit-only        # stop after wat2wasm
-    ./corpus_sweep.py --corpus <dir>     # default: the ladder's corpus/
+    ./corpus_sweep.py --corpus <dir>              # emit, assemble, run, compare
+    ./corpus_sweep.py --corpus <dir> --emit-only  # stop after wat2wasm
+
+--corpus is required and has no default. It used to default to the ladder's
+corpus/, which now holds no programs at all -- a sweep of nothing grades
+green.
 
 THIRTY PROGRAMS IS NOT A BASIS FOR A COMPILER. Everything else in this
 repository is checked against the compiler's own source, twenty-nine units of
@@ -51,8 +54,6 @@ HERE = pathlib.Path(__file__).resolve().parent
 SOURCE, TOOLS, LOCAL = HERE / 'source', HERE / 'tools', HERE / 'generated' / 'local'
 PWSH = pathlib.Path.home() / '.local' / 'pwsh' / 'pwsh'
 ZIG = pathlib.Path(os.environ.get('ZIG', pathlib.Path.home() / 'zig-0.16.0' / 'zig'))
-LADDER = pathlib.Path(os.environ.get('CXWASM_LADDER',
-                                     pathlib.Path.home() / 'showell_repos' / 'codex-zig-ladder'))
 _t0 = time.time()
 
 
@@ -99,7 +100,8 @@ def build_ir_binary(out):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--corpus', default=str(LADDER / 'corpus'))
+    ap.add_argument('--corpus', required=True,
+                    help='directory of .codex programs to sweep; there is no default')
     ap.add_argument('--emit-only', action='store_true')
     ap.add_argument('--reuse', action='store_true', help='reuse the IR driver binary')
     ap.add_argument('--tests', default=None,

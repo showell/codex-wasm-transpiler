@@ -5,7 +5,7 @@ programs — the compiler's own source, twenty-nine safari units, and two
 samples. That is a thin basis for a compiler, and it is a basis chosen by
 what we happened to be working on.
 
-The ladder's corpus holds 580 programs as **IR text**, which is exactly what
+A corpus of 580 programs held as **IR text** is exactly what
 `codex/plugs/wasm/WasmPlug.codex` consumes. So the whole set can be put
 through the emitter without compiling anything: build a driver that reads IR
 from stdin, emit, and hand every module to `wat2wasm`.

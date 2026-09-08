@@ -56,7 +56,8 @@ number that actually matters, which makes iterating on this cheap.
 
 ## Where it actually goes, phase by phase
 
-`./probe_memory.py` writes `__heap-save` marks into a copy of the driver, builds
+The phase split was measured by writing `__heap-save` marks into a copy of the
+driver, building
 that, and runs it on the real subject. The bump heap never reclaims, so the
 frontier at a mark **is** the running total and the difference between two marks
 is exactly what that phase allocated — no sampling, no profiler.
@@ -132,7 +133,7 @@ down means marks inside the emitter, which is an emitter change rather than a
 driver change. It is the largest number left that this project can act on
 alone.
 
-**A dropped phase is invisible**, which is why `probe_memory.py` refuses when
+**A dropped phase is invisible**, which is why that instrument refused when
 the driver has a binding its pass did not account for: the table would simply
 be shorter and the missing cost would fold into the row above. That guard was
 earned twice — safari's copy found its own `else let` blind spot after a year,
