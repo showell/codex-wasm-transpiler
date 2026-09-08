@@ -5,32 +5,32 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-09-06T22:18:46Z
+built            2026-09-08T23:06:29Z
 road             both
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
-COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-addrfix
-  revision       422405d0  compiler-backlog COMPILER-54: fifteen foreword chapters are CRLF and cannot be read as wri
+COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-u57
+  revision       e941ba11  zig plug: the boxing comment states the rule, not how it was found
 
-subject          codexwasm-subject.codex  3401410 bytes
-  sha256         922a2cca00c29c2e986341d321be7abefdbef35b2ebc3cc67f5c6395dda6672e
-artifact         codexwasm.wat  8205448 bytes
-  sha256         b5b084b67488225e71e0fae98c5ab24a8a98e275854d7814ef7efd5de9a8f9ba
-assembled        codexwasm.wasm  1032943 bytes
-  sha256         d310e73b6ea119ac404a9da9f27bcbc8ca0a157836cc4435e454a5b087d266c5
+subject          codexwasm-subject.codex  3432921 bytes
+  sha256         d4d1b6a005d92b005f94fdc46f488436bd71314184854b7e6c352016fd2272f3
+artifact         codexwasm.wat  8254433 bytes
+  sha256         ee2df1aa8c3865a5e4a2792060940d5f109a0935062fda431f0a29eee381d309
+assembled        codexwasm.wasm  1039846 bytes
+  sha256         4f7e2f506221b397ab38607d496bcd8b80de4aab4d3b3becf9845bf8c9f45afb
 
 codexzig         /home/steve/showell_repos/codex-zig-transpiler/generated/local/codexzig
-  sha256         5d292c1dfb7f42b328287b974ebd7855fcc68df02fa8b5f3b1dd4d274fcf675d
+  sha256         6512a08b0454f609d4215276f7123de9f657fd5e655076fda42d0163a4a41e3a
   NOTE           the zig road puts codexzig in the trusted base. Its own
                  provenance is its repository's; this records only which
                  binary ran.
 
 MEMORY -- the first priority, measured rather than estimated.
-  peak           1655.1 MB of linear memory
+  peak           1655.5 MB of linear memory
   ceiling        40.4% of wasm32's hard 4 GiB
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
   bank           2286092288
 
 NOTES
-  - checkout is on refs/heads/u56-candidate-sunday, not detached -- it can move under a build
+  - checkout is on refs/heads/u57-candidate, not detached -- it can move under a build
