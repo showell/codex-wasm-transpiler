@@ -168,6 +168,24 @@ def stamp(out, inputs):
 
 # ----------------------------------------------------------------- preflight
 
+def module_pin():
+    """The revision that built the tracked generated/codexwasm.wasm.
+
+    The module carries no stamp of its own, so this reads the receipt beside
+    it. A module and a checkout that disagree are not comparable, and nothing
+    else in the build notices -- the fixed point holds just as well against the
+    wrong source, which is the whole reason this file exists.
+    """
+    prov = GEN / 'PROVENANCE'
+    if not prov.is_file():
+        return None
+    for line in prov.read_text().splitlines():
+        if line.strip().startswith('revision'):
+            parts = line.split()
+            return parts[1] if len(parts) > 1 else None
+    return None
+
+
 def preflight(road):
     head('preflight')
     LOCAL.mkdir(parents=True, exist_ok=True)
@@ -210,9 +228,27 @@ def preflight(road):
             die(f'no zig at {ZIG} -- set $ZIG')
         say(f'zig        {subprocess.run([str(ZIG), "version"], capture_output=True, text=True).stdout.strip()}')
 
-    if road in ('self', 'both') and not WASM.is_file():
-        die('the self road needs generated/codexwasm.wasm and there is none.\n'
-            '         Take the zig road once to make it: ./build.py --road zig')
+    if road in ('self', 'both'):
+        if not WASM.is_file():
+            die('the self road needs generated/codexwasm.wasm and there is none.\n'
+                '         Take the zig road once to make it: ./build.py --road zig')
+        was = module_pin()
+        now = cobblestone.revision(root).split()[0]
+        if was and was != now:
+            # THE SELF ROAD RUNS A TRACKED BINARY, so it carries the emitter of
+            # the checkout that built it and not of the one in play. Against a
+            # different checkout the roads are not two machines running one
+            # emitter, they are two emitters -- and comparing them reports a
+            # defect that is really a repin. Update 56 added one line to
+            # WasmEmitter.codex and the two generation-1 modules came out
+            # 34,742 bytes apart, one function apart in $ft.
+            die(f'the tracked module was built at {was}, the checkout is {now}.\n'
+                '         The roads would be comparing two different emitters, so a\n'
+                '         disagreement between them would say nothing about either.\n'
+                '         Regenerate generation 1 first:  ./build.py --road zig\n'
+                '         then ./build.py --road both compares like with like.')
+        if was:
+            say(f'module     generation 1 was built at {was}, matching the checkout')
     say(f'ceiling    refuse above {MAX_PCT}% of wasm32\'s 4 GiB (CXWASM_MAX_PCT)')
     return root
 

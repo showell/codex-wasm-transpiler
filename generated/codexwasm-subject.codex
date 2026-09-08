@@ -4303,7 +4303,7 @@ Section: The Table
    BuiltinSpec { bs-name = "text-replace", bs-alloc = "unknown", bs-varies = False, bs-type = Just (FunTy TextTy empty-row (FunTy TextTy empty-row (FunTy TextTy empty-row TextTy))), bs-emit = Just (\s a -> emit-helper-call-3 s a "__str_replace") },
    BuiltinSpec { bs-name = "text-to-double-bits", bs-alloc = "unknown", bs-varies = False, bs-type = Just (FunTy TextTy empty-row int-ty-default), bs-emit = Just (\s a -> emit-helper-call-1 s a "__text_to_double") },
    BuiltinSpec { bs-name = "text-to-integer", bs-alloc = "none", bs-varies = False, bs-type = Just (FunTy TextTy empty-row int-ty-default), bs-emit = Just (\s a -> emit-helper-call-1 s a "__text_to_int") },
-   BuiltinSpec { bs-name = "show", bs-alloc = "fixed", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row TextTy)), bs-emit = Just (\s a -> emit-show-builtin s a) },
+   BuiltinSpec { bs-name = "show", bs-alloc = "unknown", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row TextTy)), bs-emit = Just (\s a -> emit-show-builtin s a) },
    BuiltinSpec { bs-name = "compare", bs-alloc = "none", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row (FunTy (TypeVar 0) empty-row int-ty-default))), bs-emit = None },
    BuiltinSpec { bs-name = "__dderiv-Show", bs-alloc = "unknown", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row TextTy)), bs-emit = None },
    BuiltinSpec { bs-name = "__dderiv-Ord", bs-alloc = "unknown", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row (FunTy (TypeVar 0) empty-row int-ty-default))), bs-emit = None },
@@ -4373,6 +4373,7 @@ Section: The Table
    BuiltinSpec { bs-name = "cpu-read-cr0", bs-alloc = "none", bs-varies = True, bs-type = Just int-ty-default, bs-emit = None },
    BuiltinSpec { bs-name = "cpu-read-cr3", bs-alloc = "none", bs-varies = True, bs-type = Just int-ty-default, bs-emit = None },
    BuiltinSpec { bs-name = "hosted-kind", bs-alloc = "none", bs-varies = True, bs-type = Just int-ty-default, bs-emit = None },
+   BuiltinSpec { bs-name = "host-socket", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row (FunTy int-ty-default empty-row (FunTy int-ty-default empty-row (FunTy int-ty-default (concrete-row "Network.Write") int-ty-default)))), bs-emit = None },
    BuiltinSpec { bs-name = "cpu-cpuid-eax", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row int-ty-default), bs-emit = None },
    BuiltinSpec { bs-name = "cpu-cpuid-ebx", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row int-ty-default), bs-emit = None },
    BuiltinSpec { bs-name = "cpu-cpuid-ecx", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row int-ty-default), bs-emit = None },
@@ -4451,7 +4452,7 @@ Section: The Table
    BuiltinSpec { bs-name = "uefi-read-file", bs-alloc = "unknown", bs-varies = True, bs-type = Just (FunTy TextTy empty-row TextTy), bs-emit = Just (\s a -> emit-helper-call-1 s a "__uefi_read_file") },
    BuiltinSpec { bs-name = "text-concat-list", bs-alloc = "unknown", bs-varies = False, bs-type = Just (FunTy (ListTy TextTy) empty-row TextTy), bs-emit = Just (\s a -> emit-helper-call-1 s a "__text_concat_list") },
    BuiltinSpec { bs-name = "raw-bytes-to-text", bs-alloc = "unknown", bs-varies = False, bs-type = Just (FunTy (ListTy int-ty-default) empty-row TextTy), bs-emit = Just (\s a -> emit-helper-call-1 s a "__raw_bytes_to_text") },
-   BuiltinSpec { bs-name = "__linked-list-empty", bs-alloc = "fixed", bs-varies = True, bs-type = Just (ForAllTy 0 (FunTy int-ty-default empty-row (LinkedListTy (TypeVar 0)))), bs-emit = Just (\s a -> emit-linked-list-empty-builtin s a) },
+   BuiltinSpec { bs-name = "__linked-list-empty", bs-alloc = "none", bs-varies = True, bs-type = Just (ForAllTy 0 (FunTy int-ty-default empty-row (LinkedListTy (TypeVar 0)))), bs-emit = Just (\s a -> emit-linked-list-empty-builtin s a) },
    BuiltinSpec { bs-name = "__linked-list-push", bs-alloc = "fixed", bs-varies = True, bs-type = Just (ForAllTy 0 (FunTy (LinkedListTy (TypeVar 0)) empty-row (FunTy (TypeVar 0) empty-row (LinkedListTy (TypeVar 0))))), bs-emit = Just (\s a -> emit-linked-list-push-builtin s a) },
    BuiltinSpec { bs-name = "__linked-list-to-list", bs-alloc = "unknown", bs-varies = True, bs-type = Just (ForAllTy 0 (FunTy (LinkedListTy (TypeVar 0)) empty-row (ListTy (TypeVar 0)))), bs-emit = Just (\s a -> emit-linked-list-to-list-builtin s a) },
    BuiltinSpec { bs-name = "__record-set", bs-alloc = "unknown", bs-varies = True, bs-type = Just (ForAllTy 0 (ForAllTy 1 (FunTy (TypeVar 0) empty-row (FunTy TextTy empty-row (FunTy (TypeVar 1) empty-row (TypeVar 0)))))), bs-emit = Just (\s a -> emit-record-set-builtin s a) },
@@ -8047,6 +8048,55 @@ Section: Memory Address Map
 
   hosted-read-byte-addr : Integer = hosted-cell-base + 40992
 
+ Linux socket syscall numbers and the two constants a `sockaddr_in` carries.
+ Ours to use, not ours to define. `accept4` rather than `accept` because 288
+ is the number every current kernel carries and `accept` is 43, which a
+ 32-bit-compat kernel maps elsewhere; the extra flags argument is passed 0.
+
+  linux-sys-close : Integer = 3
+  linux-sys-socket : Integer = 41
+  linux-sys-bind : Integer = 49
+  linux-sys-listen : Integer = 50
+  linux-sys-setsockopt : Integer = 54
+  linux-sys-accept4 : Integer = 288
+ AF_INET and SOCK_STREAM happen to be the same number on both hosts, so they
+ are named once without a host in the name. THE SOCKET OPTION LEVELS ARE NOT
+ THE SAME and that is the trap: SOL_SOCKET is 1 on Linux and 0xFFFF on
+ Windows, SO_REUSEADDR is 2 on Linux and 4 on Windows. Reusing the Linux pair
+ on Windows is accepted by setsockopt and does nothing.
+
+  hosted-af-inet : Integer = 2
+  hosted-sock-stream : Integer = 1
+  linux-sol-socket : Integer = 1
+  linux-so-reuseaddr : Integer = 2
+  hosted-win-sol-socket : Integer = 65535
+  hosted-win-so-reuseaddr : Integer = 4
+
+ The sixteen bytes a `bind` argument is. `sockaddr_in` is sin_family (2 bytes,
+ host order), sin_port (2 bytes, NETWORK order, which is why the port is
+ byte-swapped into place), sin_addr (4 bytes, 0 for INADDR_ANY) and eight
+ bytes of padding. The whole of it is two qwords, so it is built in a register
+ and stored twice rather than assembled byte by byte.
+
+ It is a cell rather than the heap frontier for the same reason
+ `hosted-read-byte-addr` is: the frontier is a buffer a caller may be filling.
+
+  hosted-sockaddr-addr : Integer = hosted-cell-base + 41024
+  hosted-sockopt-addr : Integer = hosted-cell-base + 41040
+
+ `host-socket` takes an operation selector because a builtin costs eight
+ hand-edited files and eight names would cost eight of them. These are the
+ selector's values, and a caller spells the same numbers.
+
+  sock-op-socket : Integer = 0
+  sock-op-bind : Integer = 1
+  sock-op-listen : Integer = 2
+  sock-op-accept : Integer = 3
+  sock-op-close : Integer = 4
+  sock-op-recv : Integer = 5
+  sock-op-send : Integer = 6
+  sock-op-reuseaddr : Integer = 7
+
  The Windows console target. The PE layout is FIXED so both sides can agree on
  addresses without either reading the other's output: the loader gets an image
  based at 1 MB, a 4 KB .idata at RVA 0x1000 and the text at RVA 0x2000.
@@ -8076,19 +8126,41 @@ Section: Memory Address Map
   hosted-win-idata-rva : Integer = 4096
   hosted-win-text-rva : Integer = 8192
   hosted-win-load-addr : Integer = 1056768
-  hosted-win-iat : Integer = 1052760
-  hosted-win-iat-getstdhandle : Integer = 1052760
-  hosted-win-iat-writefile : Integer = 1052768
-  hosted-win-iat-exitprocess : Integer = 1052776
+  hosted-win-iat : Integer = 1052860
+  hosted-win-iat-getstdhandle : Integer = 1052860
+  hosted-win-iat-writefile : Integer = 1052868
+  hosted-win-iat-exitprocess : Integer = 1052876
 
  Two cells a hosted Windows build needs and Linux does not: the console handle,
  cached after the first GetStdHandle, and the dword WriteFile insists on
  writing its transferred count into. Both sit above the print scratch, inside
  the band the container maps.
 
-  hosted-win-iat-virtualalloc : Integer = 1052784
+  hosted-win-iat-virtualalloc : Integer = 1052884
 
-  hosted-win-iat-readfile : Integer = 1052792
+  hosted-win-iat-readfile : Integer = 1052892
+
+ The ws2_32 half of the import table. Windows sockets are not syscalls, they
+ are DLL exports, so they arrive as IMPORTS and each is reached by an indirect
+ call through its slot. The names differ from the Linux ones and that is the
+ host's choice, not ours: `closesocket` rather than `close`, `recv` and `send`
+ rather than `read` and `write`, and `accept` rather than `accept4`.
+
+ WSAStartup MUST be called once before any other ws2_32 call or every one of
+ them fails with WSANOTINITIALISED. It writes a WSADATA block the caller owns:
+ 408 bytes on Win64, which is why the cell below is that size and not a qword.
+
+  hosted-win-iat-wsastartup : Integer = 1052908
+  hosted-win-iat-socket : Integer = 1052916
+  hosted-win-iat-bind : Integer = 1052924
+  hosted-win-iat-listen : Integer = 1052932
+  hosted-win-iat-accept : Integer = 1052940
+  hosted-win-iat-closesocket : Integer = 1052948
+  hosted-win-iat-recv : Integer = 1052956
+  hosted-win-iat-send : Integer = 1052964
+  hosted-win-iat-setsockopt : Integer = 1052972
+
+  hosted-win-wsa-version : Integer = 514
 
   hosted-win-mem-commit-reserve : Integer = 12288
   hosted-win-page-readwrite : Integer = 4
@@ -8103,7 +8175,24 @@ Section: Memory Address Map
  hosted arm passed over the top of it.
 
   hosted-win-heap-span : Integer = 3221225472
-  hosted-win-cell-base : Integer = 1342177280
+ 0x70000000 AND NOT 0x50000000, WHICH IS WHERE IT SAT UNTIL ws2_32 ARRIVED.
+ The free floor of a freshly loaded image is not a constant: it moves with what
+ the image IMPORTS. Measured 2026-09-08 by patching this base in a built .exe
+ and reading the exit code, which is 90 when the fixed VirtualAlloc is refused:
+
+   without ws2_32   0x20000000 refused, 0x40000000 granted
+   with    ws2_32   0x60000000 refused, 0x64000000 granted
+
+ So one extra DLL raised the floor by about 0x24000000 and swallowed the old
+ base, and every hosted-windows program exited 90 having printed nothing. The
+ band must also stay under 2^31 so a cell reference still encodes as an
+ absolute disp32, which leaves 0x64000000 to 0x80000000 to sit in; 0x70000000
+ is the middle of it, about 192 MB above the measured floor and 256 MB below
+ the ceiling. A FURTHER IMPORT CAN RAISE THE FLOOR AGAIN, and the honest
+ statement is that this is headroom, not a guarantee: the refusal is loud
+ (exit 90, its own code) rather than silent, and that is what the margin buys.
+
+  hosted-win-cell-base : Integer = 1879048192
   hosted-win-heap-base : Integer = 1610612736
   hosted-win-cells-failed-code : Integer = 90
 
@@ -8128,6 +8217,16 @@ Section: Memory Address Map
   hosted-win-in-handle-addr : Integer = hosted-win-cell-base + 40992
   hosted-win-read-count-addr : Integer = hosted-win-cell-base + 41000
   hosted-win-read-byte-addr : Integer = hosted-win-cell-base + 41008
+
+ The socket side's cells. WSADATA is 408 bytes on Win64 and WSAStartup fills
+ all of it, so the next cell starts a clear 448 above rather than 8. The ready
+ flag is what makes the startup happen exactly once: every entry tests it, and
+ only the first call pays.
+
+  hosted-win-wsadata-addr : Integer = hosted-win-cell-base + 41024
+  hosted-win-wsa-ready-addr : Integer = hosted-win-cell-base + 41472
+  hosted-win-sockaddr-addr : Integer = hosted-win-cell-base + 41480
+  hosted-win-sockopt-addr : Integer = hosted-win-cell-base + 41488
 
 
  The page an application processor begins executing in. A start-up IPI's
@@ -11813,6 +11912,12 @@ Section: MOV Instructions
   movsxd : Integer, Integer, Integer -> List Integer
   movsxd (rd) (rs) (offset) =
    [rex-w rd rs, 99] & emit-mem-operand rd rs offset
+
+ The register-to-register form of the same instruction, for the one case that
+ needs it: a Windows import returning int leaves its answer in EAX, and an
+ error is -1, which without this reads as 4294967295.
+
+  movsxd-rax-eax : List Integer = [72, 99, 192]
 
   mov-store-byte : Integer, Integer, Integer -> List Integer
   mov-store-byte (rd) (rs) (offset) =
@@ -16585,11 +16690,22 @@ Section: Recursive Structural Equality Helpers
  emit-eq-op again on each field, so a non-recursive sum holding a recursive
  one reaches the helper arm too and needs that helper synthesised. Following
  only the eq SITES misses it, and the miss is a call to a function nobody
- emitted. So the walk mirrors the inliner exactly -- push a req at a
- recursive sum and stop, descend through a non-recursive one -- and the
- descent terminates because non-recursive means it cannot reach itself.
- The fuel is the same bound eq-sum-is-recursive carries and exists for a
- malformed type graph, not for this walk.
+ emitted. A req is pushed and the walk stops, because eq-close-reqs descends
+ that req's own constructors; the descent terminates because eq-req-has
+ refuses a duplicate. The fuel is the same bound eq-sum-is-recursive carries
+ and exists for a malformed type graph, not for this walk.
+
+ CARRYING ACTUALS DEMANDS A HELPER AS MUCH AS RECURSION DOES, and the two are
+ one predicate because lower-eq-dispatch calls the INSTANTIATED name for every
+ sum with arguments, recursive or not. Minting only for the recursive ones left
+ that call dangling: measured 2026-09-08 on codex/test/eq-generic-fields, four
+ CDX2040 on x86-64 and the same four as [UNSUPPORTED] on arm64, from main 23574
+ widening the desugarer's __eq_<T> to every sum and so making the existence
+ probe succeed where it used to decline.
+
+  eq-needs-inst-helper : CodegenState, Text, List SumCtor, List CodexType -> Boolean
+  eq-needs-inst-helper (st) (sn) (cs) (actuals) =
+   eq-sum-is-recursive st sn cs | (list-length actuals > 0)
 
   eq-note-site : CodegenState, CodexType, List EqHelperReq, Integer -> List EqHelperReq
   eq-note-site (st) (ty) (acc) (fuel) =
@@ -16598,7 +16714,7 @@ Section: Recursive Structural Equality Helpers
    in let resolved = strip-unit-ty (resolve-to-sum-with-defs st ty)
    in when resolved
     is SumTy (sn) (args) (cs) ->
-     if eq-sum-is-recursive st (sn.value) cs
+     if eq-needs-inst-helper st (sn.value) cs actuals
      then (if eq-req-has acc (eq-helper-name-inst (sn.value) actuals) 0 then acc
       else list-push acc (deck-record (EqHelperReq {
         eq-sum-name = sn.value,
@@ -16642,7 +16758,11 @@ Section: Recursive Structural Equality Helpers
     is IrNegate (x) (ty) (sp) -> eq-collect-expr st x acc
     is IrIf (c) (t) (el) (ty) (sp) -> eq-collect-expr st el (eq-collect-expr st t (eq-collect-expr st c acc))
     is IrLet (n) (ty) (v) (b) (sp) -> eq-collect-expr st b (eq-collect-expr st v acc)
-    is IrApply (f) (a) (ty) (sp) -> eq-collect-expr st a (eq-collect-expr st f acc)
+    is IrApply (f) (a) (ty) (sp) ->
+     let noted = when f
+      is IrName (n) (nty) (nsp) -> if text-starts-with n "__eq_" & text-contains n "@" then eq-note-type st (ir-expr-type a) acc else acc
+      is otherwise -> acc
+     in eq-collect-expr st a (eq-collect-expr st f noted)
     is IrLambda (ps) (body) (ty) (sp) -> eq-collect-expr st body acc
     is IrList (es) (ty) (sp) -> eq-collect-expr-list st es 0 acc
     is IrMatch (sc) (bs) (ty) (sp) -> eq-collect-branches st bs 0 (eq-collect-expr st sc acc)
@@ -16710,22 +16830,36 @@ Section: Recursive Structural Equality Helpers
   eq-helper-true : IRExpr
   eq-helper-true = deck-record (IrBoolLit True synthetic-span)
 
-  eq-helper-field-conj : List CodexType, Integer, Integer -> IRExpr
-  eq-helper-field-conj (fs) (i) (n) =
+  eq-helper-field-conj : CodegenState, List CodexType, Integer, Integer -> IRExpr
+  eq-helper-field-conj (st) (fs) (i) (n) =
    if i >= n then eq-helper-true
    else let fty = list-at fs i
    in let lhs = deck-record (IrName (eq-helper-var "__eqx" i) fty synthetic-span)
    in let rhs = deck-record (IrName (eq-helper-var "__eqy" i) fty synthetic-span)
-   in let one = deck-record (IrBinary IrEq lhs rhs BooleanTy synthetic-span)
+   in let one = eq-helper-field-eq st fty lhs rhs
    in if i + 1 >= n then one
-   else deck-record (IrBinary IrAnd one (eq-helper-field-conj fs (i + 1) n) BooleanTy synthetic-span)
+   else deck-record (IrBinary IrAnd one (eq-helper-field-conj st fs (i + 1) n) BooleanTy synthetic-span)
 
-  eq-helper-inner : Text, List CodexType, CodexType -> IRExpr
-  eq-helper-inner (cn) (fs) (sty) =
+  eq-helper-field-eq : CodegenState, CodexType, IRExpr, IRExpr -> IRExpr
+  eq-helper-field-eq (st) (fty) (lhs) (rhs) =
+   let resolved = strip-unit-ty (resolve-to-sum-with-defs st fty)
+   in let plain = deck-record (IrBinary IrEq lhs rhs BooleanTy synthetic-span)
+   in when resolved
+    is SumTy (sn) (args) (cs) ->
+     if eq-needs-inst-helper st (sn.value) cs (eq-site-actuals fty)
+     then let hname = eq-helper-name-inst (sn.value) (eq-site-actuals fty)
+      in let hty = deck-record (FunTy fty empty-row (deck-record (FunTy fty empty-row BooleanTy)))
+      in let inner = deck-record (IrApply (deck-record (IrName hname hty synthetic-span)) lhs (peel-fun-return hty) synthetic-span)
+      in deck-record (IrApply inner rhs BooleanTy synthetic-span)
+     else plain
+    is otherwise -> plain
+
+  eq-helper-inner : CodegenState, Text, List CodexType, CodexType -> IRExpr
+  eq-helper-inner (st) (cn) (fs) (sty) =
    deck-record (IrMatch (deck-record (IrName "__eqb" sty synthetic-span)) [
      deck-record (IRBranch {
       pattern = deck-record (IrCtorPat cn (eq-helper-field-pats fs "__eqy" 0 (list-length fs) []) sty synthetic-span),
-      body = eq-helper-field-conj fs 0 (list-length fs),
+      body = eq-helper-field-conj st fs 0 (list-length fs),
       guard = eq-helper-true,
       span = synthetic-span,
       alt-group = 0 - 1
@@ -16739,22 +16873,22 @@ Section: Recursive Structural Equality Helpers
      })
     ] BooleanTy synthetic-span)
 
-  eq-helper-outer-branches : List SumCtor, CodexType, Integer, Integer, List IRBranch -> List IRBranch
-  eq-helper-outer-branches (cs) (sty) (i) (n) (acc) =
+  eq-helper-outer-branches : CodegenState, List SumCtor, CodexType, Integer, Integer, List IRBranch -> List IRBranch
+  eq-helper-outer-branches (st) (cs) (sty) (i) (n) (acc) =
    if i >= n then acc
    else let c = list-at cs i
    in let cn = (c.name).value
    in let fs = c.fields
-   in eq-helper-outer-branches cs sty (i + 1) n (list-push acc (deck-record (IRBranch {
+   in eq-helper-outer-branches st cs sty (i + 1) n (list-push acc (deck-record (IRBranch {
      pattern = deck-record (IrCtorPat cn (eq-helper-field-pats fs "__eqx" 0 (list-length fs) []) sty synthetic-span),
-     body = eq-helper-inner cn fs sty,
+     body = eq-helper-inner st cn fs sty,
      guard = eq-helper-true,
      span = synthetic-span,
      alt-group = 0 - 1
     })))
 
-  eq-helper-def : EqHelperReq -> IRDef
-  eq-helper-def (req) =
+  eq-helper-def : CodegenState, EqHelperReq -> IRDef
+  eq-helper-def (st) (req) =
    let sty = req.eq-sum-ty
    in let formals = eq-req-formals req
    in let actuals = req.eq-sum-actuals
@@ -16770,7 +16904,7 @@ Section: Recursive Structural Equality Helpers
       deck-record (IRParam { name = "__eqb", type-val = sty, span = synthetic-span })
      ],
     type-val = BooleanTy,
-    body = deck-record (IrMatch (deck-record (IrName "__eqa" sty synthetic-span)) (eq-helper-outer-branches cs sty 0 (list-length cs) []) BooleanTy synthetic-span),
+    body = deck-record (IrMatch (deck-record (IrName "__eqa" sty synthetic-span)) (eq-helper-outer-branches st cs sty 0 (list-length cs) []) BooleanTy synthetic-span),
     chapter-slug = "",
     is-punctual = False,
     wcet-budget = 0,
@@ -16778,14 +16912,14 @@ Section: Recursive Structural Equality Helpers
     span = synthetic-span
    })
 
-  eq-helper-defs-acc : List EqHelperReq, Integer, List IRDef -> List IRDef
-  eq-helper-defs-acc (reqs) (i) (acc) =
+  eq-helper-defs-acc : CodegenState, List EqHelperReq, Integer, List IRDef -> List IRDef
+  eq-helper-defs-acc (st) (reqs) (i) (acc) =
    if i >= list-length reqs then acc
-   else eq-helper-defs-acc reqs (i + 1) (list-push acc (eq-helper-def (list-at reqs i)))
+   else eq-helper-defs-acc st reqs (i + 1) (list-push acc (eq-helper-def st (list-at reqs i)))
 
   eq-helper-defs : CodegenState, List IRDef -> List IRDef
   eq-helper-defs (st) (ds) =
-   eq-helper-defs-acc (eq-close-reqs st (eq-collect-defs st ds 0 []) 0) 0 []
+   eq-helper-defs-acc st (eq-close-reqs st (eq-collect-defs st ds 0 []) 0) 0 []
 
  `cmp` orders IEEE-754 bit patterns correctly for two non-negatives and for
  mixed signs, and reverses for two negatives. Every caller here is expected to
@@ -24232,7 +24366,9 @@ Section: I/O Boundary Helpers
 
    in let st36ibh = emit-hosted-kind-helper st36i
 
-   in let st36j = emit-cpu-cpuid-eax-helper st36ibh
+   in let st36ibs = emit-hosted-socket-helper st36ibh
+
+   in let st36j = emit-cpu-cpuid-eax-helper st36ibs
 
    in let st36k = emit-cpu-cpuid-ebx-helper st36j
 
@@ -27164,8 +27300,10 @@ Section: Binary Output
  framebuffer handoff block, and `guard-page-base-cell` (36320) is the deck
  guard's, written by the page-table setup above that a hosted build never runs.
  No hosted target maps either: Windows refuses a fixed low VirtualAlloc from a
- freshly loaded image, which is why `hosted-win-cell-base` sits at 0x50000000,
- and Linux starts its band at 131072 with `bp-cell` on the page below.
+ freshly loaded image, which is why `hosted-win-cell-base` sits high in the low
+ 2 GiB rather than down with the Linux band, and Linux starts its band at
+ 131072 with `bp-cell` on the page below. The exact Windows base and what
+ decides it are stated where the constant is declared, in `X86_64Boot.codex`.
 
  Measured 2026-08-30, and this is why it is worth a builtin: `peek-qword
  126976 0` in an eight-line hosted-windows program prints its first line and
@@ -27187,6 +27325,444 @@ Section: Binary Output
    in let st1 = st-append-code st0 (li reg-rax (st.hosted-target))
 
    in st-append-code st1 x86-ret
+
+ SOCKETS, AND ONLY ON HOSTED LINUX. A hosted server uses the HOST'S TCP: a
+ SOCK_STREAM fd hands over a byte stream the kernel already sequenced, so
+ nothing here reaches NetworkStack, TcpTransport or the NE2K driver, and none
+ of those is below a hosted build in the first place. Every other target
+ answers -1 from this name, which is the value a caller checks anyway.
+
+ The Linux calling convention for a syscall is RDI, RSI, RDX, R10, R8, R9,
+ with the number in RAX and the answer in RAX. SYSCALL clobbers RCX and R11 by
+ architecture; R10 carries the heap frontier here and RBX the buffer, so all
+ four are saved along with the three registers the arguments are parked in.
+
+ The arguments arrive in the System V order the generic builtin call places
+ them: the selector in RDI, then a, b and c in RSI, RDX and RCX. They move to
+ R12, R13 and R14 before anything else, because the first syscall an arm sets
+ up overwrites RDI, RSI and RDX.
+
+  emit-hosted-socket-helper : CodegenState -> CodegenState
+
+  emit-hosted-socket-helper (st) =
+
+   let fn-off = st.code-len
+
+   in let n = list-push (st.fo-names) "host-socket"
+
+   in let o = list-push (st.fo-offsets) fn-off
+
+   in let st0 = __record-set (__record-set st "fo-names" n) "fo-offsets" o
+
+   in if (st.hosted-target) == 1 then emit-hosted-socket-linux-body st0
+
+   else if (st.hosted-target) == 2 then emit-hosted-socket-win-body st0
+
+   else st-append-code (st-append-code st0 (li reg-rax (0 - 1))) x86-ret
+
+  emit-hosted-socket-linux-body : CodegenState -> CodegenState
+
+  emit-hosted-socket-linux-body (st0) =
+
+   let st1 = st-append-code st0 (push-r reg-rbx & push-r reg-r10 & push-r reg-r11 & push-r reg-r12 & push-r reg-r13 & push-r reg-r14)
+
+   in let st2 = st-append-code st1 (mov-rr reg-r12 reg-rsi & mov-rr reg-r13 reg-rdx & mov-rr reg-r14 reg-rcx & mov-rr reg-rbx reg-rdi)
+
+   in let st3 = st-append-code st2 (cmp-ri reg-rbx sock-op-socket)
+
+   in let nx0 = st3.code-len
+
+   in let st4 = st-append-code st3 (jcc cc-ne 0)
+
+   in let st5 = st-append-code st4 (li reg-rax linux-sys-socket & li reg-rdi hosted-af-inet & li reg-rsi hosted-sock-stream & li reg-rdx 0)
+
+   in let st6 = st-append-code st5 x86-syscall
+
+   in let d0 = st6.code-len
+
+   in let st7 = st-append-code st6 (jmp 0)
+
+   in let st8 = patch-jcc-at st7 nx0 (st7.code-len)
+
+   in let st9 = st-append-code st8 (cmp-ri reg-rbx sock-op-bind)
+
+   in let nx1 = st9.code-len
+
+   in let st10 = st-append-code st9 (jcc cc-ne 0)
+
+   in let st11 = st-append-code st10 (mov-rr reg-rax reg-r13 & and-ri reg-rax 255 & shl-ri reg-rax 8)
+
+   in let st12 = st-append-code st11 (mov-rr reg-rcx reg-r13 & shr-ri reg-rcx 8 & and-ri reg-rcx 255)
+
+   in let st13 = st-append-code st12 (or-rr reg-rax reg-rcx & shl-ri reg-rax 16 & add-ri reg-rax hosted-af-inet)
+
+   in let st14 = st-append-code st13 (li reg-r10 hosted-sockaddr-addr & mov-store reg-r10 reg-rax 0)
+
+   in let st15 = st-append-code st14 (xor-rr reg-rax reg-rax & mov-store reg-r10 reg-rax 8)
+
+   in let st16 = st-append-code st15 (li reg-rax linux-sys-bind & mov-rr reg-rdi reg-r12 & li reg-rsi hosted-sockaddr-addr & li reg-rdx 16)
+
+   in let st17 = st-append-code st16 x86-syscall
+
+   in let d1 = st17.code-len
+
+   in let st18 = st-append-code st17 (jmp 0)
+
+   in let st19 = patch-jcc-at st18 nx1 (st18.code-len)
+
+   in let st20 = st-append-code st19 (cmp-ri reg-rbx sock-op-listen)
+
+   in let nx2 = st20.code-len
+
+   in let st21 = st-append-code st20 (jcc cc-ne 0)
+
+   in let st22 = st-append-code st21 (li reg-rax linux-sys-listen & mov-rr reg-rdi reg-r12 & mov-rr reg-rsi reg-r13)
+
+   in let st23 = st-append-code st22 x86-syscall
+
+   in let d2 = st23.code-len
+
+   in let st24 = st-append-code st23 (jmp 0)
+
+   in let st25 = patch-jcc-at st24 nx2 (st24.code-len)
+
+   in let st26 = st-append-code st25 (cmp-ri reg-rbx sock-op-accept)
+
+   in let nx3 = st26.code-len
+
+   in let st27 = st-append-code st26 (jcc cc-ne 0)
+
+   in let st28 = st-append-code st27 (li reg-rax linux-sys-accept4 & mov-rr reg-rdi reg-r12 & li reg-rsi 0 & li reg-rdx 0 & li reg-r10 0)
+
+   in let st29 = st-append-code st28 x86-syscall
+
+   in let d3 = st29.code-len
+
+   in let st30 = st-append-code st29 (jmp 0)
+
+   in let st31 = patch-jcc-at st30 nx3 (st30.code-len)
+
+   in let st32 = st-append-code st31 (cmp-ri reg-rbx sock-op-close)
+
+   in let nx4 = st32.code-len
+
+   in let st33 = st-append-code st32 (jcc cc-ne 0)
+
+   in let st34 = st-append-code st33 (li reg-rax linux-sys-close & mov-rr reg-rdi reg-r12)
+
+   in let st35 = st-append-code st34 x86-syscall
+
+   in let d4 = st35.code-len
+
+   in let st36 = st-append-code st35 (jmp 0)
+
+   in let st37 = patch-jcc-at st36 nx4 (st36.code-len)
+
+   in let st38 = st-append-code st37 (cmp-ri reg-rbx sock-op-recv)
+
+   in let nx5 = st38.code-len
+
+   in let st39 = st-append-code st38 (jcc cc-ne 0)
+
+   in let st40 = st-append-code st39 (li reg-rax linux-sys-read & mov-rr reg-rdi reg-r12 & mov-rr reg-rsi reg-r13 & mov-rr reg-rdx reg-r14)
+
+   in let st41 = st-append-code st40 x86-syscall
+
+   in let d5 = st41.code-len
+
+   in let st42 = st-append-code st41 (jmp 0)
+
+   in let st43 = patch-jcc-at st42 nx5 (st42.code-len)
+
+   in let st44 = st-append-code st43 (cmp-ri reg-rbx sock-op-send)
+
+   in let nx6 = st44.code-len
+
+   in let st45 = st-append-code st44 (jcc cc-ne 0)
+
+   in let st46 = st-append-code st45 (li reg-rax linux-sys-write & mov-rr reg-rdi reg-r12 & mov-rr reg-rsi reg-r13 & mov-rr reg-rdx reg-r14)
+
+   in let st47 = st-append-code st46 x86-syscall
+
+   in let d6 = st47.code-len
+
+   in let st48 = st-append-code st47 (jmp 0)
+
+   in let st49 = patch-jcc-at st48 nx6 (st48.code-len)
+
+   in let st50 = st-append-code st49 (cmp-ri reg-rbx sock-op-reuseaddr)
+
+   in let nx7 = st50.code-len
+
+   in let st51 = st-append-code st50 (jcc cc-ne 0)
+
+   in let st52 = st-append-code st51 (li reg-r10 hosted-sockopt-addr & li reg-rax 1 & mov-store reg-r10 reg-rax 0)
+
+   in let st53 = st-append-code st52 (li reg-rax linux-sys-setsockopt & mov-rr reg-rdi reg-r12 & li reg-rsi linux-sol-socket & li reg-rdx linux-so-reuseaddr)
+
+   in let st54 = st-append-code st53 (li reg-r10 hosted-sockopt-addr & li reg-r8 4)
+
+   in let st55 = st-append-code st54 x86-syscall
+
+   in let d7 = st55.code-len
+
+   in let st56 = st-append-code st55 (jmp 0)
+
+   in let st57 = patch-jcc-at st56 nx7 (st56.code-len)
+
+   in let st58 = st-append-code st57 (li reg-rax (0 - 1))
+
+   in let done = st58.code-len
+
+   in let st59 = patch-jmp-at st58 d0 done
+
+   in let st60 = patch-jmp-at st59 d1 done
+
+   in let st61 = patch-jmp-at st60 d2 done
+
+   in let st62 = patch-jmp-at st61 d3 done
+
+   in let st63 = patch-jmp-at st62 d4 done
+
+   in let st64 = patch-jmp-at st63 d5 done
+
+   in let st65 = patch-jmp-at st64 d6 done
+
+   in let st66 = patch-jmp-at st65 d7 done
+
+   in let st67 = st-append-code st66 (pop-r reg-r14 & pop-r reg-r13 & pop-r reg-r12 & pop-r reg-r11 & pop-r reg-r10 & pop-r reg-rbx)
+
+   in st-append-code st67 x86-ret
+
+ THE WINDOWS HALF IS NOT THE LINUX ONE WITH DIFFERENT NUMBERS. Windows sockets
+ are ws2_32.dll exports reached by an indirect call through an import slot, not
+ syscalls, so this obeys the Windows x64 convention: arguments in RCX, RDX, R8,
+ R9, a fifth on the stack, 32 bytes of shadow space the callee owns, and RSP
+ 16-byte aligned at the CALL. RSP is aligned explicitly here rather than by
+ construction, because the argument count varies by arm.
+
+ Three differences from Linux beyond the names, each of which is silent when
+ got wrong. SOL_SOCKET is 0xFFFF and SO_REUSEADDR is 4, and the Linux pair is
+ ACCEPTED by setsockopt and does nothing. `recv`, `send`, `bind`, `listen`,
+ `closesocket` and `setsockopt` return int, so EAX is sign-extended into RAX
+ (48 63 C0) or a -1 error arrives as 4294967295. `socket` and `accept` return
+ a 64-bit SOCKET and are left alone.
+
+ WSAStartup must be called once before any other ws2_32 call or every one of
+ them fails with WSANOTINITIALISED, so every entry tests a ready flag and only
+ the first call pays.
+
+  emit-hosted-socket-win-body : CodegenState -> CodegenState
+
+  emit-hosted-socket-win-body (st0) =
+
+   let st1 = st-append-code st0 (push-r reg-rbx & push-r reg-r10 & push-r reg-r11 & push-r reg-r12 & push-r reg-r13 & push-r reg-r14)
+
+   in let st2 = st-append-code st1 (mov-rr reg-r12 reg-rsi & mov-rr reg-r13 reg-rdx & mov-rr reg-r14 reg-rcx & mov-rr reg-rbx reg-rdi)
+
+   in let st3 = st-append-code st2 (push-r reg-rbp & mov-rr reg-rbp reg-rsp)
+
+   in let st4 = st-append-code st3 (and-ri reg-rsp (0 - 16))
+
+   in let st5 = st-append-code st4 (emit-sub-rsp-imm32 64)
+
+   in let st6 = st-append-code st5 (li reg-r10 hosted-win-wsa-ready-addr)
+
+   in let st7 = st-append-code st6 (mov-load reg-rax reg-r10 0)
+
+   in let st8 = st-append-code st7 (test-rr reg-rax reg-rax)
+
+   in let wsa-ready = st8.code-len
+
+   in let st9 = st-append-code st8 (jcc cc-ne 0)
+
+   in let st10 = st-append-code st9 (li reg-rcx hosted-win-wsa-version & li reg-rdx hosted-win-wsadata-addr)
+
+   in let st11 = st-append-code st10 (call-abs-ind hosted-win-iat-wsastartup)
+
+   in let st12 = st-append-code st11 (li reg-r10 hosted-win-wsa-ready-addr & li reg-rax 1 & mov-store reg-r10 reg-rax 0)
+
+   in let st13 = patch-jcc-at st12 wsa-ready (st12.code-len)
+
+   in let st14 = st-append-code st13 (cmp-ri reg-rbx sock-op-socket)
+
+   in let nx0 = st14.code-len
+
+   in let st15 = st-append-code st14 (jcc cc-ne 0)
+
+   in let st16 = st-append-code st15 (li reg-rcx hosted-af-inet & li reg-rdx hosted-sock-stream & li reg-r8 0)
+
+   in let st17 = st-append-code st16 (call-abs-ind hosted-win-iat-socket)
+
+   in let d0 = st17.code-len
+
+   in let st18 = st-append-code st17 (jmp 0)
+
+   in let st19 = patch-jcc-at st18 nx0 (st18.code-len)
+
+   in let st20 = st-append-code st19 (cmp-ri reg-rbx sock-op-bind)
+
+   in let nx1 = st20.code-len
+
+   in let st21 = st-append-code st20 (jcc cc-ne 0)
+
+   in let st22 = st-append-code st21 (mov-rr reg-rax reg-r13 & and-ri reg-rax 255 & shl-ri reg-rax 8)
+
+   in let st23 = st-append-code st22 (mov-rr reg-r11 reg-r13 & shr-ri reg-r11 8 & and-ri reg-r11 255)
+
+   in let st24 = st-append-code st23 (or-rr reg-rax reg-r11 & shl-ri reg-rax 16 & add-ri reg-rax hosted-af-inet)
+
+   in let st25 = st-append-code st24 (li reg-r10 hosted-win-sockaddr-addr & mov-store reg-r10 reg-rax 0)
+
+   in let st26 = st-append-code st25 (xor-rr reg-rax reg-rax & mov-store reg-r10 reg-rax 8)
+
+   in let st27 = st-append-code st26 (mov-rr reg-rcx reg-r12 & li reg-rdx hosted-win-sockaddr-addr & li reg-r8 16)
+
+   in let st28 = st-append-code st27 (call-abs-ind hosted-win-iat-bind)
+
+   in let st29 = st-append-code st28 movsxd-rax-eax
+
+   in let d1 = st29.code-len
+
+   in let st30 = st-append-code st29 (jmp 0)
+
+   in let st31 = patch-jcc-at st30 nx1 (st30.code-len)
+
+   in let st32 = st-append-code st31 (cmp-ri reg-rbx sock-op-listen)
+
+   in let nx2 = st32.code-len
+
+   in let st33 = st-append-code st32 (jcc cc-ne 0)
+
+   in let st34 = st-append-code st33 (mov-rr reg-rcx reg-r12 & mov-rr reg-rdx reg-r13)
+
+   in let st35 = st-append-code st34 (call-abs-ind hosted-win-iat-listen)
+
+   in let st36 = st-append-code st35 movsxd-rax-eax
+
+   in let d2 = st36.code-len
+
+   in let st37 = st-append-code st36 (jmp 0)
+
+   in let st38 = patch-jcc-at st37 nx2 (st37.code-len)
+
+   in let st39 = st-append-code st38 (cmp-ri reg-rbx sock-op-accept)
+
+   in let nx3 = st39.code-len
+
+   in let st40 = st-append-code st39 (jcc cc-ne 0)
+
+   in let st41 = st-append-code st40 (mov-rr reg-rcx reg-r12 & li reg-rdx 0 & li reg-r8 0)
+
+   in let st42 = st-append-code st41 (call-abs-ind hosted-win-iat-accept)
+
+   in let d3 = st42.code-len
+
+   in let st43 = st-append-code st42 (jmp 0)
+
+   in let st44 = patch-jcc-at st43 nx3 (st43.code-len)
+
+   in let st45 = st-append-code st44 (cmp-ri reg-rbx sock-op-close)
+
+   in let nx4 = st45.code-len
+
+   in let st46 = st-append-code st45 (jcc cc-ne 0)
+
+   in let st47 = st-append-code st46 (mov-rr reg-rcx reg-r12)
+
+   in let st48 = st-append-code st47 (call-abs-ind hosted-win-iat-closesocket)
+
+   in let st49 = st-append-code st48 movsxd-rax-eax
+
+   in let d4 = st49.code-len
+
+   in let st50 = st-append-code st49 (jmp 0)
+
+   in let st51 = patch-jcc-at st50 nx4 (st50.code-len)
+
+   in let st52 = st-append-code st51 (cmp-ri reg-rbx sock-op-recv)
+
+   in let nx5 = st52.code-len
+
+   in let st53 = st-append-code st52 (jcc cc-ne 0)
+
+   in let st54 = st-append-code st53 (mov-rr reg-rcx reg-r12 & mov-rr reg-rdx reg-r13 & mov-rr reg-r8 reg-r14 & li reg-r9 0)
+
+   in let st55 = st-append-code st54 (call-abs-ind hosted-win-iat-recv)
+
+   in let st56 = st-append-code st55 movsxd-rax-eax
+
+   in let d5 = st56.code-len
+
+   in let st57 = st-append-code st56 (jmp 0)
+
+   in let st58 = patch-jcc-at st57 nx5 (st57.code-len)
+
+   in let st59 = st-append-code st58 (cmp-ri reg-rbx sock-op-send)
+
+   in let nx6 = st59.code-len
+
+   in let st60 = st-append-code st59 (jcc cc-ne 0)
+
+   in let st61 = st-append-code st60 (mov-rr reg-rcx reg-r12 & mov-rr reg-rdx reg-r13 & mov-rr reg-r8 reg-r14 & li reg-r9 0)
+
+   in let st62 = st-append-code st61 (call-abs-ind hosted-win-iat-send)
+
+   in let st63 = st-append-code st62 movsxd-rax-eax
+
+   in let d6 = st63.code-len
+
+   in let st64 = st-append-code st63 (jmp 0)
+
+   in let st65 = patch-jcc-at st64 nx6 (st64.code-len)
+
+   in let st66 = st-append-code st65 (cmp-ri reg-rbx sock-op-reuseaddr)
+
+   in let nx7 = st66.code-len
+
+   in let st67 = st-append-code st66 (jcc cc-ne 0)
+
+   in let st68 = st-append-code st67 (li reg-r10 hosted-win-sockopt-addr & li reg-rax 1 & mov-store reg-r10 reg-rax 0)
+
+   in let st69 = st-append-code st68 (mov-rr reg-rcx reg-r12 & li reg-rdx hosted-win-sol-socket & li reg-r8 hosted-win-so-reuseaddr & li reg-r9 hosted-win-sockopt-addr)
+
+   in let st70 = st-append-code st69 (li reg-r10 4 & mov-store reg-rsp reg-r10 32)
+
+   in let st71 = st-append-code st70 (call-abs-ind hosted-win-iat-setsockopt)
+
+   in let st72 = st-append-code st71 movsxd-rax-eax
+
+   in let d7 = st72.code-len
+
+   in let st73 = st-append-code st72 (jmp 0)
+
+   in let st74 = patch-jcc-at st73 nx7 (st73.code-len)
+
+   in let st75 = st-append-code st74 (li reg-rax (0 - 1))
+
+   in let done = st75.code-len
+
+   in let st76 = patch-jmp-at st75 d0 done
+
+   in let st77 = patch-jmp-at st76 d1 done
+
+   in let st78 = patch-jmp-at st77 d2 done
+
+   in let st79 = patch-jmp-at st78 d3 done
+
+   in let st80 = patch-jmp-at st79 d4 done
+
+   in let st81 = patch-jmp-at st80 d5 done
+
+   in let st82 = patch-jmp-at st81 d6 done
+
+   in let st83 = patch-jmp-at st82 d7 done
+
+   in let st84 = st-append-code st83 (mov-rr reg-rsp reg-rbp & pop-r reg-rbp)
+
+   in let st85 = st-append-code st84 (pop-r reg-r14 & pop-r reg-r13 & pop-r reg-r12 & pop-r reg-r11 & pop-r reg-r10 & pop-r reg-rbx)
+
+   in st-append-code st85 x86-ret
 
   emit-cpuid-prologue : CodegenState -> CodegenState
 
@@ -35264,6 +35840,8 @@ Section: Lexer
 
   cdx-unterminated-text : Integer = 7
 
+  cdx-unterminated-char : Integer = 8
+
 Section: Parser
   cdx-expected-token-kind : Integer = 1000
 
@@ -35483,8 +36061,6 @@ Section: Hard Realtime
 
   cdx-bounded-unknown-class : Integer = 6102
 
-  cdx-bounded-class-unsupported : Integer = 6103
-
   cdx-rt-wcet-report : Integer = 6010
 
   cdx-rt-wcet-exceeded : Integer = 6011
@@ -35545,6 +36121,7 @@ Section: Registry
     mk-cdx cdx-quotation-no-floor "QuotationNoFloor" sev-error phase-name-resolver "A chapter that quotes a work declares no trust floor. Write 'trusting above N' so the chapter says how much trust a signer must clear; an absent floor would admit any pinned key at any score.",
     mk-cdx cdx-type-arity "TypeArity" sev-error phase-type-checker "A type constructor was applied with the wrong number of type arguments.",
     mk-cdx cdx-unterminated-text "UnterminatedText" sev-error phase-lexer "A text literal was not terminated before end of line.",
+    mk-cdx cdx-unterminated-char "UnterminatedChar" sev-error phase-lexer "A character literal was not terminated before end of line. Without the closing quote the scan takes whatever follows the opening one, a newline included, as the character.",
     mk-cdx cdx-resource-exhausted "ResourceExhausted" sev-error phase-infrastructure "Compiler recursion budget exhausted; the input was pathologically deep or a walker cycled. Bail rather than stack-overflow.",
     mk-cdx cdx-deck-overflow "DeckOverflow" sev-error phase-infrastructure "Phase deck allocation exceeded its fixed floor; the input is too large for the arena layout.",
     mk-cdx cdx-list-literal-too-large "ListLiteralTooLarge" sev-error phase-infrastructure "A list literal has more elements than max-list-literal-elems accepts. The emitter holds two locals per literal whatever its length, so the ceiling is a held bound rather than a cost, and the limit a large literal reaches first is now the code buffer. Split the data across several definitions and join them.",
@@ -35604,9 +36181,8 @@ Section: Registry
     mk-cdx cdx-rt-wcet-opaque "RtWcetOpaque" sev-warning phase-codegen "A punctual function's instruction count is unavailable: the emitted bytes contain an encoding outside the WCET decode vocabulary.",
     mk-cdx cdx-rt-wcet-unchecked "RtWcetUnchecked" sev-warning phase-codegen "A punctual function declares an explicit WCET budget but emits no body, so no instruction count is taken and the budget is unchecked.",
     mk-cdx cdx-mutation-in-constructor "MutationInConstructor" sev-warning phase-type-checker "A record constructor field calls __record-set, which mutates in place. Other fields reading the same record see the mutated value. Bind the mutation result to a let before the constructor.",
-    mk-cdx cdx-bounded-exceeded "BoundedExceeded" sev-error phase-type-checker "A function declares a 'bounded' allocation ceiling that its inferred class exceeds, directly or through a callee. Cost Model 3.3: the lattice is none < fixed < linear < growing and the refusal is transitive, so one callee inferred 'growing' breaks a 'bounded linear' promise at the declaration site.",
-    mk-cdx cdx-bounded-unknown-class "BoundedUnknownClass" sev-error phase-type-checker "A 'bounded' declaration names a class that is not one of none, fixed, linear or growing.",
-    mk-cdx cdx-bounded-class-unsupported "BoundedClassUnsupported" sev-error phase-type-checker "A 'bounded' declaration names 'fixed'. That rung needs a per-builtin allocation class the tree has not measured, so the promise could not be checked; declaring it is refused rather than accepted unchecked (abstain toward refusal). Use 'none' for the no-heap case, or 'linear'.",
+    mk-cdx cdx-bounded-exceeded "BoundedExceeded" sev-error phase-type-checker "A function declares a 'bounded' allocation ceiling that its inferred class exceeds, directly or through a callee. Cost Model 3.3: the lattice is none < fixed < budgeted < linear < growing and the refusal is transitive, so one callee inferred 'growing' breaks a 'bounded linear' promise at the declaration site.",
+    mk-cdx cdx-bounded-unknown-class "BoundedUnknownClass" sev-error phase-type-checker "A 'bounded' declaration names a class that is not one of none, fixed, budgeted, linear or growing.",
     mk-cdx cdx-cost-accumulator-growth "CostAccumulatorGrowth" sev-error phase-type-checker "A self-call passes its own accumulator parameter appended to, so the accumulator is copied once per iteration and the function allocates in proportion to the square of its trip count. Cost Model 3.3; raised only under the cost-report mode flag, which is off for every ordinary compile, while the check is scored against codex/test/cost/accumulator-corpus.",
     mk-cdx cdx-if-no-then "IfNoThen" sev-error phase-parser "An if expression has no 'then'. Every if requires both then and else -- there is no dangling if.",
     mk-cdx cdx-if-no-else "IfNoElse" sev-error phase-parser "An if expression has no 'else'. else is mandatory: an if with no else has no value on the false path.",
@@ -36275,7 +36851,7 @@ Section: Function-Type Peeling
     is FunTy (p) (row) (r) -> p
     is ForAllTy (id) (body) -> peel-fun-param body
     is ForAllEff (id) (body) -> peel-fun-param body
-    is otherwise -> ErrorTy
+    is otherwise -> NoExpectTy
 
   peel-fun-return : CodexType -> CodexType
   peel-fun-return (ty) =
@@ -36283,7 +36859,7 @@ Section: Function-Type Peeling
     is FunTy (p) (row) (r) -> r
     is ForAllTy (id) (body) -> peel-fun-return body
     is ForAllEff (id) (body) -> peel-fun-return body
-    is otherwise -> ErrorTy
+    is otherwise -> NoExpectTy
 
   strip-fun-args : CodexType -> CodexType
   strip-fun-args (ty) =
@@ -37265,22 +37841,52 @@ Section: Single Token Scanning
         else LexToken (make-token (deck-record ErrorToken) 1 s) next
 
 Section: Char Literal
+ Every close below is CONDITIONAL, and before this diagnostic existed the
+ absent one was silent at every severity. The non-escape arm advances over
+ whatever follows the opening quote, a newline included, so `char-code '` at
+ the end of a line took the newline as its character, found no closing quote
+ on the next line, and emitted a CharLiteral anyway: the chapter compiled,
+ exit 0, and the character the author wrote was gone. Measured at head
+ 2026-09-07 before the change. `scan-string-body` twenty lines above is the
+ same shape for text and was fixed first (COMPILER-35).
+
+ A quote straight after a letter or a digit is an APOSTROPHE and no
+ diagnostic is raised for it. A heading is not prose to this lexer: its title
+ is reassembled from ordinary tokens by `collect-title-tokens`
+ (`Syntax/Parser.codex`), so `Section: The Gate's Coverage` reaches here as a
+ character literal that never closes, and twenty files in the tree are written
+ that way. Censused 2026-09-07 over 4,025 files: of 364 well-formed character
+ literals, ZERO have an opening quote preceded by a letter or a digit, so the
+ test costs nothing that is really a literal. The scan still consumes the same
+ bytes and emits the same token either way; only the diagnostic is withheld.
+
+  char-unterminated : LexState, SourceSpan, Boolean -> LexState
+  char-unterminated (st) (open-span) (apostrophe) =
+   if apostrophe then st
+   else add-lex-error st cdx-unterminated-char "Unterminated character literal: hit end of line before closing '" open-span
+
   scan-char-literal : LexState -> LexStep
   scan-char-literal (s) =
-   let s1 = advance-char s
-   in if is-at-end s1 then LexToken (make-token (deck-record ErrorToken) (s1.offset - s.offset) s) s1
+   let open-span = span-at (s.line) (s.column) (s.offset) 1 (s.file-id)
+   in let apostrophe = if s.offset == 0 then False
+      else let prev = char-code-at (s.source) (s.offset - 1)
+      in is-letter-code prev | is-digit-code prev
+   in let s1 = advance-char s
+   in if is-at-end s1 then LexToken (make-token (deck-record ErrorToken) (s1.offset - s.offset) s) (char-unterminated s1 open-span apostrophe)
       else if peek-code s1 == cc-backslash then let s2 = advance-char s1
-   in if is-at-end s2 then LexToken (make-token (deck-record ErrorToken) (s2.offset - s.offset) s) s2
+   in if is-at-end s2 then LexToken (make-token (deck-record ErrorToken) (s2.offset - s.offset) s) (char-unterminated s2 open-span apostrophe)
    else let esc-code = peek-code s2
    in let s3 = advance-char s2
-   in let s4 = if is-at-end s3 then s3 else if peek-code s3 == cc-single-quote then advance-char s3 else s3
+   in let esc-closed = if is-at-end s3 then False else peek-code s3 == cc-single-quote
+   in let s4 = if esc-closed then advance-char s3 else char-unterminated s3 open-span apostrophe
    in let esc-span = span-at (s1.line) (s1.column) (s1.offset) 2 (s1.file-id)
    in let s5 = if esc-code == cc-lower-t then add-lex-error s4 cdx-invalid-tab-escape "\\t escape is not valid in CCE; use a space character instead" esc-span
                else if esc-code == cc-lower-r then add-lex-error s4 cdx-invalid-carriage-return-escape "\\r escape is not valid in CCE; use '\\n' for newlines" esc-span
                else s4
    in LexToken (make-token (deck-record CharLiteral) (s5.offset - s.offset) s) s5
    else let s2 = advance-char s1
-   in let s3 = if is-at-end s2 then s2 else if peek-code s2 == cc-single-quote then advance-char s2 else s2
+   in let closed = if is-at-end s2 then False else peek-code s2 == cc-single-quote
+   in let s3 = if closed then advance-char s2 else char-unterminated s2 open-span apostrophe
    in LexToken (make-token (deck-record CharLiteral) (s3.offset - s.offset) s) s3
 
 Section: Tokenize All
@@ -42534,7 +43140,7 @@ Section: Expression Desugaring
      let dlist = desugar-expr-at list-expr (depth + 1)
      in let dbody = desugar-expr-at body (depth + 1)
      in let lam = deck-record (ALambdaExpr [make-name (token-text var-tok)] dbody synthetic-span)
-     in let map-fn = deck-record (ANameExpr (make-name "map-list") synthetic-span)
+     in let map-fn = deck-record (ANameExpr (make-name "map-list") (token-span var-tok))
      in deck-record (AApplyExpr (deck-record (AApplyExpr map-fn lam synthetic-span)) dlist synthetic-span)
     is ErrExpr (tok) -> deck-record (AErrorExpr (token-text tok) (token-span tok))
     is InductionExpr (scrut) (arms) ->
@@ -43118,20 +43724,48 @@ Section: Document Desugaring
   push-derived-for-type : TypeDef, LinkedList ADef -> LinkedList ADef
   push-derived-for-type (td) (acc) =
    let acc1 = if deriving-has (td.deriving) "Show" then __linked-list-push acc (gen-show-def td) else acc
-   in let acc2 = if deriving-has (td.deriving) "Eq" | td-self-recursive td then __linked-list-push acc1 (gen-eq-def td) else acc1
+   in let acc2 = if deriving-has (td.deriving) "Eq" | td-eq-safe td then __linked-list-push acc1 (gen-eq-def td) else acc1
    in if deriving-has (td.deriving) "Ord" then __linked-list-push acc2 (gen-compare-def td) else acc2
 
-  td-self-recursive : TypeDef -> Boolean
-  td-self-recursive (td) =
+ EVERY SUM GETS `__eq_<T>`, not only the sums that derive Eq or name their own
+ type in a field. The helper is built in the DESUGARER, so it travels in the IR
+ and every backend receives it; a sum without one forces each backend to carry
+ an inline equality of its own, and the arm64 one refuses two shapes rather
+ than guess (a sum with more than one field-carrying constructor, because two
+ constructors can hold different types at one field index, and a field that
+ resolves to a sum, because inlining does not terminate on a recursive type).
+ Synthesising for every sum retires both refusals and puts one equality at one
+ site instead of three. COMPILER-63.
+
+ `gen-field-eq` compares each field pair with `==`, so a sum-typed field
+ resolves to THAT type's helper rather than being inlined, which is what makes
+ the recursive case terminate.
+
+ A SUM WITH A FIELD THE LANGUAGE REFUSES TO COMPARE GETS NO HELPER. The body
+ compares every field pair with `==`, and `Real` refuses `==` outright with
+ CDX2085, which directs the author to `~` or `~0` instead. Measured 2026-09-08:
+ widening the gate without this guard stops `codex/test/ops/real-mode-fields`
+ compiling, one CDX2085 per `Real` field, where before the widening that sum
+ got no helper at all and compiled clean. The field walk is syntactic because
+ the desugarer runs before types resolve, and `type-expr-names` recurses
+ through `AppType`, so a moded `Real approximate` is caught along with a bare
+ one.
+
+ A type that DERIVES `Eq` keeps its helper whatever its fields hold: that arm
+ is the author asking for equality, and dropping the helper under them would be
+ a silent refusal rather than the diagnostic they get today.
+
+  td-eq-safe : TypeDef -> Boolean
+  td-eq-safe (td) =
    when td.body
-    is VariantBody (ctors) -> ctors-name-type ctors (token-text (td.name)) 0 (list-length ctors)
+    is VariantBody (ctors) -> ctors-eq-safe ctors 0 (list-length ctors)
     is otherwise -> False
 
-  ctors-name-type : List VariantCtorDef, Text, Integer, Integer -> Boolean
-  ctors-name-type (ctors) (tn) (i) (len) =
-   if i >= len then False
-   else if fields-name-type ((list-at ctors i).fields) tn 0 (list-length ((list-at ctors i).fields)) then True
-   else ctors-name-type ctors tn (i + 1) len
+  ctors-eq-safe : List VariantCtorDef, Integer, Integer -> Boolean
+  ctors-eq-safe (ctors) (i) (len) =
+   if i >= len then True
+   else if fields-name-type ((list-at ctors i).fields) "Real" 0 (list-length ((list-at ctors i).fields)) then False
+   else ctors-eq-safe ctors (i + 1) len
 
   fields-name-type : List TypeExpr, Text, Integer, Integer -> Boolean
   fields-name-type (fs) (tn) (i) (len) =
@@ -45005,7 +45639,6 @@ Section: AST-Level Chapter Scoping
 Page 1
 
 
-
 Chapter: Parsmi--Name Resolution
   cites Codex chapter Phase Allocator (deck-record, deck-short-of)
   cites Codex chapter Build Settings (max-recursion-depth, demand-scope-guard-band)
@@ -45397,12 +46030,12 @@ Section: Resolve All Definitions
  deck-short-of again after the walk and raises CDX9002 from there.
 
   resolve-all-defs : Scope, List ADef, Integer, Integer, List Diagnostic, SkipListText, List ChapterAssignment, List ACitesDecl, List Text, Text, List RenameEntry, Integer -> List Diagnostic
-  resolve-all-defs (sc) (defs) (i) (len) (errs) (colliding) (assignments) (citations) (slug-cache) (cur-slug) (cur-chapter-rn) (ceiling) =
+  resolve-all-defs (sc) (defs) (i) (len) (errs) (colliding) (assignments) (citations) (cite-slugs) (cur-slug) (cur-chapter-rn) (ceiling) =
    if i == len then errs
    else if deck-short-of ceiling demand-scope-guard-band then errs
    else let def = list-at defs i
    in let chapter-rn = if def.chapter-slug == cur-slug then cur-chapter-rn
-      else apply-cite-overrides (build-chapter-rename-map colliding assignments (def.chapter-slug)) citations colliding assignments slug-cache (def.chapter-slug) 0
+      else apply-cite-overrides (build-chapter-rename-map colliding assignments (def.chapter-slug)) citations colliding assignments cite-slugs (def.chapter-slug) 0
    in let bivy-mark = __heap-save
    in let deck-mark = __deck-pos
    in let fresh-scope = Scope { names = sc.names, locals = skip-list-text-empty, chapter-renames = chapter-rn }
@@ -45413,8 +46046,8 @@ Section: Resolve All Definitions
    in if list-length errs-new == 0
       then let deck-back = __deck-set deck-mark
        in let bivy-back = __heap-restore bivy-mark
-       in resolve-all-defs sc defs (i + 1) len errs colliding assignments citations slug-cache (def.chapter-slug) chapter-rn ceiling
-      else resolve-all-defs sc defs (i + 1) len (errs & errs-new) colliding assignments citations slug-cache (def.chapter-slug) chapter-rn ceiling
+       in resolve-all-defs sc defs (i + 1) len errs colliding assignments citations cite-slugs (def.chapter-slug) chapter-rn ceiling
+      else resolve-all-defs sc defs (i + 1) len (errs & errs-new) colliding assignments citations cite-slugs (def.chapter-slug) chapter-rn ceiling
 
  A definition's resolution answers only its diagnostics; every scope,
  pattern result and rename lookup it built is dead once resolve-expr
@@ -45463,7 +46096,8 @@ Section: Resolve Chapter
    in let all-top = skip-list-text-union (skip-list-text-union (skip-list-text-union (skip-list-text-union (skip-list-text-clone (top.names)) (effect-ops.op-names)) cited-names) class-method-names) dict-placeholder-names
    in let sc = build-all-names-scope all-top (ctors.ctor-names) builtin-names
    in let slug-cache = for a in assignments -> cite-key (a.chapter-slug)
-   in let expr-errs = resolve-all-defs sc (mod.defs) 0 (list-length (mod.defs)) [] colliding assignments (mod.citations) slug-cache "" [] ceiling
+   in let cite-slugs = for c in (mod.citations) -> find-slug-for-cite-name (c.quire.value) (c.chapter-name.value) assignments slug-cache
+   in let expr-errs = resolve-all-defs sc (mod.defs) 0 (list-length (mod.defs)) [] colliding assignments (mod.citations) cite-slugs "" [] ceiling
    in let ctor-list = deck-record (skip-list-text-to-list (ctors.ctor-names))
    in deck-record (ResolveResult {
      bag = deck-record (bag-from-list (top.errors & ctors.errors & effect-ops.errors & expr-errs)),
@@ -47142,14 +47776,11 @@ Section: Deep Type Copy
    in mkey-ctors-loop cs (i + 1) len depth mc (cons-mix (cons-mix (cons-mix acc (address-of (mcopy-name (c.name) mc))) (address-of (mcopy-types (c.fields) depth mc))) (address-of (mcopy-types (c.return-type) depth mc)))
 
  THE BOX CHECK READS A TAG, so it asks for one. `peek-qword a 0` is that tag
- on bare metal, where a variant's first word IS its tag -- and it is a payload
- word on any target whose unions lay themselves out differently. The zig plug's
- read came back a pointer, failed `> 28`, and every type this touched escaped
- to ErrorTy with the bag still empty: the compact then copied nothing and the
- originals were reclaimed behind it. `variant-tag` is the builtin for this
- question and it costs the same load on bare metal;
- `Emit/X86_64Compound.codex` moved off the same idiom for the same reason
- after it "cost the C# arm every tag in this table".
+ only where a variant's first word IS its tag, which is bare metal; it is a
+ payload word on any target whose unions lay themselves out differently, and
+ the read comes back a pointer there. `variant-tag` is the builtin for this
+ question and costs the same load on bare metal. `Emit/X86_64Compound.codex`
+ moved off the same idiom for the same reason.
 
   mcopy-type : CodexType, Integer, MemoCtx -> CodexType
   mcopy-type (ty) (depth) (mc) =
@@ -49073,14 +49704,12 @@ Section: Cost Model 3.3 -- the bounded declaration
  `punctual` records "hard-realtime", so nothing new is threaded through the
  chapter record.
 
- Three rungs are decidable here today. The inference answers whether a
- definition is `growing`, and whether it allocates at all; it does not
- separate `fixed` from `linear`, because that needs a per-builtin allocation
- class this tree has not measured. So `bounded none`, `bounded linear` and
- `bounded growing` are checked, and `bounded fixed` is REFUSED as unsupported
- rather than accepted unchecked. That is the abstain-toward-refusal direction
- the ruling asks for: an unchecked promise reads as a checked one and is
- worse than no promise.
+ Every rung is decidable here. The inference answers whether a definition is
+ `growing` and whether it allocates at all; `fixed` and `budgeted` are decided
+ against the registry's per-builtin allocation class, one step apart in how
+ they read `budgeted` itself. A callee that allocates a bound nobody states
+ keeps a `budgeted` promise and breaks a `fixed` one, which is the whole of
+ the difference and is the `strict` flag on the walk below.
 
   cost-class-rank : Text -> Integer
   cost-class-rank (c) =
@@ -49131,23 +49760,24 @@ Section: Cost Model 3.3 -- the bounded declaration
    if list-length anns == 0 then st
    else let growing = cost-growing-set st defs
    in let allocating = if cost-any-none anns 0 (list-length anns) then cost-alloc-set st defs else []
-   in let over = if cost-any-budgeted anns 0 (list-length anns) then cost-over-set st defs else []
-   in check-bounded-loop st defs growing allocating over anns 0 (list-length anns)
+   in let over = if cost-any-budgeted anns 0 (list-length anns) then cost-over-set st defs False else []
+   in let overfixed = if cost-any-fixed anns 0 (list-length anns) then cost-over-set st defs True else []
+   in check-bounded-loop st defs growing allocating over overfixed anns 0 (list-length anns)
 
-  check-bounded-loop : UnificationState, List ADef, List Text, List Text, List Text, List AnnotationNode, Integer, Integer -> UnificationState
-  check-bounded-loop (st) (defs) (growing) (allocating) (over) (anns) (i) (len) =
+  check-bounded-loop : UnificationState, List ADef, List Text, List Text, List Text, List Text, List AnnotationNode, Integer, Integer -> UnificationState
+  check-bounded-loop (st) (defs) (growing) (allocating) (over) (overfixed) (anns) (i) (len) =
    if i >= len then st
    else let a = list-at anns i
-   in if a.kind == "bounded" then check-bounded-loop (check-bounded-one st defs growing allocating over a) defs growing allocating over anns (i + 1) len
-   else check-bounded-loop st defs growing allocating over anns (i + 1) len
+   in if a.kind == "bounded" then check-bounded-loop (check-bounded-one st defs growing allocating over overfixed a) defs growing allocating over overfixed anns (i + 1) len
+   else check-bounded-loop st defs growing allocating over overfixed anns (i + 1) len
 
-  check-bounded-one : UnificationState, List ADef, List Text, List Text, List Text, AnnotationNode -> UnificationState
-  check-bounded-one (st) (defs) (growing) (allocating) (over) (a) =
+  check-bounded-one : UnificationState, List ADef, List Text, List Text, List Text, List Text, AnnotationNode -> UnificationState
+  check-bounded-one (st) (defs) (growing) (allocating) (over) (overfixed) (a) =
    let rank = cost-class-rank (a.body)
    in let span = cost-def-span defs (a.target) 0 (list-length defs)
    in if rank < 0 then __record-set st "bag" (bag-add (st.bag) (make-error cdx-bounded-unknown-class ("'bounded " & a.body & "' on '" & a.target & "' names no class; the lattice is none < fixed < budgeted < linear < growing") span))
    else if rank == 0 then (if is-rt-name allocating (a.target) 0 (list-length allocating) then __record-set st "bag" (bag-add (st.bag) (make-error cdx-bounded-exceeded ("'" & a.target & "' declares bounded none but allocates, here or in something it calls") span)) else st)
-   else if rank == 1 then __record-set st "bag" (bag-add (st.bag) (make-error cdx-bounded-class-unsupported ("'bounded fixed' on '" & a.target & "' cannot be checked yet: fixed is the same bytes every call, which no builtin has been measured to be. Use 'bounded budgeted' for a bound the caller names, or 'bounded none' for the no-heap promise") span))
+   else if rank == 1 then (if is-rt-name overfixed (a.target) 0 (list-length overfixed) then __record-set st "bag" (bag-add (st.bag) (make-error cdx-bounded-exceeded ("'" & a.target & "' declares bounded fixed but does not allocate the same bytes every call, here or in something it calls: a builtin whose allocation follows an input, one bounded only by a constant nobody states, or one bounded by an argument that is not a literal") span)) else st)
    else if rank == 2 then (if is-rt-name over (a.target) 0 (list-length over) then __record-set st "bag" (bag-add (st.bag) (make-error cdx-bounded-exceeded ("'" & a.target & "' declares bounded budgeted but allocates past a named bound, here or in something it calls: a builtin whose allocation follows an input, or one bounded by an argument that is not a literal") span)) else st)
    else if rank >= 4 then st
    else if is-rt-name growing (a.target) 0 (list-length growing)
@@ -49166,8 +49796,7 @@ Section: Cost Model -- the none rung
  A name in call position that is neither a definition in this unit nor a
  builtin measured at zero bytes is read as allocating. That is question 1's
  abstain-toward-refusal: a false refusal is paid in a declaration the author
- can decline to write, and a false acceptance is an unchecked promise, which
- is the thing CDX6103 exists to prevent.
+ can decline to write, and a false acceptance is an unchecked promise.
 
  The zero-byte set now comes from the REGISTRY rather than from a list kept
  here. `bs-alloc` on `BuiltinSpec` carries each builtin's measured allocation
@@ -49303,15 +49932,15 @@ Section: Cost Model -- the none rung
    else if n > k then False
    else when list-at args (k - n) is ALitExpr (t) (kk) (s) -> True is otherwise -> False
 
-  cost-head-overbudget : List ADef, List Text, Text, List AExpr -> Boolean
-  cost-head-overbudget (defs) (over) (h) (args) =
+  cost-head-overbudget : List ADef, List Text, Text, List AExpr, Boolean -> Boolean
+  cost-head-overbudget (defs) (over) (h) (args) (strict) =
    if h == "" then True
    else if is-rt-name over h 0 (list-length over) then True
    else if cost-def-known defs h 0 (list-length defs) then False
    else let c = builtin-alloc-by-name builtins h 0 (list-length builtins)
    in if c == "none" then False
       else if c == "fixed" then False
-      else if c == "budgeted" then False
+      else if c == "budgeted" then strict
       else if cost-budget-arg c > 0 then cost-arg-literal args (cost-budget-arg c) == False
       else is-rt-safe-builtin h == False
 
@@ -49322,66 +49951,66 @@ Section: Cost Model -- the none rung
  empty argument list and refused. Anything nested inside an argument is still
  reached, because it is in the list.
 
-  cost-expr-overbudget : UnificationState, AExpr, List ADef, List Text -> Boolean
-  cost-expr-overbudget (st) (e) (defs) (over) = when e
+  cost-expr-overbudget : UnificationState, AExpr, List ADef, List Text, Boolean -> Boolean
+  cost-expr-overbudget (st) (e) (defs) (over) (strict) = when e
     is ALitExpr (t) (k) (s) -> False
     is ANameExpr (n) (s) -> is-rt-unsafe-name (n.value) | is-rt-name over (n.value) 0 (list-length over)
-    is AApplyExpr (f) (a) (s) -> cost-head-overbudget defs over (cost-apply-head e) (cost-apply-args e []) | cost-args-overbudget st (cost-apply-args e []) defs over 0
-    is ABinaryExpr (l) (op) (r) (s) -> cost-binop-allocates st op s | cost-expr-overbudget st l defs over | cost-expr-overbudget st r defs over
-    is AUnaryExpr (x) (s) -> cost-expr-overbudget st x defs over
-    is AIfExpr (c) (t) (el) (s) -> cost-expr-overbudget st c defs over | cost-expr-overbudget st t defs over | cost-expr-overbudget st el defs over
-    is ALetExpr (bs) (b) (s) -> cost-binds-overbudget st bs defs over 0 (list-length bs) | cost-expr-overbudget st b defs over
-    is AMatchExpr (sc) (arms) (s) -> cost-expr-overbudget st sc defs over | cost-arms-overbudget st arms defs over 0 (list-length arms)
-    is AFieldAccess (obj) (f) (s) -> cost-expr-overbudget st obj defs over
+    is AApplyExpr (f) (a) (s) -> cost-head-overbudget defs over (cost-apply-head e) (cost-apply-args e []) strict | cost-args-overbudget st (cost-apply-args e []) defs over 0 strict
+    is ABinaryExpr (l) (op) (r) (s) -> cost-binop-allocates st op s | cost-expr-overbudget st l defs over strict | cost-expr-overbudget st r defs over strict
+    is AUnaryExpr (x) (s) -> cost-expr-overbudget st x defs over strict
+    is AIfExpr (c) (t) (el) (s) -> cost-expr-overbudget st c defs over strict | cost-expr-overbudget st t defs over strict | cost-expr-overbudget st el defs over strict
+    is ALetExpr (bs) (b) (s) -> cost-binds-overbudget st bs defs over 0 (list-length bs) strict | cost-expr-overbudget st b defs over strict
+    is AMatchExpr (sc) (arms) (s) -> cost-expr-overbudget st sc defs over strict | cost-arms-overbudget st arms defs over 0 (list-length arms) strict
+    is AFieldAccess (obj) (f) (s) -> cost-expr-overbudget st obj defs over strict
     is otherwise -> True
 
-  cost-args-overbudget : UnificationState, List AExpr, List ADef, List Text, Integer -> Boolean
-  cost-args-overbudget (st) (args) (defs) (over) (i) =
+  cost-args-overbudget : UnificationState, List AExpr, List ADef, List Text, Integer, Boolean -> Boolean
+  cost-args-overbudget (st) (args) (defs) (over) (i) (strict) =
    if i >= list-length args then False
-   else if cost-expr-overbudget st (list-at args i) defs over then True
-   else cost-args-overbudget st args defs over (i + 1)
+   else if cost-expr-overbudget st (list-at args i) defs over strict then True
+   else cost-args-overbudget st args defs over (i + 1) strict
 
-  cost-binds-overbudget : UnificationState, List ALetBind, List ADef, List Text, Integer, Integer -> Boolean
-  cost-binds-overbudget (st) (bs) (defs) (over) (i) (len) =
+  cost-binds-overbudget : UnificationState, List ALetBind, List ADef, List Text, Integer, Integer, Boolean -> Boolean
+  cost-binds-overbudget (st) (bs) (defs) (over) (i) (len) (strict) =
    if i >= len then False
-   else if cost-expr-overbudget st ((list-at bs i).value) defs over then True
-   else cost-binds-overbudget st bs defs over (i + 1) len
+   else if cost-expr-overbudget st ((list-at bs i).value) defs over strict then True
+   else cost-binds-overbudget st bs defs over (i + 1) len strict
 
-  cost-arms-overbudget : UnificationState, List AMatchArm, List ADef, List Text, Integer, Integer -> Boolean
-  cost-arms-overbudget (st) (arms) (defs) (over) (i) (len) =
+  cost-arms-overbudget : UnificationState, List AMatchArm, List ADef, List Text, Integer, Integer, Boolean -> Boolean
+  cost-arms-overbudget (st) (arms) (defs) (over) (i) (len) (strict) =
    if i >= len then False
    else let arm = list-at arms i
-   in if cost-expr-overbudget st (arm.guard) defs over | cost-expr-overbudget st (arm.body) defs over then True
-   else cost-arms-overbudget st arms defs over (i + 1) len
+   in if cost-expr-overbudget st (arm.guard) defs over strict | cost-expr-overbudget st (arm.body) defs over strict then True
+   else cost-arms-overbudget st arms defs over (i + 1) len strict
 
-  cost-over-seed : UnificationState, List ADef, Integer, Integer, List Text -> List Text
-  cost-over-seed (st) (defs) (i) (len) (acc) =
+  cost-over-seed : UnificationState, List ADef, Integer, Integer, List Text, Boolean -> List Text
+  cost-over-seed (st) (defs) (i) (len) (acc) (strict) =
    if i >= len then acc
    else let d = list-at defs i
-   in if cost-expr-overbudget st (d.body) defs [] then cost-over-seed st defs (i + 1) len (list-push acc (d.name.value))
-   else cost-over-seed st defs (i + 1) len acc
+   in if cost-expr-overbudget st (d.body) defs [] strict then cost-over-seed st defs (i + 1) len (list-push acc (d.name.value)) strict
+   else cost-over-seed st defs (i + 1) len acc strict
 
-  cost-over-step : UnificationState, List ADef, List Text, Integer, Integer, List Text -> List Text
-  cost-over-step (st) (defs) (known) (i) (len) (acc) =
+  cost-over-step : UnificationState, List ADef, List Text, Integer, Integer, List Text, Boolean -> List Text
+  cost-over-step (st) (defs) (known) (i) (len) (acc) (strict) =
    if i >= len then acc
    else let d = list-at defs i
-   in if is-rt-name acc (d.name.value) 0 (list-length acc) then cost-over-step st defs known (i + 1) len acc
-   else if cost-expr-overbudget st (d.body) defs known
-   then cost-over-step st defs known (i + 1) len (list-push acc (d.name.value))
-   else cost-over-step st defs known (i + 1) len acc
+   in if is-rt-name acc (d.name.value) 0 (list-length acc) then cost-over-step st defs known (i + 1) len acc strict
+   else if cost-expr-overbudget st (d.body) defs known strict
+   then cost-over-step st defs known (i + 1) len (list-push acc (d.name.value)) strict
+   else cost-over-step st defs known (i + 1) len acc strict
 
-  cost-over-close : UnificationState, List ADef, List Text, Integer, Integer -> List Text
-  cost-over-close (st) (defs) (acc) (round) (rounds) =
+  cost-over-close : UnificationState, List ADef, List Text, Integer, Integer, Boolean -> List Text
+  cost-over-close (st) (defs) (acc) (round) (rounds) (strict) =
    if round >= rounds then acc
-   else let grown = cost-over-step st defs acc 0 (list-length defs) acc
+   else let grown = cost-over-step st defs acc 0 (list-length defs) acc strict
    in if list-length grown == list-length acc then acc
-   else cost-over-close st defs grown (round + 1) rounds
+   else cost-over-close st defs grown (round + 1) rounds strict
 
-  cost-over-set : UnificationState, List ADef -> List Text
-  cost-over-set (st) (defs) =
-   let seed = cost-over-seed st defs 0 (list-length defs) []
+  cost-over-set : UnificationState, List ADef, Boolean -> List Text
+  cost-over-set (st) (defs) (strict) =
+   let seed = cost-over-seed st defs 0 (list-length defs) [] strict
    in if list-length seed == 0 then seed
-   else cost-over-close st defs seed 0 (list-length defs)
+   else cost-over-close st defs seed 0 (list-length defs) strict
 
   cost-any-budgeted : List AnnotationNode, Integer, Integer -> Boolean
   cost-any-budgeted (anns) (i) (len) =
@@ -49389,6 +50018,13 @@ Section: Cost Model -- the none rung
    else let a = list-at anns i
    in if a.kind == "bounded" then (if a.body == "budgeted" then True else cost-any-budgeted anns (i + 1) len)
    else cost-any-budgeted anns (i + 1) len
+
+  cost-any-fixed : List AnnotationNode, Integer, Integer -> Boolean
+  cost-any-fixed (anns) (i) (len) =
+   if i >= len then False
+   else let a = list-at anns i
+   in if a.kind == "bounded" then (if a.body == "fixed" then True else cost-any-fixed anns (i + 1) len)
+   else cost-any-fixed anns (i + 1) len
 
   cost-alloc-set : UnificationState, List ADef -> List Text
   cost-alloc-set (st) (defs) =
@@ -49703,11 +50339,12 @@ Section: Proof Acyclicity
    })
    in let acc0 = deck-record (__list-with-capacity def-count)
    in let slug-cache = for a in assignments -> cite-key (a.chapter-slug)
+   in let cite-slugs = for c in (mod.citations) -> find-slug-for-cite-name (c.quire.value) (c.chapter-name.value) assignments slug-cache
    in let exit = __deck-exit
    in let cb = check-batch-open check-base keep-base keep-ceiling def-count demand-check-batch-budget poison
    in let __seq = cb.cb-reg-note = reg-note & " pre-st=" & show (__deck-pos - p5)
    in let opened = check-batch-begin cb pre-st acc0
-   in let result = check-all-defs pre-st sorted-env (mod.defs) 0 def-count acc0 renames colliding assignments (mod.citations) slug-cache "" [] (mod.rt-names) tdm ceiling cb
+   in let result = check-all-defs pre-st sorted-env (mod.defs) 0 def-count acc0 renames colliding assignments (mod.citations) cite-slugs "" [] (mod.rt-names) tdm ceiling cb
    in let enter = __deck-enter
    in let cycle-st = check-rt-cycles (mod.defs) (mod.rt-names) (result.state)
    in let bounded-st = check-bounded-decls cycle-st (mod.defs) (mod.annotations)
@@ -49999,29 +50636,29 @@ Section: Check Batches
   check-batch-due (cb) =
    (__heap-save - cb.cb-bivy-mark) + (__deck-pos - cb.cb-deck-mark) >= cb.cb-budget
 
- The close is bare-metal memory management in its entirety -- it moves the
- deck cursor twice, poisons the two spans it is about to give back, and
- rewinds the bivy -- and its copier reaches further still: `mcopy-type`
- validates a box by ranging `peek-qword (address-of ty) 0` against the
- CodexType tags. A HOSTED target has no such memory. Its objects live wherever
- its host allocator put them, `address-of`, `peek-*` and `__heap-save` answer
- for a different region entirely, and the peek reads whatever that region
- happens to hold. `mcopy-type` then takes its unsafe escape and answers
- `ErrorTy` for every type in the chapter, which is the safe direction on bare
- metal only because the caller catches it by comparing the keep frontier
- against `mc-ceiling` -- a second measurement in the same fictional space, so
- on a hosted target it fails open. The zig arm of the plug-oracle ladder read
- `check-errors 0` and bound every top-level function to `ErrorTy`.
- Guarding the copier alone is not enough: real types behind it reach the next
- assumption and the walk dies on a corrupt switch. So the guard goes here, at
- the whole operation, exactly as `deck-reservation-guard` does.
+ THE CLOSE IS BARE-METAL MEMORY MANAGEMENT IN ITS ENTIRETY -- it moves the deck
+ cursor twice, poisons the two spans it is about to give back, and rewinds the
+ bivy -- and its copier reaches further still: `mcopy-type` validates a box by
+ reading raw memory at the address it was handed. A HOSTED target has no such
+ memory. Its objects live wherever its host allocator put them, `address-of`,
+ `peek-*` and `__heap-save` answer for a different region entirely, and the
+ read returns whatever that region happens to hold. `mcopy-type` then takes its
+ unsafe escape and answers `ErrorTy` for every type in the chapter, which is
+ the safe direction on bare metal only because the caller catches it by
+ comparing the keep frontier against `mc-ceiling` -- a second measurement in
+ the same fictional space, so on a hosted target it fails OPEN.
 
- Nothing is lost by skipping it. The close exists to materialise the batch
- into the keep BEFORE the scratch is reclaimed, and a hosted target reclaims
- nothing -- there is no compact to survive. The batch counters and
- `cb-overflow` stay at their initial values in consequence, so
- `check-batch-note` reads zeros and CDX9002 cannot fire on a hosted arm.
- Both follow: a hosted arm has no keep to fill and no reservation to overflow.
+ Guarding the copier alone is not enough: real types behind it reach the next
+ assumption and the walk dies on a corrupt switch. The guard goes at the whole
+ operation, as `Core/PhaseAllocator.codex:38` and `:86` already guard raw-memory
+ work for the same reason.
+
+ Nothing is lost by skipping it. The close exists to materialise the batch into
+ the keep BEFORE the scratch is reclaimed, and a hosted target reclaims
+ nothing. `cb-keep`, `cb-batches` and `cb-overflow` stay at their initial
+ values in consequence, so `check-batch-note` reads zeros and CDX9002 cannot
+ fire on a hosted arm -- both correct, since a hosted arm has no keep to fill
+ and no reservation to overflow.
 
   check-batch-close : CheckBatch, UnificationState, List TypeBinding -> Integer
   check-batch-close (cb) (st) (acc) =
@@ -50114,13 +50751,13 @@ Section: Check Batches
    cb.cb-reg-note & " CHECK-BATCH batches=" & show (cb.cb-batches) & " max-bivy=" & show (cb.cb-max-bivy) & " max-deck=" & show (cb.cb-max-deck) & " keep-end=" & show (cb.cb-keep) & " check-base=" & show (cb.cb-mc.mc-floor) & " walk-floor=" & show (cb.cb-walk-floor) & " done-deck=" & show __deck-pos & " done-bivy=" & show __heap-save & " ty=" & show (list-length (cb.cb-mc.mc-ty)) & "/" & show (cb.cb-mc.mc-cap-ty) & " text=" & show (list-length (cb.cb-mc.mc-text)) & " name=" & show (list-length (cb.cb-mc.mc-name)) & " row=" & show (list-length (cb.cb-mc.mc-row)) & " tylists=" & show (list-length (cb.cb-mc.mc-tylist)) & " fieldlists=" & show (list-length (cb.cb-mc.mc-fieldlist)) & " ctorlists=" & show (list-length (cb.cb-mc.mc-ctorlist)) & " labellists=" & show (list-length (cb.cb-mc.mc-labellist)) & " cons-slots=" & show (cb.cb-mc.mc-cons-slots) & " overflow=" & (if cb.cb-overflow then "1" else "0")
 
   check-all-defs : UnificationState, TypeEnv, List ADef, Integer, Integer, List TypeBinding, List RenameEntry, SkipListText, List ChapterAssignment, List ACitesDecl, List Text, Text, List RenameEntry, List Text, List TypeBinding, Integer, CheckBatch -> ChapterResult
-  check-all-defs (st) (env) (defs) (i) (len) (acc) (renames) (colliding) (assignments) (citations) (slug-cache) (cur-slug) (cur-chapter-rn) (rt-names) (tdm) (ceiling) (cb) =
+  check-all-defs (st) (env) (defs) (i) (len) (acc) (renames) (colliding) (assignments) (citations) (cite-slugs) (cur-slug) (cur-chapter-rn) (rt-names) (tdm) (ceiling) (cb) =
    if i == len then let closed = check-batch-close cb st acc in check-all-defs-done st env acc cb
    else if cb.cb-overflow then check-all-defs-done st env acc cb
    else if deck-short-of ceiling demand-check-guard-band then let closed = check-batch-close cb st acc in check-all-defs-done st env acc cb
    else let def = list-at defs i
    in let chapter-rn = if def.chapter-slug == cur-slug then cur-chapter-rn
-      else apply-cite-overrides (build-chapter-rename-map colliding assignments (def.chapter-slug)) citations colliding assignments slug-cache (def.chapter-slug) 0
+      else apply-cite-overrides (build-chapter-rename-map colliding assignments (def.chapter-slug)) citations colliding assignments cite-slugs (def.chapter-slug) 0
    in let fresh-env = __record-set (__record-set (__record-set env "locals" empty-type-bindings) "chapter-renames" chapter-rn) "local-ranges" []
    in let r = check-def st fresh-env defs tdm def renames
    in let lin-st = check-linearity-def def fresh-env (r.state)
@@ -50138,8 +50775,8 @@ Section: Check Batches
    in if check-batch-due cb
       then let closed = check-batch-close cb rt-st acc2
        in let opened = check-batch-begin cb rt-st acc2
-       in check-all-defs rt-st env defs (i + 1) len acc2 renames colliding assignments citations slug-cache "" [] rt-names tdm ceiling cb
-      else check-all-defs rt-st env defs (i + 1) len acc2 renames colliding assignments citations slug-cache (def.chapter-slug) chapter-rn rt-names tdm ceiling cb
+       in check-all-defs rt-st env defs (i + 1) len acc2 renames colliding assignments citations cite-slugs "" [] rt-names tdm ceiling cb
+      else check-all-defs rt-st env defs (i + 1) len acc2 renames colliding assignments citations cite-slugs (def.chapter-slug) chapter-rn rt-names tdm ceiling cb
 
 Section: Induction Checking
 
@@ -54138,8 +54775,11 @@ Section: Expression Lowering
   lower-lazy : AExpr, CodexType, LowerCtx, SourceSpan, Integer -> IRExpr
   lower-lazy (inner) (ty) (ctx) (s) (depth) =
    let peeled-inner = peel-fun-return ty
+   in let recovered-inner = peel-fun-return (deep-resolve (ctx.ust) (lookup-expr-type (ctx.ust) s))
    in let inner-ty = when peeled-inner
-      is ErrorTy | NoExpectTy -> peel-fun-return (deep-resolve (ctx.ust) (lookup-expr-type (ctx.ust) s))
+      is ErrorTy | NoExpectTy -> when recovered-inner
+         is ErrorTy -> NoExpectTy
+         is otherwise -> recovered-inner
       is otherwise -> peeled-inner
    in let sfx = integer-to-text depth
    in let cell-n = "__lz-cell" & sfx
@@ -54684,21 +55324,28 @@ Section: Expression Lowering
   lower-eq-dispatch (left-ty) (left-ir) (right-ir) (ty) (ctx) (s) (positive) =
    let resolved-left = deep-resolve (ctx.ust) left-ty
    in let tn = type-name-of resolved-left
-   in let probe = if text-length tn == 0 | eq-type-has-args (strip-unit-ty resolved-left) then ErrorTy
+   in let stripped = strip-unit-ty resolved-left
+   in let has-args = eq-type-has-args stripped
+   in let probe = if text-length tn == 0 then ErrorTy
     else lookup-type-split (ctx.overlay) (ctx.base) ("__eq_" & tn)
    in when probe
     is ErrorTy | NoExpectTy -> deck-record (IrBinary (lower-bin-op (eq-op-for positive) left-ty) left-ir right-ir (binary-result-type (eq-op-for positive) left-ty ty) s)
-    is otherwise -> let fty = strip-forall-ty (deep-resolve (ctx.ust) probe)
-     in let inner = deck-record (IrApply (deck-record (IrName ("__eq_" & tn) fty s)) left-ir (peel-fun-return fty) s)
+    is otherwise -> let hname = if has-args then eq-helper-name-inst tn (eq-site-actuals stripped) else "__eq_" & tn
+     in let fty = if has-args then deck-record (FunTy stripped empty-row (deck-record (FunTy stripped empty-row BooleanTy)))
+        else strip-forall-ty (deep-resolve (ctx.ust) probe)
+     in let inner = deck-record (IrApply (deck-record (IrName hname fty s)) left-ir (peel-fun-return fty) s)
      in let call = deck-record (IrApply inner right-ir BooleanTy s)
      in if positive then call
         else deck-record (IrIf call (deck-record (IrBoolLit False s)) (deck-record (IrBoolLit True s)) BooleanTy s)
 
  The desugarer mints one __eq_<T> per type NAME, and type-name-of has already
- dropped the arguments, so every instantiation of a parameterised type would
- share a helper whose field stays at the declaration's own type variable. An
- instantiated type is sent to the emitter instead, which carries the actuals
- and substitutes them.
+ dropped the arguments, so that helper's field stays at the declaration's own
+ type variable. Its EXISTENCE is what this arm reads: the desugarer mints it
+ only for a type it generated equality for, so finding it proves the operand is
+ such a type without resolving it here. An instantiated one is then called by
+ the INSTANTIATED name, which eq-helper-defs mints per set of actuals and which
+ opening attaches to the wire; sending it to the emitter alone is what left
+ every plug comparing two heap pointers (COMPILER-44, measured on arm64).
 
   eq-type-has-args : CodexType -> Boolean
   eq-type-has-args (ty) =
@@ -55648,6 +56295,26 @@ Section: Collections and Act
    else FunTy int-ty-default empty-row (build-lambda-type params ret (i + 1))
 
 Section: Definition Lowering
+
+ THE EMITTED TYPE IS THE STRIPPED ONE, and the quantifier is dropped here
+ rather than by each backend. `all-bindings` holds two entries per definition
+ whose types DIFFER, the environment's carrying a `ForAllTy` and
+ `check-result.types`' having it peeled; `compare-binding-names` compares the
+ name alone, `sort-by` is an unstable quicksort and `bsearch-text-pos` is a
+ lower bound, so which of the two `lookup-type-bsearch` returns is decided by
+ where unrelated names sort. Stripping makes that choice not matter, because
+ both entries strip to the same shape. Reported by Steve Howell, PR 134, who
+ measured `deck-record` quantified and 103 of 104 not; at head `deck-record` is
+ clean and `hamt-node-set`, `sort-by` and `copy-list-loop` are quantified
+ instead, moved by ordinary landings. COMPILER-66.
+
+ A backend that receives the quantifier has no use for it and mostly no arm
+ for it: arm64, riscv and wasm carry no `ForAllTy` case at all, and the zig
+ emitter grew its cases only after being bitten (`ZigEmitter.codex` 295-307,
+ which names `sort-by` as the first to arrive quantified). In this compiler
+ `is-proof-return` has no `ForAllTy` arm either, so a quantified proof
+ definition answers False to `is-proof-def`.
+
   lower-def : ADef, List TypeBinding, UnificationState, List RenameEntry, List RenameEntry, Boolean -> IRDef
   lower-def (d) (types) (ust) (renames) (chapter-rn) (rename) =
    let rn = resolve-def-name renames (d.name.value) (d.chapter-slug)
@@ -55661,7 +56328,7 @@ Section: Definition Lowering
    in deck-record (IRDef {
     name = rn,
     params = params,
-    type-val = full-type,
+    type-val = stripped,
     body = lower-expr (d.body) ret-type ctx,
     chapter-slug = d.chapter-slug,
     is-punctual = False,
@@ -55749,6 +56416,7 @@ Section: Definition Lowering
   lower-chapter : AChapter, List TypeBinding, UnificationState, List Text, List RenameEntry, SkipListText, List ChapterAssignment, Integer, Boolean, Integer, Integer -> (IRChapter, Integer)
   lower-chapter (m) (all-types) (ust) (ctor-names) (renames) (colliding) (assignments) (ceiling) (rename) (keep-base) (keep-ceiling) =
    let slug-cache = for a in assignments -> cite-key (a.chapter-slug)
+   in let cite-slugs = for c in (m.citations) -> find-slug-for-cite-name (c.quire.value) (c.chapter-name.value) assignments slug-cache
    in let def-count = list-length (m.defs)
    in let exit = __deck-exit
    in let scratch-base = __deck-pos
@@ -55758,7 +56426,7 @@ Section: Definition Lowering
    in let keep0 = __deck-pos
    in let set-s0 = __deck-set scratch-base
    in let mc = lower-keep-open scratch-base keep-ceiling def-count
-   in let (defs, keep-end) = lower-defs-keep (m.defs) all-types ust 0 acc0 renames colliding assignments (m.citations) slug-cache "" [] (m.rt-names) (m.rt-budgets) ceiling rename mc keep0 keep-ceiling
+   in let (defs, keep-end) = lower-defs-keep (m.defs) all-types ust 0 acc0 renames colliding assignments (m.citations) cite-slugs "" [] (m.rt-names) (m.rt-budgets) ceiling rename mc keep0 keep-ceiling
    in let set-k1 = __deck-set keep-end
    in let ch = deck-record (IRChapter {
     name = m.name,
@@ -55777,8 +56445,8 @@ Section: Definition Lowering
    in lower-collect-effect-op-names effs (i + 1) len (acc & (for op in (e.ops) -> op.name.value))
 
   lower-defs : List ADef, List TypeBinding, UnificationState, Integer, List RenameEntry, SkipListText, List ChapterAssignment, List ACitesDecl, List Text, Text, List RenameEntry, List Text, List Integer, Integer, Boolean -> List IRDef
-  lower-defs (defs) (types) (ust) (i) (renames) (colliding) (assignments) (citations) (slug-cache) (cur-slug) (cur-chapter-rn) (rt-names) (rt-budgets) (ceiling) (rename) =
-   lower-defs-acc defs types ust i [] renames colliding assignments citations slug-cache cur-slug cur-chapter-rn rt-names rt-budgets ceiling rename
+  lower-defs (defs) (types) (ust) (i) (renames) (colliding) (assignments) (citations) (cite-slugs) (cur-slug) (cur-chapter-rn) (rt-names) (rt-budgets) (ceiling) (rename) =
+   lower-defs-acc defs types ust i [] renames colliding assignments citations cite-slugs cur-slug cur-chapter-rn rt-names rt-budgets ceiling rename
 
   is-in-rt-names : List Text, Text, Integer, Integer -> Boolean
   is-in-rt-names (names) (target) (i) (len) =
@@ -55811,15 +56479,15 @@ Section: Definition Lowering
  8,487,976 bytes, exactly one guard band short of the floor.
 
   lower-defs-acc : List ADef, List TypeBinding, UnificationState, Integer, List IRDef, List RenameEntry, SkipListText, List ChapterAssignment, List ACitesDecl, List Text, Text, List RenameEntry, List Text, List Integer, Integer, Boolean -> List IRDef
-  lower-defs-acc (defs) (types) (ust) (i) (acc) (renames) (colliding) (assignments) (citations) (slug-cache) (cur-slug) (cur-chapter-rn) (rt-names) (rt-budgets) (ceiling) (rename) =
+  lower-defs-acc (defs) (types) (ust) (i) (acc) (renames) (colliding) (assignments) (citations) (cite-slugs) (cur-slug) (cur-chapter-rn) (rt-names) (rt-budgets) (ceiling) (rename) =
    if i == list-length defs then acc
    else if deck-bound-short-of ceiling demand-lower-guard-band then acc
    else let d = list-at defs i
    in let chapter-rn = if d.chapter-slug == cur-slug then cur-chapter-rn
-      else apply-cite-overrides (build-chapter-rename-map colliding assignments (d.chapter-slug)) citations colliding assignments slug-cache (d.chapter-slug) 0
+      else apply-cite-overrides (build-chapter-rename-map colliding assignments (d.chapter-slug)) citations colliding assignments cite-slugs (d.chapter-slug) 0
    in let ir-def = lower-def d types ust renames chapter-rn rename
    in let tagged = if is-in-rt-names rt-names (d.name.value) 0 (list-length rt-names) then __record-set (__record-set ir-def "is-punctual" True) "wcet-budget" (find-rt-budget rt-names rt-budgets (d.name.value) 0 (list-length rt-names)) else ir-def
-   in lower-defs-acc defs types ust (i + 1) (list-push acc tagged) renames colliding assignments citations slug-cache (d.chapter-slug) chapter-rn rt-names rt-budgets ceiling rename
+   in lower-defs-acc defs types ust (i + 1) (list-push acc tagged) renames colliding assignments citations cite-slugs (d.chapter-slug) chapter-rn rt-names rt-budgets ceiling rename
 
 Section: Per-Definition Reclamation
 
@@ -55876,7 +56544,7 @@ Section: Per-Definition Reclamation
    }
 
   lower-defs-keep : List ADef, List TypeBinding, UnificationState, Integer, List IRDef, List RenameEntry, SkipListText, List ChapterAssignment, List ACitesDecl, List Text, Text, List RenameEntry, List Text, List Integer, Integer, Boolean, MemoCtx, Integer, Integer -> (List IRDef, Integer)
-  lower-defs-keep (defs) (types) (ust) (i) (acc) (renames) (colliding) (assignments) (citations) (slug-cache) (cur-slug) (cur-chapter-rn) (rt-names) (rt-budgets) (ceiling) (rename) (mc) (keep) (keep-ceiling) =
+  lower-defs-keep (defs) (types) (ust) (i) (acc) (renames) (colliding) (assignments) (citations) (cite-slugs) (cur-slug) (cur-chapter-rn) (rt-names) (rt-budgets) (ceiling) (rename) (mc) (keep) (keep-ceiling) =
    if i == list-length defs then (acc, keep)
    else if keep + demand-lower-guard-band >= keep-ceiling then (acc, keep)
    else if deck-short-of ceiling demand-lower-guard-band then (acc, keep)
@@ -55885,7 +56553,7 @@ Section: Per-Definition Reclamation
    in let bivy-mark = __heap-save
    in let (chapter-rn, keep1) = if d.chapter-slug == cur-slug then (cur-chapter-rn, keep)
       else let set-k = __deck-set keep
-      in let rn = deck-record (apply-cite-overrides (build-chapter-rename-map colliding assignments (d.chapter-slug)) citations colliding assignments slug-cache (d.chapter-slug) 0)
+      in let rn = deck-record (apply-cite-overrides (build-chapter-rename-map colliding assignments (d.chapter-slug)) citations colliding assignments cite-slugs (d.chapter-slug) 0)
       in let k2 = __deck-pos
       in let set-s = __deck-set scratch-mark
       in (rn, k2)
@@ -55897,7 +56565,7 @@ Section: Per-Definition Reclamation
    in let keep2 = __deck-pos
    in let set-scratch = __deck-set scratch-mark
    in let r = __heap-restore bivy-mark
-   in lower-defs-keep defs types ust (i + 1) (list-push acc kept) renames colliding assignments citations slug-cache (d.chapter-slug) chapter-rn rt-names rt-budgets ceiling rename mc keep2 keep-ceiling
+   in lower-defs-keep defs types ust (i + 1) (list-push acc kept) renames colliding assignments citations cite-slugs (d.chapter-slug) chapter-rn rt-names rt-budgets ceiling rename mc keep2 keep-ceiling
 
   lcopy-text : Text, MemoCtx -> Text
   lcopy-text (t) (mc) = mcopy-text t mc
@@ -60311,7 +60979,7 @@ Section: Expression Emission
     is IrName (n) (ty) (sp) -> n
     is IrBinary (op) (l) (r) (ty) (sp) -> codex-emit-binary op l r ctors indent
     is IrNegate (operand) (ty) (sp) -> "-(" & codex-emit-expr-at operand ctors indent (depth + 1) & ")"
-    is IrIf (c) (t) (el) (ty) (sp) -> codex-emit-if c t el ctors indent 0
+    is IrIf (c) (t) (el) (ty) (sp) -> if is-negated-eq-call c t el then codex-emit-noteq c ctors indent else codex-emit-if c t el ctors indent 0
     is IrLet (name) (ty) (val) (body) (sp) -> codex-emit-let name val body ctors indent
     is IrApply (f) (a) (ty) (sp) -> codex-emit-apply e ctors indent
     is IrLambda (params) (body) (ty) (sp) -> codex-emit-lambda params body ctors indent
@@ -60344,8 +61012,9 @@ Section: Binary Operators
    when e
     is IrBinary (child-op) (l2) (r2) (ty) (sp) -> if bin-op-prec child-op < bin-op-prec parent-op then "(" & codex-emit-expr e ctors indent & ")"
     else codex-emit-expr e ctors indent
-    is IrIf (c) (t) (el) (ty) (sp) -> "(" & codex-emit-expr e ctors indent & ")"
+    is IrIf (c) (t) (el) (ty) (sp) -> if is-negated-eq-call c t el then wrap-binary-left parent-op (IrBinary IrNotEq (eq-call-arg c 0) (eq-call-arg c 1) ty sp) ctors indent else "(" & codex-emit-expr e ctors indent & ")"
     is IrApply (f2) (a2) (ty) (sp) -> if apply-prints-as-for e then "(" & codex-emit-expr e ctors indent & ")"
+    else if apply-prints-as-eq e then wrap-binary-left parent-op (IrBinary IrEq (eq-call-arg e 0) (eq-call-arg e 1) ty sp) ctors indent
     else codex-emit-expr e ctors indent
     is otherwise -> codex-emit-expr e ctors indent
 
@@ -60354,8 +61023,9 @@ Section: Binary Operators
    when e
     is IrBinary (child-op) (l2) (r2) (ty) (sp) -> if needs-right-wrap parent-op child-op then "(" & codex-emit-expr e ctors indent & ")"
     else codex-emit-expr e ctors indent
-    is IrIf (c) (t) (el) (ty) (sp) -> "(" & codex-emit-expr e ctors indent & ")"
+    is IrIf (c) (t) (el) (ty) (sp) -> if is-negated-eq-call c t el then wrap-binary-right parent-op (IrBinary IrNotEq (eq-call-arg c 0) (eq-call-arg c 1) ty sp) ctors indent else "(" & codex-emit-expr e ctors indent & ")"
     is IrApply (f2) (a2) (ty) (sp) -> if apply-prints-as-for e then "(" & codex-emit-expr e ctors indent & ")"
+    else if apply-prints-as-eq e then wrap-binary-right parent-op (IrBinary IrEq (eq-call-arg e 0) (eq-call-arg e 1) ty sp) ctors indent
     else codex-emit-expr e ctors indent
     is otherwise -> codex-emit-expr e ctors indent
 
@@ -60446,7 +61116,8 @@ Section: If/Then/Else
    let acc2 = list-push acc ("if " & codex-emit-expr c ctors indent & " then " & codex-emit-expr t ctors indent)
    in when el
     is IrIf (c2) (t2) (el2) (ty) (sp) ->
-     codex-emit-if-chain c2 t2 el2 ctors indent else-offset (list-push acc2 ("\n" & make-indent indent & pad-spaces else-offset & "else "))
+     if is-negated-eq-call c2 t2 el2 then list-push acc2 ("\n" & make-indent indent & pad-spaces else-offset & "else " & codex-emit-noteq c2 ctors indent)
+     else codex-emit-if-chain c2 t2 el2 ctors indent else-offset (list-push acc2 ("\n" & make-indent indent & pad-spaces else-offset & "else "))
     is otherwise ->
      list-push acc2 ("\n" & make-indent indent & pad-spaces else-offset & "else " & codex-emit-expr el ctors indent)
 
@@ -60467,7 +61138,8 @@ Section: Let
     is IrLet (name2) (ty2) (val2) (body2) (sp2) ->
      codex-emit-let-chain name2 val2 body2 ctors indent (list-push acc2 ("\n" & make-indent indent & "in "))
     is IrIf (c) (t) (el) (ty) (sp) ->
-     list-push acc2 ("\n" & make-indent indent & "in " & codex-emit-if c t el ctors indent 3)
+     if is-negated-eq-call c t el then list-push acc2 ("\n" & make-indent indent & "in " & codex-emit-noteq c ctors indent)
+     else list-push acc2 ("\n" & make-indent indent & "in " & codex-emit-if c t el ctors indent 3)
     is otherwise ->
      list-push acc2 ("\n" & make-indent indent & "in " & codex-emit-expr body ctors indent)
 
@@ -60494,7 +61166,37 @@ Section: Apply
    in let args = chain.args
    in if is-tuple-ctor func (list-length args) then "(" & codex-emit-tuple-expr-elems args ctors indent 0 (list-length args) & ")"
    else if is-for-expr func args then codex-emit-for-expr args ctors indent
+   else if is-eq-helper-call func args then codex-emit-binary IrEq (list-at args 0) (list-at args 1) ctors indent
    else codex-emit-expr func ctors indent & codex-emit-apply-args args ctors indent 0 (list-length args) (is-ctor-name func ctors)
+
+  is-eq-helper-call : IRExpr, List IRExpr -> Boolean
+  is-eq-helper-call (func) (args) =
+   if list-length args == 2 then when func
+    is IrName (n) (ty) (sp) -> text-starts-with n "__eq_"
+    is otherwise -> False
+   else False
+
+  apply-prints-as-eq : IRExpr -> Boolean
+  apply-prints-as-eq (e) =
+   let chain = collect-apply-chain e []
+   in is-eq-helper-call (chain.root) (chain.args)
+
+  eq-call-arg : IRExpr, Integer -> IRExpr
+  eq-call-arg (e) (i) =
+   let chain = collect-apply-chain e []
+   in list-at (chain.args) i
+
+  is-negated-eq-call : IRExpr, IRExpr, IRExpr -> Boolean
+  is-negated-eq-call (c) (t) (el) =
+   when t
+    is IrBoolLit (tb) (ts) -> when el
+     is IrBoolLit (eb) (es) -> if tb then False else if eb then apply-prints-as-eq c else False
+     is otherwise -> False
+    is otherwise -> False
+
+  codex-emit-noteq : IRExpr, List Text, Integer -> Text
+  codex-emit-noteq (c) (ctors) (indent) =
+   codex-emit-binary IrNotEq (eq-call-arg c 0) (eq-call-arg c 1) ctors indent
 
   is-for-expr : IRExpr, List IRExpr -> Boolean
   is-for-expr (func) (args) =
@@ -66375,6 +67077,23 @@ Section: Entry Point
    in let lift-ceiling = lift-base + lift-deck-height
    in deck-record (lift-lambdas ir lift-ceiling)
 
+ COMPILER-44. The x86 path attaches the instantiated equality helpers at
+ `X86_64Chapter`, and the plugs never went through it: they received a bare
+ `binary eq` over `(ctd "Box" (args text))` and compared two heap pointers, so
+ every structurally-equal pair built from separate allocations answered `no`.
+ Measured on Renode 2026-09-07, arm64: `box-text-eq`, `box-int-eq`,
+ `box-nested` and `pair-generic` all wrong, `named-concrete` right because it
+ goes through the desugarer's own `__eq_Named`.
+ `lower-eq-dispatch` now calls the INSTANTIATED name, so the wire has to carry
+ the def that name refers to or the reference dangles. The state is empty but
+ for the binding table, which is all `resolve-constructed-ty` reads.
+
+  eq-attach-helpers : IRChapter, List ATypeDef -> IRChapter
+  eq-attach-helpers (ir) (tds) =
+   let tmap = deck-record (build-type-def-map tds 0 (list-length tds) [])
+   in let eq-st = __record-set empty-codegen-state "type-defs" tmap
+   in __record-set ir "defs" ((ir.defs) & eq-helper-defs eq-st (ir.defs))
+
   emit-ir-uni : Text, CompileFlags -> [Console] Nothing
   emit-ir-uni (source) (flags) =
    let fe = compile-frontend-ir source "Program" flags
@@ -66383,7 +67102,7 @@ Section: Entry Point
     print-codegen-error-header (bag-errors (fe.bag))
     print-bag-notices (fe.bag)
     if bag-has-errors (fe.bag) then print-line-uni "CODEGEN-HALTED: errors in bag; no IR emitted"
-    else let lifted-ir = lift-ir-for-emit (fe.ir) flags
+    else let lifted-ir = eq-attach-helpers (lift-ir-for-emit (fe.ir) flags) (fe.type-defs)
      in act
      print-line-uni "IR-BEGIN"
      print-line-uni (emit-ir-chapter (ir-prune-unreachable-roots lifted-ir ir-emit-roots) (fe.text-meta) (fe.type-defs))
@@ -66408,7 +67127,7 @@ Section: Entry Point
     if flags.wire-trace then print-line-uni ("FE-DONE frontier " & integer-to-text h-pre-emit) else print-text ""
     print-codegen-error-header (bag-errors (fe.bag))
     if bag-has-errors (fe.bag) then print-line-uni "CODEGEN-HALTED: errors in bag; no IR emitted"
-    else let lifted-ir = lift-ir-for-emit (fe.ir) flags
+    else let lifted-ir = eq-attach-helpers (lift-ir-for-emit (fe.ir) flags) (fe.type-defs)
      in let raw-defs = lifted-ir.defs
      in act
       if flags.wire-trace then ir-trace-dce-cost raw-defs 0 (list-length raw-defs) else print-text ""
@@ -68820,6 +69539,7 @@ Section: Apply Emission
   wat-no-such-thing (n) =
    n == "port-out-byte" |
    n == "port-in-byte" |
+   n == "host-socket" |
    n == "prof-dump" |
    n == "prof-start"
 
