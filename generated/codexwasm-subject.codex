@@ -12697,31 +12697,6 @@ Section: Full CCE Conversion (tier0/1/2, inlined from Foreword CCE)
   cce-tier1-usize : Integer -> Integer
   cce-tier1-usize (block) = list-at cce-tier1-blocks (block * 2 + 1)
 
-  cce-tier1-blk : Integer -> Integer
-  cce-tier1-blk (cp) =
-    let v = cp - 128
-    in if v < 256 then 0
-    else if v < 384 then 1
-    else if v < 512 then 2
-    else if v < 640 then 3
-    else if v < 768 then 4
-    else if v < 896 then 5
-    else if v < 1024 then 6
-    else if v < 1152 then 7
-    else if v < 1664 then 8
-    else if v < 1920 then 9
-    else if v < 2048 then 10
-    else (-1)
-
-  cce-tier1-off : Integer -> Integer
-  cce-tier1-off (cp) =
-    let v = cp - 128
-    in if v < 256 then v
-    else if v < 1152 then int-mod (v - 256) 128
-    else if v < 1664 then v - 1152
-    else if v < 1920 then v - 1664
-    else v - 1920
-
   cce-tier2-ubase-c : Integer = 2176
   cce-tier2-count : Integer = 10
 
@@ -12741,27 +12716,6 @@ Section: Full CCE Conversion (tier0/1/2, inlined from Foreword CCE)
 
   cce-tier2-cbase : Integer -> Integer
   cce-tier2-cbase (block) = cce-tier2-cbase-loop block 0 cce-tier2-ubase-c
-
-  cce-to-uni : Integer -> Integer
-  cce-to-uni (cp) =
-    if cp < 0 then 65533
-    else if cp < 128 then list-at cce-to-unicode-table cp
-    else if cp < 2176 then
-      let block = cce-tier1-blk cp
-      in if block < 0 then 65533
-      else cce-tier1-ubase block + cce-tier1-off cp
-    else if cp < 67712 then cce-to-uni-t2 cp 0
-    else 65533
-
-  cce-to-uni-t2 : Integer, Integer -> Integer
-  cce-to-uni-t2 (cp) (block) =
-    if block >= cce-tier2-count then 65533
-    else let cb = cce-tier2-cbase block
-    in let cs = cce-tier2-usize block
-    in if cp >= cb then
-      if cp < cb + cs then cce-tier2-ubase block + (cp - cb)
-      else cce-to-uni-t2 cp (block + 1)
-    else cce-to-uni-t2 cp (block + 1)
 
   cce-from-uni : Integer -> Integer
   cce-from-uni (u) =
@@ -15722,7 +15676,9 @@ Section: Expression Emission
      let tag = find-ctor-tag ctors name 0
      in if tag >= 0 then emit-nullary-ctor st tag
         else emit-name-as-call st name
-    is FunTy (pt) (row) (rt) -> emit-partial-application st name [] (1 + fun-type-arity rt)
+    is FunTy (pt) (row) (rt) ->
+     let ua = lookup-x86-arity (st.user-arities) name
+     in emit-partial-application st name [] (if ua > 0 then ua else 1 + fun-type-arity rt)
     is otherwise -> if has-nullary-x86-builtin-emitter st name then emit-builtin st name []
                     else emit-name-as-call st name
 
@@ -20466,7 +20422,7 @@ Section: Function Application
                       let is-local = lookup-local (st.locals) (flat.func-name) >= 0
               in if is-local then emit-indirect-call st flat
                          else if user-arity > 0 & list-length (flat.args) == user-arity then emit-call-or-effect-op st flat user-arity
-                         else emit-partial-application st (flat.func-name) (flat.args) (list-length (flat.args) + 1 + fun-type-arity rt)
+                         else emit-partial-application st (flat.func-name) (flat.args) (if user-arity > 0 then user-arity else list-length (flat.args) + 1 + fun-type-arity rt)
                      is otherwise ->
                       let is-local = lookup-local (st.locals) (flat.func-name) >= 0
               in if is-local then emit-indirect-call st flat
@@ -21081,14 +21037,84 @@ Section: Closures and Partial Application
   emit-one-trampoline : CodegenState, Text, Integer, Integer, List Integer -> CodegenState
   emit-one-trampoline (st) (func-name) (c) (total-arity) (offsets) =
    let r = total-arity - c
-   in let st1 = if r <= 1 then st
-    else let sa = st-append-code st (mov-load reg-rax reg-rsp 8)
-    in emit-trampoline-under-cases sa c 1 r offsets total-arity
-   in let st2 = emit-consume-arg-count st1
+   in let sa = st-append-code st (mov-load reg-rax reg-rsp 8)
+   in let st1 = if r <= 1 then sa
+    else emit-trampoline-under-cases sa c 1 r offsets total-arity
+   in let st1b = emit-trampoline-over-dynamic st1 func-name c r
+   in let st2 = emit-consume-arg-count st1b
    in let st3 = emit-trampoline-shift-args st2 5 c
    in let st4 = emit-trampoline-load-captures st3 0 c
    in let st5 = emit-load-func-addr st4 reg-rax func-name
    in st-append-code st5 [255, 224]
+
+  emit-over-push-extras : CodegenState, Integer, Integer -> CodegenState
+  emit-over-push-extras (st) (i) (lo) =
+   if i < lo then st
+   else emit-over-push-extras (st-append-code st (push-r (list-at arg-regs i))) (i - 1) lo
+
+ One block serves every surplus count. The block runs when the argument count
+ in rax is greater than r and at most 6, which is the range the argument
+ registers can carry; a count above 6 falls through to the exact path, as it
+ did when each count had its own block.
+
+ Registers on entry are fixed by the closure convention: rax is the argument
+ count, r11 is the closure, and the captures are read through r11 by
+ emit-trampoline-load-captures, so the surplus count is carried in r10, which
+ the convention leaves free, until the captures are loaded.
+
+ The loop keeps two words on the stack below the pushed arguments, the surplus
+ count at offset 0 and the address of the next surplus argument at offset 8,
+ because every register is clobbered across the applications. rsp is back at
+ those two words at each iteration: push-i32 pushes the count word the callee
+ consumes, and the call's return address goes with it. The final add of
+ 16 + (6 - r) * 8 drops the two words and every pushed argument the count did
+ not reach, which restores rsp to the return address whatever the count was.
+
+  emit-trampoline-over-dynamic : CodegenState, Text, Integer, Integer -> CodegenState
+  emit-trampoline-over-dynamic (st) (func-name) (c) (r) =
+   if r >= 6 then st
+   else let st1 = st-append-code st (cmp-ri reg-rax r)
+   in let low = st1.code-len
+   in let st2 = st-append-code st1 (jcc cc-le 0)
+   in let st3 = st-append-code st2 (cmp-ri reg-rax 6)
+   in let high = st3.code-len
+   in let st4 = st-append-code st3 (jcc cc-g 0)
+   in let st5 = st-append-code st4 (mov-rr reg-r10 reg-rax)
+   in let st6 = st-append-code st5 (sub-ri reg-r10 r)
+   in let st7 = emit-consume-arg-count st6
+   in let st8 = emit-over-push-extras st7 5 r
+   in let st9 = emit-trampoline-shift-args st8 5 c
+   in let st10 = emit-trampoline-load-captures st9 0 c
+   in let st11 = st-append-code st10 (mov-rr reg-rax reg-rsp)
+   in let st12 = st-append-code st11 (push-r reg-rax)
+   in let st13 = st-append-code st12 (push-r reg-r10)
+   in let st14 = emit-load-func-addr st13 reg-rax func-name
+   in let st15 = st-append-code st14 [255, 208]
+   in let st16 = emit-over-apply-loop st15 r
+   in let st17 = patch-jcc-at st16 low (st16.code-len)
+   in patch-jcc-at st17 high (st16.code-len)
+
+  emit-over-apply-loop : CodegenState, Integer -> CodegenState
+  emit-over-apply-loop (st) (r) =
+   let top = st.code-len
+   in let st1 = st-append-code st (mov-load reg-r11 reg-rsp 0)
+   in let st2 = st-append-code st1 (cmp-ri reg-r11 0)
+   in let ex = st2.code-len
+   in let st3 = st-append-code st2 (jcc cc-e 0)
+   in let st4 = st-append-code st3 (sub-ri reg-r11 1)
+   in let st5 = st-append-code st4 (mov-store reg-rsp reg-r11 0)
+   in let st6 = st-append-code st5 (mov-load reg-r11 reg-rsp 8)
+   in let st7 = st-append-code st6 (mov-load reg-rdi reg-r11 0)
+   in let st8 = st-append-code st7 (add-ri reg-r11 8)
+   in let st9 = st-append-code st8 (mov-store reg-rsp reg-r11 8)
+   in let st10 = st-append-code st9 (mov-rr reg-r11 reg-rax)
+   in let st11 = st-append-code st10 (mov-load reg-rax reg-r11 0)
+   in let st12 = st-append-code st11 (push-i32 1)
+   in let st13 = st-append-code st12 [255, 208]
+   in let st14 = st-append-code st13 (jmp (top - (st13.code-len + 5)))
+   in let st15 = patch-jcc-at st14 ex (st14.code-len)
+   in let st16 = st-append-code st15 (add-ri reg-rsp (16 + (6 - r) * 8))
+   in st-append-code st16 x86-ret
 
   emit-trampoline-family : CodegenState, Text, Integer, Integer, Integer, List Integer -> TrampFamily
   emit-trampoline-family (st) (func-name) (c) (num-captures) (total-arity) (offsets) =
@@ -35965,6 +35991,8 @@ Section: Type checker and Codegen
 
   cdx-unreachable-match-arm : Integer = 2096
 
+  cdx-partial-application-unused : Integer = 2097
+
   cdx-non-exhaustive-match : Integer = 2070
 
   cdx-int-literal-overflow : Integer = 2071
@@ -36169,6 +36197,7 @@ Section: Registry
     mk-cdx cdx-row-mismatch "RowMismatch" sev-error phase-type-checker "Two effect rows could not be unified: an effect performed on one side is not allowed by the other, and no row variable is free to absorb the difference.",
     mk-cdx cdx-row-infinite "RowInfinite" sev-error phase-type-checker "Row occurs check failed - a row variable would absorb a row that already contains it, producing an infinite effect row.",
     mk-cdx cdx-handler-unused "HandlerUnused" sev-warning phase-type-checker "A handler encloses a body whose effect row cannot perform the handled effect; the handler is legal but discharges nothing.",
+    mk-cdx cdx-partial-application-unused "PartialApplicationUnused" sev-warning phase-type-checker "A let binds a partial application of a named function and nothing reads the binding, so the call is never completed and its effects never happen. The usual cause is an argument left off a call whose result is discarded.",
     mk-cdx cdx-effectful-arrow-value "EffectfulArrowValue" sev-error phase-type-checker "An effect bracket cannot wrap a function type in a value signature; effects belong on the arrow they decorate: write A -> [E] B.",
     mk-cdx cdx-field-on-unit-type "FieldOnUnitType" sev-error phase-type-checker "A field access or assignment names a field through a unit wrapper. The wrapper is a distinct type and has no fields, and a unit over a record has no accessor and is not accepted where the record is expected, so the field cannot be reached through it.",
     mk-cdx cdx-rt-calls-unsafe "RtCallsUnsafe" sev-error phase-type-checker "A [HardRealtime] function calls a function that is not [HardRealtime]-safe.",
@@ -52882,11 +52911,132 @@ Section: Infer Let
    let env2 = infer-let-bindings st env bindings 0 (list-length bindings) empty-row depth
    in let br = infer-expr-at (env2.state) (env2.env) body (depth + 1)
    in let (amb, amb-st) = row-union (br.state) (env2.binds-row) (br.effect-row)
+   in let warned-st = warn-unused-partials amb-st (env2.env) bindings body 0 (list-length bindings)
    in CheckResult {
     inferred-type = br.inferred-type,
     effect-row = amb,
-    state = amb-st
+    state = warned-st
    }
+
+  warn-unused-partials : UnificationState, TypeEnv, List ALetBind, AExpr, Integer, Integer -> UnificationState
+  warn-unused-partials (st) (env) (bindings) (body) (i) (len) =
+   if i >= len then st
+   else warn-unused-partials (warn-one-partial st env bindings body i len False) env bindings body (i + 1) len
+
+  warn-unused-partials-act : UnificationState, TypeEnv, List ALetBind, AExpr, List AActStmt, Integer, Integer, Integer, Integer -> UnificationState
+  warn-unused-partials-act (st) (env) (bindings) (body) (stmts) (si) (slen) (i) (len) =
+   if i >= len then st
+   else let used-after = uses-name-in-stmts stmts si slen ((list-at bindings i).name.value)
+   in let st2 = warn-one-partial st env bindings body i len used-after
+   in warn-unused-partials-act st2 env bindings body stmts si slen (i + 1) len
+
+  warn-one-partial : UnificationState, TypeEnv, List ALetBind, AExpr, Integer, Integer, Boolean -> UnificationState
+  warn-one-partial (st) (env) (bindings) (body) (i) (len) (used-after) =
+   let b = list-at bindings i
+   in let nm = b.name.value
+   in let head = partial-apply-head-name (b.value)
+   in if head == "" then st
+   else if head == nm then st
+   else if used-after then st
+   else if bind-name-count bindings nm 0 len > 1 then st
+   else if is-fun-ty (env-lookup env nm) then
+    if uses-name-in-binds bindings (i + 1) len nm then st
+    else if aexpr-uses-name body nm then st
+    else __record-set st "bag" (bag-add (st.bag) (make-warning cdx-partial-application-unused ("'" & nm & "' is bound to a partial application of '" & head & "' and nothing reads '" & nm & "', so the call is never completed and its effects never happen. Supply the missing arguments, or drop the binding.") (b.span)))
+   else st
+
+  is-fun-ty : CodexType -> Boolean
+  is-fun-ty (t) =
+   when t
+    is FunTy (p) (row) (r) -> True
+    is otherwise -> False
+
+  partial-apply-head-name : AExpr -> Text
+  partial-apply-head-name (e) =
+   when e
+    is AApplyExpr (f) (a) (s) -> apply-spine-head-name f
+    is otherwise -> ""
+
+  apply-spine-head-name : AExpr -> Text
+  apply-spine-head-name (e) =
+   when e
+    is AApplyExpr (f) (a) (s) -> apply-spine-head-name f
+    is ANameExpr (n) (s) -> n.value
+    is otherwise -> ""
+
+  bind-name-count : List ALetBind, Text, Integer, Integer -> Integer
+  bind-name-count (binds) (target) (i) (len) =
+   if i >= len then 0
+   else if (list-at binds i).name.value == target then 1 + bind-name-count binds target (i + 1) len
+   else bind-name-count binds target (i + 1) len
+
+  aexpr-uses-name : AExpr, Text -> Boolean
+  aexpr-uses-name (e) (target) =
+   when e
+    is ALitExpr (lt) (k) (s) -> False
+    is ANameExpr (n) (s) -> n.value == target
+    is AApplyExpr (f) (a) (s) -> aexpr-uses-name f target | aexpr-uses-name a target
+    is ABinaryExpr (l) (op) (r) (s) -> aexpr-uses-name l target | aexpr-uses-name r target
+    is AUnaryExpr (x) (s) -> aexpr-uses-name x target
+    is AIfExpr (c) (tb) (el) (s) -> aexpr-uses-name c target | aexpr-uses-name tb target | aexpr-uses-name el target
+    is ALetExpr (binds) (lbody) (s) -> uses-name-in-binds binds 0 (list-length binds) target | aexpr-uses-name lbody target
+    is ALambdaExpr (ps) (lbody) (s) -> aexpr-uses-name lbody target
+    is AMatchExpr (scrut) (arms) (s) -> aexpr-uses-name scrut target | uses-name-in-arms arms 0 (list-length arms) target
+    is AListExpr (es) (s) -> uses-name-in-exprs es 0 (list-length es) target
+    is ARecordExpr (n) (fs) (s) -> uses-name-in-fields fs 0 (list-length fs) target
+    is AFieldAccess (r) (fl) (s) -> aexpr-uses-name r target
+    is AActExpr (ss) (s) -> uses-name-in-stmts ss 0 (list-length ss) target
+    is AHandleExpr (eff) (hb) (cs) (s) -> aexpr-uses-name hb target | uses-name-in-clauses cs 0 (list-length cs) target
+    is AWithTimeoutExpr (tv) (effs) (scopes) (wb) (s) -> aexpr-uses-name wb target
+    is ATryExpr (mx) (tb) (fb) (fl) (s) -> uses-name-in-stmts tb 0 (list-length tb) target | uses-name-in-stmts fb 0 (list-length fb) target | uses-name-in-stmts fl 0 (list-length fl) target
+    is AFieldAssignExpr (r) (fl) (v) (s) -> aexpr-uses-name r target | aexpr-uses-name v target
+    is ALazyExpr (inner) (s) -> aexpr-uses-name inner target
+    is AErrorExpr (m) (s) -> False
+    is AInductionExpr (sc) (arms) (s) -> aexpr-uses-name sc target | uses-name-in-arms arms 0 (list-length arms) target
+
+  uses-name-in-binds : List ALetBind, Integer, Integer, Text -> Boolean
+  uses-name-in-binds (binds) (i) (len) (target) =
+   if i >= len then False
+   else if aexpr-uses-name ((list-at binds i).value) target then True
+   else uses-name-in-binds binds (i + 1) len target
+
+  uses-name-in-exprs : List AExpr, Integer, Integer, Text -> Boolean
+  uses-name-in-exprs (es) (i) (len) (target) =
+   if i >= len then False
+   else if aexpr-uses-name (list-at es i) target then True
+   else uses-name-in-exprs es (i + 1) len target
+
+  uses-name-in-arms : List AMatchArm, Integer, Integer, Text -> Boolean
+  uses-name-in-arms (arms) (i) (len) (target) =
+   if i >= len then False
+   else let a = list-at arms i
+   in if aexpr-uses-name (a.guard) target then True
+   else if aexpr-uses-name (a.body) target then True
+   else uses-name-in-arms arms (i + 1) len target
+
+  uses-name-in-fields : List AFieldExpr, Integer, Integer, Text -> Boolean
+  uses-name-in-fields (fs) (i) (len) (target) =
+   if i >= len then False
+   else if aexpr-uses-name ((list-at fs i).value) target then True
+   else uses-name-in-fields fs (i + 1) len target
+
+  uses-name-in-stmts : List AActStmt, Integer, Integer, Text -> Boolean
+  uses-name-in-stmts (ss) (i) (len) (target) =
+   if i >= len then False
+   else if stmt-uses-name (list-at ss i) target then True
+   else uses-name-in-stmts ss (i + 1) len target
+
+  stmt-uses-name : AActStmt, Text -> Boolean
+  stmt-uses-name (s) (target) =
+   when s
+    is AActBindStmt (n) (v) (sp) -> aexpr-uses-name v target
+    is AActExprStmt (v) (sp) -> aexpr-uses-name v target
+
+  uses-name-in-clauses : List AHandleClause, Integer, Integer, Text -> Boolean
+  uses-name-in-clauses (cs) (i) (len) (target) =
+   if i >= len then False
+   else if aexpr-uses-name ((list-at cs i).body) target then True
+   else uses-name-in-clauses cs (i + 1) len target
 
   LetBindResult = record {
    state : UnificationState,
@@ -53970,10 +54120,11 @@ Section: Infer Act
   infer-act-let (st) (env) (binds) (body) (stmts) (i) (len) (acc-row) (depth) =
    let lr = infer-let-bindings st env binds 0 (list-length binds) empty-row depth
    in let (acc2, acc-st) = row-union (lr.state) acc-row (lr.binds-row)
+   in let warned-st = warn-unused-partials-act acc-st (lr.env) binds body stmts (i + 1) len 0 (list-length binds)
    in when body
-    is ALetExpr (binds2) (body2) (ls2) -> infer-act-let acc-st (lr.env) binds2 body2 stmts i len acc2 (depth + 1)
+    is ALetExpr (binds2) (body2) (ls2) -> infer-act-let warned-st (lr.env) binds2 body2 stmts i len acc2 (depth + 1)
     is otherwise ->
-     let br = infer-expr-at acc-st (lr.env) body (depth + 1)
+     let br = infer-expr-at warned-st (lr.env) body (depth + 1)
      in let (acc3, acc-st2) = row-union (br.state) acc2 (br.effect-row)
      in infer-act-loop acc-st2 (lr.env) stmts (i + 1) len (br.inferred-type) acc3 depth
 
@@ -54233,7 +54384,7 @@ Section: Infer Expression (dispatch)
   later-field-reads-name : List AFieldExpr, Integer, Integer, Text -> Boolean
   later-field-reads-name (fields) (i) (len) (target) =
    if i >= len then False
-   else if aexpr-mentions-name ((list-at fields i).value) target then True
+   else if aexpr-uses-name ((list-at fields i).value) target then True
    else later-field-reads-name fields (i + 1) len target
 
  The `__record-set` is often NESTED in an argument rather than sitting at
@@ -54266,24 +54417,6 @@ Section: Infer Expression (dispatch)
    when e
     is ANameExpr (n) (s) -> n.value
     is otherwise -> ""
-
-  aexpr-mentions-name : AExpr, Text -> Boolean
-  aexpr-mentions-name (e) (target) =
-   when e
-    is ANameExpr (n) (s) -> n.value == target
-    is AApplyExpr (f) (a) (s) -> aexpr-mentions-name f target | aexpr-mentions-name a target
-    is ABinaryExpr (l) (op) (r) (s) -> aexpr-mentions-name l target | aexpr-mentions-name r target
-    is AIfExpr (c) (t) (el) (s) -> aexpr-mentions-name c target | aexpr-mentions-name t target | aexpr-mentions-name el target
-    is ALetExpr (binds) (body) (s) -> aexpr-mentions-name body target | binds-mention-name binds 0 (list-length binds) target
-    is AMatchExpr (scrut) (arms) (s) -> aexpr-mentions-name scrut target
-    is AFieldAccess (obj) (fl) (s) -> aexpr-mentions-name obj target
-    is otherwise -> False
-
-  binds-mention-name : List ALetBind, Integer, Integer, Text -> Boolean
-  binds-mention-name (binds) (i) (len) (target) =
-   if i >= len then False
-   else if aexpr-mentions-name ((list-at binds i).value) target then True
-   else binds-mention-name binds (i + 1) len target
 
   aexpr-mentions-record-set : AExpr -> Boolean
   aexpr-mentions-record-set (e) =
@@ -54461,7 +54594,17 @@ Section: Type Lookup
     is otherwise -> overlay-hit
 
   compare-binding-names : TypeBinding, TypeBinding -> Integer
-  compare-binding-names (a) (b) = text-compare (a.name) (b.name)
+  compare-binding-names (a) (b) =
+   let by-name = text-compare (a.name) (b.name)
+   in if by-name /= 0 then by-name
+   else binding-shape-rank (a.bound-type) - binding-shape-rank (b.bound-type)
+
+  binding-shape-rank : CodexType -> Integer
+  binding-shape-rank (ty) =
+   when ty
+    is SumTy (sn) (sa) (sc) | RecordTy (rn) (ra) (rf) -> 0
+    is ForAllTy (id) (body) | ForAllEff (id) (body) -> 2
+    is otherwise -> 1
 
   sort-bindings : List TypeBinding -> List TypeBinding
   sort-bindings (xs) = sort-by xs compare-binding-names
@@ -67234,14 +67377,14 @@ Section: Entry Point
    d <- disk-diag path-result
    m <- disk-diag-mem vol
    v <- disk-diag-vol vol
-   when disk-source vol disk-default-path
+   when disk-source vol (disk-path-of path-result)
      is Just (source) ->
        let o = bp-pass 1 bp-orange bp-magenta
        in let foreword-prefix = disk-resolve-forewords vol source mode
        in let full = foreword-prefix & source
        in let flags = parse-mode-flags mode (text-length full)
        in emit-cdx full mode flags True
-     is None -> disk-no-source ("DISK: file not found: " & disk-default-path)
+     is None -> disk-no-source ("DISK: file not found: " & disk-path-of path-result)
   end
 
  The volume rung reads the BPB rather than the mount's own answer.
@@ -67377,11 +67520,20 @@ Section: Entry Point
   disk-diag-path : Maybe Text -> [Console] Nothing
   disk-diag-path (pr) = print-line-uni "DIAG path SKIPPED (see chapter note)"
 
- The name is fixed by the image builder: build-img -Source always writes
- SOURCE.SRC, and the stub's second stdin line has never said anything else.
+ SOURCE.SRC is the FALLBACK, not the only answer. The stub's second stdin line
+ carries the path, and DISK mode read that line and then compiled the constant
+ anyway, so an image holding two sources could only ever compile whichever one
+ the builder had named SOURCE.SRC. Honouring the line is what lets one image
+ hold a directory of them.
 
   disk-default-path : Text
   disk-default-path = "SOURCE.SRC"
+
+  disk-path-of : Maybe Text -> Text
+  disk-path-of (pr) =
+   when pr
+    is Just (p) -> if text-length p == 0 then disk-default-path else p
+    is None -> disk-default-path
 
  The device behind block-read-sector depends on how the block helper bound
  it. Bound through LoadedImage->DeviceHandle the firmware hands a PARTITION,
