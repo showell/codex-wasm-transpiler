@@ -151,7 +151,6 @@ cd tools && npm ci && cd ..
 ./build.py                      # self road: check the artifact against itself
 ./build.py --road zig           # re-derive it from source, through codexzig
 ./build.py --road both          # both, and require them to agree
-./build.py --prove-gate         # show the comparison can actually FAIL
 ```
 
 ## Checking it against programs we did not choose

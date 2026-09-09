@@ -6,7 +6,6 @@
     ./build.py --road both        both roads; every artifact must agree
     ./build.py --force            rebuild every stage
     ./build.py --check-only       check against what is on disk
-    ./build.py --prove-gate       show the fixed-point comparison can FAIL
     ./build.py --rebank           bank this run's peak as the number to beat
     ./build.py --no-sample        skip stage 5
 
@@ -529,7 +528,7 @@ def assemble(force):
     stamp(WASM, [WAT])
 
 
-def fixed_point(mem, prove_gate=False, rebank=False):
+def fixed_point(mem, rebank=False):
     """The invariant, and the measurement that goes with it.
 
     `mem` is filled in rather than returned because the peak this build
@@ -544,22 +543,33 @@ def fixed_point(mem, prove_gate=False, rebank=False):
     refuse_halt(GEN2_DIAG, 'generation 2')
     presence(GEN2_WAT, 'generation 2')
 
-    if prove_gate:
-        # BOX checklist, Before-11: a comparison whose every row reads `ok`
-        # has never executed its own mismatch branch. Perturb by the smallest
-        # amount that must fail, confirm RED, and put it back.
-        say()
-        say('--prove-gate: flipping one byte of generation 2 to show the gate fires')
-        data = bytearray(GEN2_WAT.read_bytes())
-        data[len(data) // 2] ^= 0x01
-        GEN2_WAT.write_bytes(bytes(data))
+    # THE COMPARISON PROVES ITSELF, every run, for 43 ms of the build's 94
+    # seconds. A comparison whose every row reads `ok` has never run its own
+    # mismatch branch, and what hides there is not a broken `==`: it is the
+    # comparison pointed at the wrong operand, after which every run agrees
+    # forever and the byte count below still looks right. One flipped byte
+    # separates "they match" from "nothing was compared".
+    #
+    # Both the self-test and the real comparison read through `operands`, so a
+    # refactor cannot move one without the other. Reading GEN2_WAT directly
+    # here would prove only that this function can open a file.
+    def operands():
+        return WAT.read_bytes(), GEN2_WAT.read_bytes()
 
-    a, b = WAT.read_bytes(), GEN2_WAT.read_bytes()
+    original = GEN2_WAT.read_bytes()
+    probe = bytearray(original)
+    probe[len(probe) // 2] ^= 0x01
+    GEN2_WAT.write_bytes(bytes(probe))
+    x, y = operands()
+    GEN2_WAT.write_bytes(original)
+    if x == y:
+        die('the self-test flipped one byte of generation 2 and the comparison still\n'
+            '         said equal. It is not reading what it reports on, so every green\n'
+            '         run above it means nothing.')
+
+    a, b = operands()
     if a == b:
-        if prove_gate:
-            die('--prove-gate flipped a byte and the comparison still said equal. '
-                'The gate does not work and every green run above it means nothing.')
-        say(f'IDENTICAL -- {len(a)} bytes, both ways')
+        say(f'IDENTICAL -- {len(a)} bytes, both ways (self-test: one flipped byte is caught)')
         return True
     say(f'DIFFERS: generation 1 is {len(a)} bytes, generation 2 is {len(b)}')
     for i in range(min(len(a), len(b))):
@@ -570,10 +580,6 @@ def fixed_point(mem, prove_gate=False, rebank=False):
             break
     else:
         say('  one is a prefix of the other')
-    if prove_gate:
-        say('the gate FIRES -- restoring generation 2 and calling this a pass')
-        GEN2_WAT.write_bytes(a)
-        return True
     return False
 
 
@@ -671,8 +677,6 @@ def main():
     ap.add_argument('--force', action='store_true', help='rebuild every stage')
     ap.add_argument('--check-only', action='store_true',
                     help='check the fixed point against what is on disk')
-    ap.add_argument('--prove-gate', action='store_true',
-                    help='perturb generation 2 and require the comparison to FAIL')
     ap.add_argument('--no-sample', action='store_true', help='skip stage 5')
     ap.add_argument('--rebank', action='store_true',
                     help='bank this run\'s peak memory as the number the ratchet reads')
@@ -708,7 +712,7 @@ def main():
                 die(f'--check-only, but {f.name} is missing')
 
     mem = {}
-    ok = fixed_point(mem, args.prove_gate, args.rebank)
+    ok = fixed_point(mem, args.rebank)
     sample_ok = True
     if not args.no_sample:
         sample_ok = run_sample()
