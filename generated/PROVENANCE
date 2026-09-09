@@ -5,7 +5,7 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-09-09T01:25:46Z
+built            2026-09-09T01:31:01Z
 road             both
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
@@ -30,4 +30,4 @@ MEMORY -- the first priority, measured rather than estimated.
   ceiling        40.4% of wasm32's hard 4 GiB
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
-  bank           2286092288
+  bank           1736048640

@@ -7,6 +7,8 @@
     ./build.py --force            rebuild every stage
     ./build.py --check-only       check against what is on disk
     ./build.py --prove-gate       show the fixed-point comparison can FAIL
+    ./build.py --rebank           bank this run's peak as the number to beat
+    ./build.py --no-sample        skip stage 5
 
 codexwasm is one program: Codex source in, WAT out. It runs as a wasm module.
 
@@ -76,7 +78,13 @@ ZIG = pathlib.Path(os.environ.get('ZIG', pathlib.Path.home() / 'zig-0.16.0' / 'z
 SUBJECT = GEN / 'codexwasm-subject.codex'
 WAT = GEN / 'codexwasm.wat'          # THE artifact, and it is readable
 WASM = GEN / 'codexwasm.wasm'        # the same thing, assembled
-DIAG = GEN / 'codexwasm.diag'
+# Beside generation 2's, and gitignored with it. This file is the emitter's
+# stdout for whichever road ran -- the native binary prints CX-DECK telemetry
+# and the module does not -- so its content is a function of the ROAD and not
+# of the source. Tracked, it made `git diff generated/` report a 396-line
+# change for choosing a different flag. It is read within the run, by
+# refuse_halt, and is evidence of nothing afterwards.
+DIAG = LOCAL / 'codexwasm.diag'
 
 GEN2_WAT = LOCAL / 'codexwasm.gen2.wat'
 GEN2_DIAG = LOCAL / 'codexwasm.gen2.diag'
@@ -126,6 +134,7 @@ INPUT_WAS_CAPPED_AT = 4 * 1024 * 1024
 
 _t0 = time.time()
 _notes = []
+_bank_pending = None
 
 
 def say(msg=''):
@@ -362,8 +371,14 @@ def check_memory(stderr_text, what, ratchet=False, rebank=False):
 
     got = int(fields['bytes'])
     if rebank:
-        BANK.write_text(f'{got}\n')
-        say(f'--rebank: banked {got} bytes ({fields["mb"]} MB) as the number to beat')
+        # NOT WRITTEN YET. A baseline is the thing every later run is judged
+        # against, so it may only come from a run that passed -- and the
+        # checkout-moved check below already promises that a build which loses
+        # its tree writes nothing. main() banks this once the fixed point holds
+        # and the sample matches.
+        global _bank_pending
+        _bank_pending = (got, fields['mb'])
+        say(f'--rebank: {got} bytes ({fields["mb"]} MB) will be banked if this run passes')
         return fields
     if not BANK.is_file():
         _notes.append('no memory bank yet -- run --rebank to set one; the ratchet is OFF')
@@ -706,6 +721,15 @@ def main():
 
     if not args.check_only:
         write_provenance(root, road, mem)
+
+    if _bank_pending:
+        got, mb = _bank_pending
+        if ok and sample_ok:
+            BANK.write_text(f'{got}\n')
+            say(f'--rebank: banked {got} bytes ({mb} MB) as the number to beat')
+        else:
+            say(f'--rebank: NOT banked -- this run did not pass, and a baseline '
+                f'taken from a run we do not trust is worse than a stale one')
 
     head('verdict')
     say(f'fixed point   {"HOLDS" if ok else "BROKEN"}')
