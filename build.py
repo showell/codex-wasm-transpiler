@@ -185,6 +185,29 @@ def checkout_state(root):
     return f'{head_sha}{" DIRTY" if dirty else ""}'
 
 
+def borrowed_pin(binary):
+    """The revision the borrowed codexzig was built from, or None.
+
+    codexzig carries no stamp of its own, so this reads the receipt its own
+    repository writes beside it: the binary sits at
+    <repo>/generated/local/codexzig and the receipt at
+    <repo>/generated/PROVENANCE, whose `checkout` line is followed by the
+    revision. Nothing here can make a binary from somewhere else say where it
+    came from, so an unreadable receipt is REPORTED rather than read as
+    agreement.
+    """
+    prov = pathlib.Path(binary).resolve().parent.parent / 'PROVENANCE'
+    if not prov.is_file():
+        return None
+    lines = prov.read_text().splitlines()
+    for i, line in enumerate(lines):
+        if line.startswith('checkout') and i + 1 < len(lines):
+            tok = lines[i + 1].split()
+            if tok and 8 <= len(tok[0]) <= 40 and all(c in '0123456789abcdef' for c in tok[0]):
+                return tok[0]
+    return None
+
+
 def module_pin():
     """The revision that built the tracked generated/codexwasm.wasm.
 
@@ -241,6 +264,25 @@ def preflight(road):
             die(f'CODEXZIG={binary} is not executable')
         say(f'codexzig   {binary}')
         say(f'           sha256 {sha(binary)[:16]}')
+        # THE ZIG ROAD BORROWS AN EMITTER FROM ANOTHER REPOSITORY, and the
+        # self road is already guarded against exactly this: a module and a
+        # checkout that disagree are two emitters, not two machines running
+        # one. The same hazard reaches the zig road through $CODEXZIG and was
+        # covered by nothing, so a codexzig built at another revision would
+        # have made a road disagreement unattributable.
+        pin = borrowed_pin(binary)
+        now = cobblestone.revision(root).split()[0]
+        if pin and pin != now:
+            die(f'codexzig was built at {pin}, the checkout is {now}.\n'
+                '         The zig road would emit with a DIFFERENT emitter than the one\n'
+                '         in play, so a disagreement between the roads would say nothing\n'
+                '         about either. Rebuild codexzig against this checkout.')
+        if pin:
+            say(f'           built at {pin}, matching the checkout')
+        else:
+            say('           WARNING: no receipt beside it -- its pin is UNVERIFIED')
+            _notes.append('codexzig had no readable receipt, so the emitter it carries '
+                          'is unverified against this checkout')
         if not ZIG.exists():
             die(f'no zig at {ZIG} -- set $ZIG')
         say(f'zig        {subprocess.run([str(ZIG), "version"], capture_output=True, text=True).stdout.strip()}')
