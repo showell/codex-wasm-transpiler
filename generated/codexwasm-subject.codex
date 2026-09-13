@@ -4528,6 +4528,12 @@ Section: The Table
    BuiltinSpec { bs-name = "bits-to-real-approx", bs-alloc = "none", bs-varies = False, bs-type = Just (FunTy int-ty-default empty-row real-f32), bs-emit = Just (\s a -> emit-bits-to-real-approx-builtin s a) },
    BuiltinSpec { bs-name = "vec4-splat", bs-alloc = "fixed", bs-varies = False, bs-type = Just (FunTy real-f32 empty-row (VectorTy 4 real-f32)), bs-emit = Just (\s a -> emit-vec4-splat-builtin s a) },
    BuiltinSpec { bs-name = "vec4-extract", bs-alloc = "none", bs-varies = False, bs-type = Just (FunTy (VectorTy 4 real-f32) empty-row (FunTy int-ty-default empty-row real-f32)), bs-emit = Just (\s a -> emit-vec4-extract-builtin s a) },
+   BuiltinSpec { bs-name = "mask4-any", bs-alloc = "none", bs-varies = False, bs-type = Just (FunTy (VectorMaskTy 4) empty-row BooleanTy), bs-emit = Just (\s a -> emit-mask4-any-builtin s a) },
+   BuiltinSpec { bs-name = "mask4-all", bs-alloc = "none", bs-varies = False, bs-type = Just (FunTy (VectorMaskTy 4) empty-row BooleanTy), bs-emit = Just (\s a -> emit-mask4-all-builtin s a) },
+   BuiltinSpec { bs-name = "mask4-none", bs-alloc = "none", bs-varies = False, bs-type = Just (FunTy (VectorMaskTy 4) empty-row BooleanTy), bs-emit = Just (\s a -> emit-mask4-none-builtin s a) },
+   BuiltinSpec { bs-name = "mask4-count", bs-alloc = "none", bs-varies = False, bs-type = Just (FunTy (VectorMaskTy 4) empty-row int-ty-default), bs-emit = Just (\s a -> emit-mask4-count-builtin s a) },
+   BuiltinSpec { bs-name = "vec4-select", bs-alloc = "fixed", bs-varies = False, bs-type = Just (FunTy (VectorMaskTy 4) empty-row (FunTy (VectorTy 4 real-f32) empty-row (FunTy (VectorTy 4 real-f32) empty-row (VectorTy 4 real-f32)))), bs-emit = Just (\s a -> emit-vec-select-builtin s a) },
+   BuiltinSpec { bs-name = "vec4-reduce-add", bs-alloc = "none", bs-varies = False, bs-type = Just (FunTy (VectorTy 4 real-f32) empty-row real-f32), bs-emit = Just (\s a -> emit-vec4-reduce-add-builtin s a) },
    BuiltinSpec { bs-name = "suggested-vector-width", bs-alloc = "none", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row int-ty-default)), bs-emit = Just (\s a -> emit-suggested-vector-width-builtin s a) },
    BuiltinSpec { bs-name = "atomic-load", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row int-ty-default), bs-emit = Just (\s a -> emit-atomic-load-builtin s a) },
    BuiltinSpec { bs-name = "atomic-store", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row (FunTy int-ty-default empty-row int-ty-default)), bs-emit = Just (\s a -> emit-atomic-store-builtin s a) },
@@ -4535,11 +4541,11 @@ Section: The Table
    BuiltinSpec { bs-name = "atomic-add", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row (FunTy int-ty-default empty-row int-ty-default)), bs-emit = Just (\s a -> emit-atomic-add-builtin s a) },
    BuiltinSpec { bs-name = "atomic-exchange", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row (FunTy int-ty-default empty-row int-ty-default)), bs-emit = Just (\s a -> emit-atomic-exchange-builtin s a) },
    BuiltinSpec { bs-name = "memory-fence", bs-alloc = "none", bs-varies = True, bs-type = Just (FunTy int-ty-default empty-row int-ty-default), bs-emit = Just (\s a -> emit-memory-fence-builtin s a) },
-   BuiltinSpec { bs-name = "vec-empty", bs-alloc = "fixed", bs-varies = False, bs-type = Just (ForAllTy 0 (VectorTy 0 (TypeVar 0))), bs-emit = Just (\s a -> emit-vec-empty-builtin s a) },
-   BuiltinSpec { bs-name = "vec-singleton", bs-alloc = "fixed", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row (VectorTy 1 (TypeVar 0)))), bs-emit = Just (\s a -> emit-vec-singleton-builtin s a) },
-   BuiltinSpec { bs-name = "vec-head", bs-alloc = "none", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (VectorTy (0 - 1) (TypeVar 0)) empty-row (TypeVar 0))), bs-emit = Just (\s a -> emit-vec-head-builtin s a) },
-   BuiltinSpec { bs-name = "vec-cons", bs-alloc = "input", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row (FunTy (VectorTy (0 - 1) (TypeVar 0)) empty-row (VectorTy (0 - 1) (TypeVar 0))))), bs-emit = Just (\s a -> emit-helper-call-2 s [list-at a 1, list-at a 0] "__list_snoc") },
-   BuiltinSpec { bs-name = "vec-length", bs-alloc = "none", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (VectorTy (0 - 1) (TypeVar 0)) empty-row int-ty-default)), bs-emit = Just (\s a -> emit-list-length-builtin s a) },
+   BuiltinSpec { bs-name = "vec-empty", bs-alloc = "fixed", bs-varies = False, bs-type = Just (ForAllTy 0 (SizedVecTy 0 (TypeVar 0))), bs-emit = Just (\s a -> emit-vec-empty-builtin s a) },
+   BuiltinSpec { bs-name = "vec-singleton", bs-alloc = "fixed", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row (SizedVecTy 1 (TypeVar 0)))), bs-emit = Just (\s a -> emit-vec-singleton-builtin s a) },
+   BuiltinSpec { bs-name = "vec-head", bs-alloc = "none", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (SizedVecTy (0 - 1) (TypeVar 0)) empty-row (TypeVar 0))), bs-emit = Just (\s a -> emit-vec-head-builtin s a) },
+   BuiltinSpec { bs-name = "vec-cons", bs-alloc = "input", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (TypeVar 0) empty-row (FunTy (SizedVecTy (0 - 1) (TypeVar 0)) empty-row (SizedVecTy (0 - 1) (TypeVar 0))))), bs-emit = Just (\s a -> emit-helper-call-2 s [list-at a 1, list-at a 0] "__list_snoc") },
+   BuiltinSpec { bs-name = "vec-length", bs-alloc = "none", bs-varies = False, bs-type = Just (ForAllTy 0 (FunTy (SizedVecTy (0 - 1) (TypeVar 0)) empty-row int-ty-default)), bs-emit = Just (\s a -> emit-list-length-builtin s a) },
    BuiltinSpec { bs-name = "s-new", bs-alloc = "unknown", bs-varies = True, bs-type = Just (ForAllTy 0 (deck-record (ConstructedTy schan-name [TypeVar 0]))), bs-emit = Just (\s a -> emit-helper-call-0 s a "chan-kern-create") },
    BuiltinSpec { bs-name = "s-send", bs-alloc = "unknown", bs-varies = True, bs-type = Just (ForAllTy 0 (ForAllTy 1 (FunTy (deck-record (ConstructedTy schan-name [deck-record (ConstructedTy ssend-name [TypeVar 0, TypeVar 1])])) empty-row (FunTy (TypeVar 0) empty-row (deck-record (ConstructedTy schan-name [TypeVar 1])))))), bs-emit = Just (\s a -> emit-helper-call-2 s a "chan-kern-send-block") },
    BuiltinSpec { bs-name = "s-recv", bs-alloc = "unknown", bs-varies = True, bs-type = Just (ForAllTy 0 (ForAllTy 1 (FunTy (deck-record (ConstructedTy schan-name [deck-record (ConstructedTy srecv-name [TypeVar 0, TypeVar 1])])) empty-row (deck-record (ConstructedTy schan-name [TypeVar 1]))))), bs-emit = Just (\s a -> emit-helper-call-1 s a "chan-kern-recv-block") },
@@ -12394,6 +12400,16 @@ Section: SSE2 Instructions
    then [102, rex False (gpr >= 8) False (xmm >= 8), 15, 80, modrm 3 gpr xmm]
    else [102, 15, 80, modrm 3 gpr xmm]
 
+ The packed-single form is the same opcode without the 0x66 prefix, and it
+ yields FOUR sign bits rather than two. The REX rule above is the same rule
+ here, for the same reason.
+
+  movmskps : Integer, Integer -> List Integer
+  movmskps (gpr) (xmm) =
+   if (gpr >= 8) | (xmm >= 8)
+   then [rex False (gpr >= 8) False (xmm >= 8), 15, 80, modrm 3 gpr xmm]
+   else [15, 80, modrm 3 gpr xmm]
+
   unpcklpd-xmm : Integer, Integer -> List Integer
   unpcklpd-xmm (dst) (src) =
    [102, 15, 20, modrm 3 dst src]
@@ -16412,6 +16428,7 @@ Section: Expression Emission
   eq-site-actuals (ty) =
    when ty
     is ConstructedTy (cn) (ca) -> ca
+    is ListTy (e) -> [e]
     is otherwise -> eq-empty-type-args
 
   eq-subst-deep : List CodexType, List CodexType, Integer, CodexType -> CodexType
@@ -16679,6 +16696,14 @@ Section: Recursive Structural Equality Helpers
         eq-sum-ctors = cs
        })))
      else eq-site-ctors st cs 0 acc (fuel - 1) args actuals
+    is ListTy (e) ->
+     if eq-req-has acc (eq-helper-name-inst "List" [e]) 0 then acc
+     else eq-note-site st e (list-push acc (deck-record (EqHelperReq {
+        eq-sum-name = "List",
+        eq-sum-ty = resolved,
+        eq-sum-actuals = [e],
+        eq-sum-ctors = []
+       }))) (fuel - 1)
     is otherwise -> acc
 
   eq-site-ctors : CodegenState, List SumCtor, Integer, List EqHelperReq, Integer, List CodexType, List CodexType -> List EqHelperReq
@@ -16801,6 +16826,11 @@ Section: Recursive Structural Equality Helpers
    let resolved = strip-unit-ty (resolve-to-sum-with-defs st fty)
    in let plain = deck-record (IrBinary IrEq lhs rhs BooleanTy synthetic-span)
    in when resolved
+    is ListTy (e) ->
+     let hname = eq-helper-name-inst "List" [e]
+     in let hty = deck-record (FunTy resolved empty-row (deck-record (FunTy resolved empty-row BooleanTy)))
+     in let inner = deck-record (IrApply (deck-record (IrName hname hty synthetic-span)) lhs (peel-fun-return hty) synthetic-span)
+     in deck-record (IrApply inner rhs BooleanTy synthetic-span)
     is SumTy (sn) (args) (cs) ->
      if eq-needs-inst-helper st (sn.value) cs (eq-site-actuals fty)
      then let hname = eq-helper-name-inst (sn.value) (eq-site-actuals fty)
@@ -16843,16 +16873,137 @@ Section: Recursive Structural Equality Helpers
      alt-group = 0 - 1
     })))
 
+ A LIST REQ MINTS TWO DEFINITIONS, and the second is the reason a list cannot
+ reuse the sum shape: the comparison is a walk over an index, and a walk needs
+ a definition with the index in it. The entry compares the two lengths and
+ hands off; the loop compares one element pair and calls itself. Recursion
+ rather than bounded inlining is the same argument the sum helper makes, and
+ here it also keeps the cost linear: a version that dropped the head of each
+ list per step would allocate a whole list per element on a heap with no GC.
+
+ The element pair goes through `eq-helper-field-eq`, so the element decides how
+ it is compared exactly as a field does: a sum reaches its own instantiated
+ helper, a nested list reaches this same pair minted at the inner type, and
+ Text reaches the backend's own arm. That is why the element type is in the
+ NAME: one copy per element type, each with the right compare.
+
+  eq-list-elem-of : CodexType -> CodexType
+  eq-list-elem-of (ty) =
+   when strip-unit-ty ty
+    is ListTy (e) -> e
+    is otherwise -> ErrorTy
+
+  eq-req-is-list : EqHelperReq -> Boolean
+  eq-req-is-list (req) = req.eq-sum-name == "List"
+
+  eq-list-loop-name : EqHelperReq -> Text
+  eq-list-loop-name (req) = deck-record (eq-req-name req & "__loop")
+
+  eq-ir-name : Text, CodexType -> IRExpr
+  eq-ir-name (n) (ty) = deck-record (IrName n ty synthetic-span)
+
+  eq-fun1-ty : CodexType, CodexType -> CodexType
+  eq-fun1-ty (a) (r) = deck-record (FunTy a empty-row r)
+
+  eq-ir-call1 : Text, CodexType, CodexType, IRExpr -> IRExpr
+  eq-ir-call1 (n) (aty) (rty) (x) =
+   deck-record (IrApply (eq-ir-name n (eq-fun1-ty aty rty)) x rty synthetic-span)
+
+  eq-ir-call2 : Text, CodexType, CodexType, CodexType, IRExpr, IRExpr -> IRExpr
+  eq-ir-call2 (n) (aty) (bty) (rty) (x) (y) =
+   let rest = eq-fun1-ty bty rty
+   in let inner = deck-record (IrApply (eq-ir-name n (eq-fun1-ty aty rest)) x rest synthetic-span)
+   in deck-record (IrApply inner y rty synthetic-span)
+
+  eq-list-int-ty : CodexType
+  eq-list-int-ty = int-ty-default
+
+  eq-list-loop-call : EqHelperReq, IRExpr, IRExpr, IRExpr, IRExpr -> IRExpr
+  eq-list-loop-call (req) (xs) (ys) (i) (n) =
+   let lty = req.eq-sum-ty
+   in let t3 = eq-fun1-ty eq-list-int-ty (eq-fun1-ty eq-list-int-ty BooleanTy)
+   in let t2 = eq-fun1-ty lty t3
+   in let t1 = eq-fun1-ty lty t2
+   in let a1 = deck-record (IrApply (eq-ir-name (eq-list-loop-name req) t1) xs t2 synthetic-span)
+   in let a2 = deck-record (IrApply a1 ys t3 synthetic-span)
+   in let a3 = deck-record (IrApply a2 i (eq-fun1-ty eq-list-int-ty BooleanTy) synthetic-span)
+   in deck-record (IrApply a3 n BooleanTy synthetic-span)
+
+  eq-list-helper-def : CodegenState, EqHelperReq -> IRDef
+  eq-list-helper-def (st) (req) =
+   let lty = req.eq-sum-ty
+   in let lena = eq-ir-call1 "list-length" lty eq-list-int-ty (eq-ir-name "__eqa" lty)
+   in let lenb = eq-ir-call1 "list-length" lty eq-list-int-ty (eq-ir-name "__eqb" lty)
+   in let same-len = deck-record (IrBinary IrEq lena lenb BooleanTy synthetic-span)
+   in let zero = deck-record (IrIntLit 0 synthetic-span)
+   in let len-again = eq-ir-call1 "list-length" lty eq-list-int-ty (eq-ir-name "__eqa" lty)
+   in let walk = eq-list-loop-call req (eq-ir-name "__eqa" lty) (eq-ir-name "__eqb" lty) zero len-again
+   in let no = deck-record (IrBoolLit False synthetic-span)
+   in let entry-body = deck-record (IrIf same-len walk no BooleanTy synthetic-span)
+   in deck-record (IRDef {
+    name = eq-req-name req,
+    params = [
+      deck-record (IRParam { name = "__eqa", type-val = lty, span = synthetic-span }),
+      deck-record (IRParam { name = "__eqb", type-val = lty, span = synthetic-span })
+     ],
+    type-val = BooleanTy,
+    body = entry-body,
+    chapter-slug = "",
+    is-punctual = False,
+    wcet-budget = 0,
+    unique-params = [],
+    span = synthetic-span
+   })
+
+  eq-list-loop-def : CodegenState, EqHelperReq -> IRDef
+  eq-list-loop-def (st) (req) =
+   let lty = req.eq-sum-ty
+   in let ety = eq-list-elem-of lty
+   in let xs = eq-ir-name "__eqa" lty
+   in let ys = eq-ir-name "__eqb" lty
+   in let i = eq-ir-name "__eqi" eq-list-int-ty
+   in let n = eq-ir-name "__eqn" eq-list-int-ty
+   in let done = deck-record (IrBinary IrGtEq i n BooleanTy synthetic-span)
+   in let lhs = eq-ir-call2 "list-at" lty eq-list-int-ty ety xs i
+   in let rhs = eq-ir-call2 "list-at" lty eq-list-int-ty ety ys i
+   in let one = eq-helper-field-eq st ety lhs rhs
+   in let step = deck-record (IrIntLit 1 synthetic-span)
+   in let i-next = deck-record (IrBinary IrAddInt i step eq-list-int-ty synthetic-span)
+   in let next = eq-list-loop-call req xs ys i-next n
+   in let yes = deck-record (IrBoolLit True synthetic-span)
+   in let no = deck-record (IrBoolLit False synthetic-span)
+   in let inner-if = deck-record (IrIf one next no BooleanTy synthetic-span)
+   in let loop-body = deck-record (IrIf done yes inner-if BooleanTy synthetic-span)
+   in deck-record (IRDef {
+    name = eq-list-loop-name req,
+    params = [
+      deck-record (IRParam { name = "__eqa", type-val = lty, span = synthetic-span }),
+      deck-record (IRParam { name = "__eqb", type-val = lty, span = synthetic-span }),
+      deck-record (IRParam { name = "__eqi", type-val = eq-list-int-ty, span = synthetic-span }),
+      deck-record (IRParam { name = "__eqn", type-val = eq-list-int-ty, span = synthetic-span })
+     ],
+    type-val = BooleanTy,
+    body = loop-body,
+    chapter-slug = "",
+    is-punctual = False,
+    wcet-budget = 0,
+    unique-params = [],
+    span = synthetic-span
+   })
+
   eq-helper-def : CodegenState, EqHelperReq -> IRDef
   eq-helper-def (st) (req) =
-   let sty = req.eq-sum-ty
-   in let formals = eq-req-formals req
+   let formals = eq-req-formals req
    in let actuals = req.eq-sum-actuals
    in let cs = for c in (req.eq-sum-ctors) -> deck-record (SumCtor {
      name = c.name,
      fields = eq-subst-fields (c.fields) formals actuals,
      return-type = c.return-type
     })
+   in let sty = if list-length actuals == 0 then req.eq-sum-ty
+    else when req.eq-sum-ty
+     is SumTy (n) (args) (ctors) -> deck-record (SumTy n actuals cs)
+     is otherwise -> req.eq-sum-ty
    in deck-record (IRDef {
     name = eq-req-name req,
     params = [
@@ -16871,7 +17022,10 @@ Section: Recursive Structural Equality Helpers
   eq-helper-defs-acc : CodegenState, List EqHelperReq, Integer, List IRDef -> List IRDef
   eq-helper-defs-acc (st) (reqs) (i) (acc) =
    if i >= list-length reqs then acc
-   else eq-helper-defs-acc st reqs (i + 1) (list-push acc (eq-helper-def st (list-at reqs i)))
+   else let req = list-at reqs i
+   in if eq-req-is-list req
+   then eq-helper-defs-acc st reqs (i + 1) (list-push (list-push acc (eq-list-helper-def st req)) (eq-list-loop-def st req))
+   else eq-helper-defs-acc st reqs (i + 1) (list-push acc (eq-helper-def st req))
 
   eq-helper-defs : CodegenState, List IRDef -> List IRDef
   eq-helper-defs (st) (ds) =
@@ -18173,7 +18327,8 @@ Section: Builtin Emission
    in let st1 = st-append-code (e0.state) (li (e0.reg) (st-cell (e0.state) deck-bound-counter-addr))
    in let e1 = alloc-temp st1
    in let st2 = st-append-code (e1.state) (mov-load (e1.reg) (e0.reg) 0)
-   in let st3 = st-append-code st2 (add-ri (e1.reg) (0 - 1))
+   in let guarded = st-append-code st2 (cmp-ri (e1.reg) 0 & jcc cc-g 2 & [15, 11])
+   in let st3 = st-append-code guarded (add-ri (e1.reg) (0 - 1))
    in let st4 = st-append-code st3 (mov-store (e0.reg) (e1.reg) 0)
    in let jcc-pos = st4.code-len
    in let st5 = st-append-code st4 (jcc cc-ne 0)
@@ -18836,6 +18991,86 @@ Section: State Effect
    let (st1, bits-reg) = emit-mask-extract st args
    in let rd = alloc-temp st1
    in let st2 = st-append-code (rd.state) (mov-rr (rd.reg) bits-reg & shr-ri (rd.reg) 1 & and-ri bits-reg 1 & add-rr (rd.reg) bits-reg)
+   in EmitResult { state = st2, reg = rd.reg }
+
+ MOVMSKPS extracts four packed-single sign bits; MOVMSKPD extracts two
+ packed-double sign bits.
+
+  emit-mask4-extract : CodegenState, List IRExpr -> (CodegenState, Integer)
+  emit-mask4-extract (st) (args) =
+   let mask = emit-expr (st-set-tail-pos st False) (list-at args 0)
+   in let loc = alloc-local (mask.state)
+   in let st1 = store-local (loc.state) (loc.reg) (mask.reg)
+   in let mld = load-local st1 (loc.reg)
+   in let st2 = st-append-code (mld.state) (movups-load 0 (mld.reg) 0)
+   in let rd = alloc-temp st2
+   in let st3 = st-append-code (rd.state) (movmskps (rd.reg) 0)
+   in (st3, int-widen (rd.reg))
+
+  emit-mask4-any-builtin : CodegenState, List IRExpr -> EmitResult
+  emit-mask4-any-builtin (st) (args) =
+   let (st1, bits-reg) = emit-mask4-extract st args
+   in let rd = alloc-temp st1
+   in let st2 = st-append-code (rd.state) (test-rr bits-reg bits-reg & setcc cc-ne (rd.reg) & movzx-byte-self (rd.reg))
+   in EmitResult { state = st2, reg = rd.reg }
+
+  emit-mask4-all-builtin : CodegenState, List IRExpr -> EmitResult
+  emit-mask4-all-builtin (st) (args) =
+   let (st1, bits-reg) = emit-mask4-extract st args
+   in let rd = alloc-temp st1
+   in let st2 = st-append-code (rd.state) (cmp-ri bits-reg 15 & setcc cc-e (rd.reg) & movzx-byte-self (rd.reg))
+   in EmitResult { state = st2, reg = rd.reg }
+
+  emit-mask4-none-builtin : CodegenState, List IRExpr -> EmitResult
+  emit-mask4-none-builtin (st) (args) =
+   let (st1, bits-reg) = emit-mask4-extract st args
+   in let rd = alloc-temp st1
+   in let st2 = st-append-code (rd.state) (test-rr bits-reg bits-reg & setcc cc-e (rd.reg) & movzx-byte-self (rd.reg))
+   in EmitResult { state = st2, reg = rd.reg }
+
+  emit-mask4-count-builtin : CodegenState, List IRExpr -> EmitResult
+  emit-mask4-count-builtin (st) (args) =
+   let (st1, bits-reg) = emit-mask4-extract st args
+   in let rd = alloc-temp st1
+   in let acc = alloc-temp-avoiding (rd.state) bits-reg
+   in let st2 = st-append-code (acc.state) (
+    mov-rr (acc.reg) bits-reg
+    & and-ri (acc.reg) 1
+    & mov-rr (rd.reg) bits-reg
+    & shr-ri (rd.reg) 1
+    & and-ri (rd.reg) 1
+    & add-rr (acc.reg) (rd.reg)
+    & mov-rr (rd.reg) bits-reg
+    & shr-ri (rd.reg) 2
+    & and-ri (rd.reg) 1
+    & add-rr (acc.reg) (rd.reg)
+    & mov-rr (rd.reg) bits-reg
+    & shr-ri (rd.reg) 3
+    & and-ri (rd.reg) 1
+    & add-rr (acc.reg) (rd.reg)
+   )
+   in EmitResult { state = st2, reg = acc.reg }
+
+  emit-vec4-reduce-add-builtin : CodegenState, List IRExpr -> EmitResult
+  emit-vec4-reduce-add-builtin (st) (args) =
+   let vec = emit-expr (st-set-tail-pos st False) (list-at args 0)
+   in let loc = alloc-local (vec.state)
+   in let st1 = store-local (loc.state) (loc.reg) (vec.reg)
+   in let vld = load-local st1 (loc.reg)
+   in let rd = alloc-temp-avoiding (vld.state) (vld.reg)
+   in let st2 = st-append-code (rd.state) (
+    movups-load 0 (vld.reg) 0
+    & mov-load-u32 (rd.reg) (vld.reg) 4
+    & movd-to-xmm 1 (rd.reg)
+    & addss-xmm 0 1
+    & mov-load-u32 (rd.reg) (vld.reg) 8
+    & movd-to-xmm 1 (rd.reg)
+    & addss-xmm 0 1
+    & mov-load-u32 (rd.reg) (vld.reg) 12
+    & movd-to-xmm 1 (rd.reg)
+    & addss-xmm 0 1
+    & movd-from-xmm (rd.reg) 0
+   )
    in EmitResult { state = st2, reg = rd.reg }
 
 Section: Builtin Registry
@@ -21903,6 +22138,7 @@ Section: Self-Type-Table Emission
     is UnitTy (n) (inner) -> let nm = emit-const-name buf len vaddr n in let c = emit-const-codextype buf (nm.len) vaddr inner (fuel - 1) in const-box buf (c.len) (live-type-tag ty) [vaddr + nm.off, vaddr + c.off]
     is VectorTy (vn) (vt) -> const-box buf len (live-type-tag ty) [vn, 0]
     is VectorMaskTy (n) -> const-box buf len (live-type-tag ty) [n]
+    is SizedVecTy (sn) (st) -> const-box buf len (live-type-tag ty) [sn, 0]
     is TypeCon (n) -> let nm = emit-const-name buf len vaddr n in const-box buf (nm.len) (live-name-ref-tag n) [vaddr + nm.off, 0]
     is TypeApply (f) (a) -> const-box buf len (live-type-tag ErrorTy) []
     is LinearTy (linner) -> emit-const-codextype buf len vaddr linner (fuel - 1)
@@ -22435,11 +22671,15 @@ Section: Pattern Matching
 
   emit-pattern : CodegenState, Integer, IRPat, CodexType -> EmitPatternResult
   emit-pattern (st) (scrut-loc) (pat) (scrut-ty) =
+   emit-pattern-with-patches st scrut-loc pat scrut-ty []
+
+  emit-pattern-with-patches : CodegenState, Integer, IRPat, CodexType, List Integer -> EmitPatternResult
+  emit-pattern-with-patches (st) (scrut-loc) (pat) (scrut-ty) (patches) =
    when pat
     is IrWildPat (sp) -> EmitPatternResult {
      state = st,
      next-branch-patch = -1,
-     extra-patches = []
+     extra-patches = patches
     }
     is IrVarPat (name) (ty) (sp) ->
      let var-loc = alloc-local st
@@ -22448,7 +22688,7 @@ Section: Pattern Matching
      in EmitPatternResult {
       state = add-local st1 name (var-loc.reg),
       next-branch-patch = -1,
-      extra-patches = []
+      extra-patches = patches
      }
     is IrCtorPat (name) (sub-pats) (ty) (sp) ->
      let scrut-load = load-local st scrut-loc
@@ -22465,7 +22705,7 @@ Section: Pattern Matching
      in let jcc-pos = st2.code-len
      in let st3 = st-append-code st2 (jcc cc-ne 0)
      in let field-tys = ctor-field-types resolve-ty name
-     in let bf = bind-ctor-fields st3 scrut-loc sub-pats field-tys 0 []
+     in let bf = bind-ctor-fields st3 scrut-loc sub-pats field-tys 0 patches
      in EmitPatternResult {
       state = bf.state,
       next-branch-patch = jcc-pos,
@@ -22477,7 +22717,7 @@ Section: Pattern Matching
      in EmitPatternResult {
       state = lt.state,
       next-branch-patch = lt.patch,
-      extra-patches = []
+      extra-patches = patches
      }
     is IrVecPat (sub-pats) (ty) (sp) ->
      let result-loc = alloc-local st
@@ -22492,7 +22732,7 @@ Section: Pattern Matching
      in EmitPatternResult {
       state = st5,
       next-branch-patch = jcc-pos,
-      extra-patches = []
+      extra-patches = patches
      }
 
   emit-vec-lane-checks : CodegenState, Integer, List IRPat, Integer, Integer, Integer -> CodegenState
@@ -22544,8 +22784,18 @@ Section: Pattern Matching
       let scrut-load = load-local st scrut-loc
       in let field-val = alloc-temp (scrut-load.state)
       in let st1 = st-append-code (field-val.state) (emit-narrow-load fw fsigned (field-val.reg) (scrut-load.reg) foff)
-      in let lt = emit-pattern-lit-test st1 (field-val.reg) value fty
+      in let lt = emit-pattern-lit-test st1 (field-val.reg) value lty
       in bind-ctor-fields (lt.state) scrut-loc sub-pats tys (i + 1) (list-push patches (lt.patch))
+     is IrCtorPat (name) (subs) (ty) (sp) ->
+      let field-loc = alloc-local st
+      in let scrut-load = load-local (field-loc.state) scrut-loc
+      in let field-val = alloc-temp (scrut-load.state)
+      in let st1 = st-append-code (field-val.state) (emit-narrow-load fw fsigned (field-val.reg) (scrut-load.reg) foff)
+      in let st2 = store-local st1 (field-loc.reg) (field-val.reg)
+      in let nested = emit-pattern-with-patches st2 (field-loc.reg) sub fty patches
+      in let failures = if nested.next-branch-patch < 0 then nested.extra-patches
+                        else list-push (nested.extra-patches) (nested.next-branch-patch)
+      in bind-ctor-fields (nested.state) scrut-loc sub-pats tys (i + 1) failures
      is otherwise -> bind-ctor-fields st scrut-loc sub-pats tys (i + 1) patches
 
   patch-pattern-extras : CodegenState, List Integer, Integer -> CodegenState
@@ -22716,6 +22966,24 @@ Section: State Records
     cg : CodegenState,
 
     p1 : Integer between 0 and 4294967295
+
+  }
+
+  CmpWordResult = record {
+
+    cg : CodegenState,
+
+    ge : Integer between 0 and 4294967295,
+
+    lt : Integer between 0 and 4294967295
+
+  }
+
+  ParseResult2 = record {
+
+    cg : CodegenState,
+
+    empty : Integer between 0 and 4294967295
 
   }
 
@@ -34366,95 +34634,447 @@ Section: __text_to_int
 
 Section: __text_to_double
 
- Ten to the power k is exact as a double for k up to 22, so accumulating it
- by repeated multiplication and dividing once is correctly rounded over the
- whole range a literal can usefully name. Beyond 22 the divisor is itself
- inexact, but that is still one rounding against k of them.
+ Correctly rounded decimal-to-binary64, one rounding. value = N * 10^(-f) is
+ computed as N / 5^f scaled by 2^(-f), by binary long division of a fixed
+ 256-bit magnitude: den = 5^f (four 64-bit words, little-endian), R = N, then
+ normalise to den <= R < 2*den, take the leading 1, and pull 53 more bits,
+ rounding to nearest with ties to even from the last bit and a sticky remainder.
+ Four words hold 5^f for every f a Real literal can carry (the front end refuses
+ a fraction wider than 108 digits, and 5^108 < 2^256). The magic constants are
+ 2^54, 2^53, 2^52, and the IEEE bias 1075 = 52 + 1023.
 
- The numerator is a separate and untouched limit: `cvtsi2sd` of the digit
- integer is exact only below 2^53, so a literal carrying more than about
- sixteen significant digits loses precision before the scaling ever runs.
+ __ttd_shl1 (rdi = 4-word buffer): shift left by one bit across the words.
 
-  emit-text-to-double-setup : CodegenState -> HelpResult1
-  emit-text-to-double-setup (st) =
+  emit-ttd-shl1 : CodegenState -> CodegenState
+  emit-ttd-shl1 (st) =
+    let st0 = record-func-offset st "__ttd_shl1"
+   in let a0 = st-append-code st0 (mov-load reg-rax reg-rdi 0)
+   in let a1 = st-append-code a0 (mov-rr reg-rcx reg-rax)
+   in let a2 = st-append-code a1 (shr-ri reg-rcx 63)
+   in let a3 = st-append-code a2 (shl-ri reg-rax 1)
+   in let a4 = st-append-code a3 (mov-store reg-rdi reg-rax 0)
+   in let b0 = st-append-code a4 (mov-load reg-rax reg-rdi 8)
+   in let b1 = st-append-code b0 (mov-rr reg-rdx reg-rax)
+   in let b2 = st-append-code b1 (shr-ri reg-rdx 63)
+   in let b3 = st-append-code b2 (shl-ri reg-rax 1)
+   in let b4 = st-append-code b3 (or-rr reg-rax reg-rcx)
+   in let b5 = st-append-code b4 (mov-store reg-rdi reg-rax 8)
+   in let b6 = st-append-code b5 (mov-rr reg-rcx reg-rdx)
+   in let c0 = st-append-code b6 (mov-load reg-rax reg-rdi 16)
+   in let c1 = st-append-code c0 (mov-rr reg-rdx reg-rax)
+   in let c2 = st-append-code c1 (shr-ri reg-rdx 63)
+   in let c3 = st-append-code c2 (shl-ri reg-rax 1)
+   in let c4 = st-append-code c3 (or-rr reg-rax reg-rcx)
+   in let c5 = st-append-code c4 (mov-store reg-rdi reg-rax 16)
+   in let c6 = st-append-code c5 (mov-rr reg-rcx reg-rdx)
+   in let d0 = st-append-code c6 (mov-load reg-rax reg-rdi 24)
+   in let d1 = st-append-code d0 (shl-ri reg-rax 1)
+   in let d2 = st-append-code d1 (or-rr reg-rax reg-rcx)
+   in let d3 = st-append-code d2 (mov-store reg-rdi reg-rax 24)
+   in st-append-code d3 x86-ret
+
+ __ttd_cmp_ge (rdi = a, rsi = b): rax = 1 if a >= b else 0, unsigned, 4 words
+ from the most significant down.
+
+  emit-ttd-cmpge-word : CodegenState, Integer -> CmpWordResult
+  emit-ttd-cmpge-word (st) (off) =
+    let a0 = st-append-code st (mov-load reg-rax reg-rdi off)
+   in let a1 = st-append-code a0 (mov-load reg-rcx reg-rsi off)
+   in let a2 = st-append-code a1 (cmp-rr reg-rax reg-rcx)
+   in let ge-pos = a2.code-len
+   in let a3 = st-append-code a2 (jcc cc-a 0)
+   in let lt-pos = a3.code-len
+   in let a4 = st-append-code a3 (jcc cc-b 0)
+   in CmpWordResult { cg = a4, ge = ge-pos, lt = lt-pos }
+
+  emit-ttd-cmp-ge : CodegenState -> CodegenState
+  emit-ttd-cmp-ge (st) =
+    let st0 = record-func-offset st "__ttd_cmp_ge"
+   in let w3 = emit-ttd-cmpge-word st0 24
+   in let w2 = emit-ttd-cmpge-word (w3.cg) 16
+   in let w1 = emit-ttd-cmpge-word (w2.cg) 8
+   in let e0 = st-append-code (w1.cg) (mov-load reg-rax reg-rdi 0)
+   in let e1 = st-append-code e0 (mov-load reg-rcx reg-rsi 0)
+   in let e2 = st-append-code e1 (cmp-rr reg-rax reg-rcx)
+   in let lt0-pos = e2.code-len
+   in let e3 = st-append-code e2 (jcc cc-b 0)
+   in let ge-pos = e3.code-len
+   in let e4 = st-append-code e3 (li reg-rax 1)
+   in let e5 = st-append-code e4 x86-ret
+   in let lt-pos = e5.code-len
+   in let e6 = st-append-code e5 (li reg-rax 0)
+   in let e7 = st-append-code e6 x86-ret
+   in let p1 = patch-jcc-at e7 (w3.ge) ge-pos
+   in let p2 = patch-jcc-at p1 (w3.lt) lt-pos
+   in let p3 = patch-jcc-at p2 (w2.ge) ge-pos
+   in let p4 = patch-jcc-at p3 (w2.lt) lt-pos
+   in let p5 = patch-jcc-at p4 (w1.ge) ge-pos
+   in let p6 = patch-jcc-at p5 (w1.lt) lt-pos
+   in patch-jcc-at p6 lt0-pos lt-pos
+
+ __ttd_sub (rdi = a, rsi = b): a -= b, assuming a >= b. Borrow in rcx.
+ MOV zero preserves CF until SETB; li zero emits XOR and clears CF.
+
+  emit-ttd-sub-word : CodegenState, Integer, Boolean -> CodegenState
+  emit-ttd-sub-word (st) (off) (top) =
+    let a0 = st-append-code st (mov-load reg-rax reg-rdi off)
+   in let a1 = st-append-code a0 (mov-load reg-rdx reg-rsi off)
+   in let a2 = st-append-code a1 (sub-rr reg-rax reg-rdx)
+   in if top
+      then let t0 = st-append-code a2 (sub-rr reg-rax reg-rcx)
+        in st-append-code t0 (mov-store reg-rdi reg-rax off)
+      else let a3 = st-append-code a2 (mov-ri32 reg-r8 0)
+        in let a4 = st-append-code a3 (setcc cc-b reg-r8)
+        in let a5 = st-append-code a4 (sub-rr reg-rax reg-rcx)
+        in let a6 = st-append-code a5 (mov-ri32 reg-r9 0)
+        in let a7 = st-append-code a6 (setcc cc-b reg-r9)
+        in let a8 = st-append-code a7 (mov-store reg-rdi reg-rax off)
+        in let a9 = st-append-code a8 (mov-rr reg-rcx reg-r8)
+        in st-append-code a9 (add-rr reg-rcx reg-r9)
+
+  emit-ttd-sub : CodegenState -> CodegenState
+  emit-ttd-sub (st) =
+    let st0 = record-func-offset st "__ttd_sub"
+   in let s0 = st-append-code st0 (li reg-rcx 0)
+   in let s1 = emit-ttd-sub-word s0 0 False
+   in let s2 = emit-ttd-sub-word s1 8 False
+   in let s3 = emit-ttd-sub-word s2 16 False
+   in let s4 = emit-ttd-sub-word s3 24 True
+   in st-append-code s4 x86-ret
+
+ __ttd_mul5 (rdi = buffer): buffer *= 5. carry in r8; per word s = (x<<2)+x+carry,
+ high part accumulated from the top two bits of x plus the two add-carries.
+ MOV zero preserves CF until SETB; li zero emits XOR and clears CF.
+
+  emit-ttd-mul5-word : CodegenState, Integer -> CodegenState
+  emit-ttd-mul5-word (st) (off) =
+    let a0 = st-append-code st (mov-load reg-rax reg-rdi off)
+   in let a1 = st-append-code a0 (mov-rr reg-rdx reg-rax)
+   in let a2 = st-append-code a1 (shr-ri reg-rdx 62)
+   in let a3 = st-append-code a2 (mov-rr reg-r9 reg-rax)
+   in let a4 = st-append-code a3 (shl-ri reg-r9 2)
+   in let a5 = st-append-code a4 (add-rr reg-r9 reg-rax)
+   in let a6 = st-append-code a5 (mov-ri32 reg-r10 0)
+   in let a7 = st-append-code a6 (setcc cc-b reg-r10)
+   in let a8 = st-append-code a7 (add-rr reg-rdx reg-r10)
+   in let a9 = st-append-code a8 (add-rr reg-r9 reg-r8)
+   in let b0 = st-append-code a9 (mov-ri32 reg-r10 0)
+   in let b1 = st-append-code b0 (setcc cc-b reg-r10)
+   in let b2 = st-append-code b1 (add-rr reg-rdx reg-r10)
+   in let b3 = st-append-code b2 (mov-store reg-rdi reg-r9 off)
+   in st-append-code b3 (mov-rr reg-r8 reg-rdx)
+
+  emit-ttd-mul5 : CodegenState -> CodegenState
+  emit-ttd-mul5 (st) =
+    let st0 = record-func-offset st "__ttd_mul5"
+   in let m0 = st-append-code st0 (li reg-r8 0)
+   in let m1 = emit-ttd-mul5-word m0 0
+   in let m2 = emit-ttd-mul5-word m1 8
+   in let m3 = emit-ttd-mul5-word m2 16
+   in let m4 = emit-ttd-mul5-word m3 24
+   in st-append-code m4 x86-ret
+
+ The main entry. rdi = text object (length at [rdi], bytes at [rdi+8]); returns
+ the f64 bits in rax. rbx is the frame base (rbp is reserved by the runtime and
+ must not be touched, so this helper uses rbx like the other text helpers). R10
+ carries the heap frontier across the call and no caller saves it, so the
+ prologue pushes r10 and the epilogue restores it; the frame is 120 rather than
+ 112 to keep rsp 16-aligned across that sixth push. From
+ rbx: den at 0, R at 32, tmp at 64, neg at 96, the bit counter at 104. r12 = exp,
+ r13 = f, r14 = acc.
+
+  emit-ttd-prologue : CodegenState -> CodegenState
+  emit-ttd-prologue (st) =
     let st0 = record-func-offset st "__text_to_double"
-   in let st1 = st-append-code st0 (mov-load reg-rcx reg-rdi 0)
-   in let st2 = st-append-code st1 (lea reg-rdi reg-rdi 8)
-   in let st3 = st-append-code st2 (li reg-rax 0)
-   in let st4 = st-append-code st3 (li reg-r11 0)
-   in let st5 = st-append-code st4 (li reg-rsi 0)
-   in let st6 = st-append-code st5 (li reg-r8 0)
-   in let st7 = st-append-code st6 (li reg-r9 0)
-   in let st8 = st-append-code st7 (test-rr reg-rcx reg-rcx)
-   in let empty-pos = st8.code-len
-   in let st9 = st-append-code st8 (jcc cc-e 0)
-   in let st10 = st-append-code st9 (movzx-byte reg-rdx reg-rdi 0)
-   in let st11 = st-append-code st10 (cmp-ri reg-rdx 73)
-   in let not-minus-pos = st11.code-len
-   in let st12 = st-append-code st11 (jcc cc-ne 0)
-   in let st13 = st-append-code st12 (li reg-rsi 1)
-   in let st14 = st-append-code st13 (add-ri reg-r11 1)
-   in let st15 = patch-jcc-at st14 not-minus-pos (st14.code-len)
-   in HelpResult1 {
-    cg = st15,
-    p1 = empty-pos
-   }
+   in let a2 = st-append-code st0 (push-r reg-rbx)
+   in let a3 = st-append-code a2 (push-r reg-r12)
+   in let a4 = st-append-code a3 (push-r reg-r13)
+   in let a5 = st-append-code a4 (push-r reg-r14)
+   in let a6 = st-append-code a5 (push-r reg-r15)
+   in let a6b = st-append-code a6 (push-r reg-r10)
+   in let a7 = st-append-code a6b (sub-ri reg-rsp 120)
+   in st-append-code a7 (mov-rr reg-rbx reg-rsp)
 
-  emit-text-to-double-parse : CodegenState -> CodegenState
-  emit-text-to-double-parse (st) =
-    let parse-loop = st.code-len
-   in let st0 = st-append-code st (cmp-rr reg-r11 reg-rcx)
-   in let parse-done-pos = st0.code-len
-   in let st1 = st-append-code st0 (jcc cc-ge 0)
-   in let st2 = st-append-code st1 (mov-rr reg-rdx reg-rdi)
-   in let st3 = st-append-code st2 (add-rr reg-rdx reg-r11)
-   in let st4 = st-append-code st3 (movzx-byte reg-rdx reg-rdx 0)
-   in let st5 = st-append-code st4 (cmp-ri reg-rdx 65)
-   in let not-dot-pos = st5.code-len
-   in let st6 = st-append-code st5 (jcc cc-ne 0)
-   in let st7 = st-append-code st6 (li reg-r9 1)
-   in let st8 = st-append-code st7 (add-ri reg-r11 1)
-   in let st9 = st-append-code st8 (jmp (parse-loop - (st8.code-len + 5)))
-   in let st10 = patch-jcc-at st9 not-dot-pos (st9.code-len)
-   in let st11 = st-append-code st10 (sub-ri reg-rdx 3)
-   in let st12 = st-append-code st11 (push-r reg-rdx)
-   in let st13 = st-append-code st12 (mov-rr reg-rdx reg-rax)
-   in let st14 = st-append-code st13 (shl-ri reg-rax 3)
-   in let st15 = st-append-code st14 (add-rr reg-rax reg-rdx)
-   in let st16 = st-append-code st15 (add-rr reg-rax reg-rdx)
-   in let st17 = st-append-code st16 (pop-r reg-rdx)
-   in let st18 = st-append-code st17 (add-rr reg-rax reg-rdx)
-   in let st19 = st-append-code st18 (add-rr reg-r8 reg-r9)
-   in let st20 = st-append-code st19 (add-ri reg-r11 1)
-   in let st21 = st-append-code st20 (jmp (parse-loop - (st20.code-len + 5)))
-   in patch-jcc-at st21 parse-done-pos (st21.code-len)
+  emit-ttd-epilogue : CodegenState -> CodegenState
+  emit-ttd-epilogue (st) =
+    let a0 = st-append-code st (add-ri reg-rsp 120)
+   in let a0b = st-append-code a0 (pop-r reg-r10)
+   in let a1 = st-append-code a0b (pop-r reg-r15)
+   in let a2 = st-append-code a1 (pop-r reg-r14)
+   in let a3 = st-append-code a2 (pop-r reg-r13)
+   in let a4 = st-append-code a3 (pop-r reg-r12)
+   in let a5 = st-append-code a4 (pop-r reg-rbx)
+   in st-append-code a5 x86-ret
+
+ Parse: rax = N (unsigned), r13 = fraction count, r10 = negative flag.
+
+  emit-ttd-parse2 : CodegenState -> ParseResult2
+  emit-ttd-parse2 (st) =
+    let a0 = st-append-code st (mov-load reg-rcx reg-rdi 0)
+   in let a1 = st-append-code a0 (lea reg-rsi reg-rdi 8)
+   in let a2 = st-append-code a1 (li reg-rax 0)
+   in let a3 = st-append-code a2 (li reg-r13 0)
+   in let a4 = st-append-code a3 (li reg-r10 0)
+   in let a5 = st-append-code a4 (li reg-r9 0)
+   in let a6 = st-append-code a5 (li reg-r11 0)
+   in let a7 = st-append-code a6 (test-rr reg-rcx reg-rcx)
+   in let empty-pos = a7.code-len
+   in let a8 = st-append-code a7 (jcc cc-e 0)
+   in let a9 = st-append-code a8 (lea-rr reg-rdx reg-rsi reg-r11)
+   in let b0 = st-append-code a9 (movzx-byte reg-rdx reg-rdx 0)
+   in let b1 = st-append-code b0 (cmp-ri reg-rdx 73)
+   in let notminus-pos = b1.code-len
+   in let b2 = st-append-code b1 (jcc cc-ne 0)
+   in let b3 = st-append-code b2 (li reg-r10 1)
+   in let b4 = st-append-code b3 (add-ri reg-r11 1)
+   in let b5 = patch-jcc-at b4 notminus-pos (b4.code-len)
+   in let ploop = b5.code-len
+   in let c0 = st-append-code b5 (cmp-rr reg-r11 reg-rcx)
+   in let pdone-pos = c0.code-len
+   in let c1 = st-append-code c0 (jcc cc-ge 0)
+   in let c2 = st-append-code c1 (lea-rr reg-rdx reg-rsi reg-r11)
+   in let c3 = st-append-code c2 (movzx-byte reg-rdx reg-rdx 0)
+   in let c4 = st-append-code c3 (cmp-ri reg-rdx 65)
+   in let notdot-pos = c4.code-len
+   in let c5 = st-append-code c4 (jcc cc-ne 0)
+   in let c6 = st-append-code c5 (li reg-r9 1)
+   in let c7 = st-append-code c6 (add-ri reg-r11 1)
+   in let c8 = st-append-code c7 (jmp (ploop - (c7.code-len + 5)))
+   in let c9 = patch-jcc-at c8 notdot-pos (c8.code-len)
+   in let d0 = st-append-code c9 (sub-ri reg-rdx 3)
+   in let d1 = st-append-code d0 (imul-rri reg-rax reg-rax 10)
+   in let d2 = st-append-code d1 (add-rr reg-rax reg-rdx)
+   in let d3 = st-append-code d2 (add-rr reg-r13 reg-r9)
+   in let d4 = st-append-code d3 (add-ri reg-r11 1)
+   in let d5 = st-append-code d4 (jmp (ploop - (d4.code-len + 5)))
+   in let d6 = patch-jcc-at d5 pdone-pos (d5.code-len)
+   in ParseResult2 { cg = d6, empty = empty-pos }
+
+ Zero result: rax = 0, or the sign bit if negative (r10). Shared by the empty
+ string and the N == 0 case.
+
+  emit-ttd-zero-ret : CodegenState -> CodegenState
+  emit-ttd-zero-ret (st) =
+    let a0 = st-append-code st (li reg-rax 0)
+   in let a1 = st-append-code a0 (test-rr reg-r10 reg-r10)
+   in let pos-pos = a1.code-len
+   in let a2 = st-append-code a1 (jcc cc-e 0)
+   in let a3 = st-append-code a2 (li reg-r9 1)
+   in let a4 = st-append-code a3 (shl-ri reg-r9 63)
+   in let a5 = st-append-code a4 (or-rr reg-rax reg-r9)
+   in let a6 = patch-jcc-at a5 pos-pos (a5.code-len)
+   in emit-ttd-epilogue a6
+
+ Initialise den = {1,0,0,0} at rbx, R = {N,0,0,0} at rbx+32; neg at rbx+96.
+
+  emit-ttd-init-bufs : CodegenState -> CodegenState
+  emit-ttd-init-bufs (st) =
+    let a0 = st-append-code st (mov-store reg-rbx reg-r10 96)
+   in let a3 = st-append-code a0 (li reg-rcx 1)
+   in let a4 = st-append-code a3 (mov-store reg-rbx reg-rcx 0)
+   in let a5 = st-append-code a4 (li reg-rcx 0)
+   in let a6 = st-append-code a5 (mov-store reg-rbx reg-rcx 8)
+   in let a7 = st-append-code a6 (mov-store reg-rbx reg-rcx 16)
+   in let a8 = st-append-code a7 (mov-store reg-rbx reg-rcx 24)
+   in let a9 = st-append-code a8 (mov-store reg-rbx reg-rax 32)
+   in let b0 = st-append-code a9 (mov-store reg-rbx reg-rcx 40)
+   in let b1 = st-append-code b0 (mov-store reg-rbx reg-rcx 48)
+   in st-append-code b1 (mov-store reg-rbx reg-rcx 56)
+
+ den = 5^f, then exp = 0.
+
+  emit-ttd-pow5 : CodegenState -> CodegenState
+  emit-ttd-pow5 (st) =
+    let a0 = st-append-code st (mov-rr reg-r15 reg-r13)
+   in let ploop = a0.code-len
+   in let a1 = st-append-code a0 (test-rr reg-r15 reg-r15)
+   in let done-pos = a1.code-len
+   in let a2 = st-append-code a1 (jcc cc-e 0)
+   in let a3 = st-append-code a2 (lea reg-rdi reg-rbx 0)
+   in let a4 = emit-call-to a3 "__ttd_mul5"
+   in let a5 = st-append-code a4 (sub-ri reg-r15 1)
+   in let a6 = st-append-code a5 (jmp (ploop - (a5.code-len + 5)))
+   in let a7 = patch-jcc-at a6 done-pos (a6.code-len)
+   in st-append-code a7 (li reg-r12 0)
+
+ Copy den into tmp (rbp-32), for the 2*den test in the big-normalise loop.
+
+  emit-ttd-copy-den-tmp : CodegenState -> CodegenState
+  emit-ttd-copy-den-tmp (st) =
+    let a0 = st-append-code st (mov-load reg-rax reg-rbx 0)
+   in let a1 = st-append-code a0 (mov-store reg-rbx reg-rax 64)
+   in let a2 = st-append-code a1 (mov-load reg-rax reg-rbx 8)
+   in let a3 = st-append-code a2 (mov-store reg-rbx reg-rax 72)
+   in let a4 = st-append-code a3 (mov-load reg-rax reg-rbx 16)
+   in let a5 = st-append-code a4 (mov-store reg-rbx reg-rax 80)
+   in let a6 = st-append-code a5 (mov-load reg-rax reg-rbx 24)
+   in st-append-code a6 (mov-store reg-rbx reg-rax 88)
+
+  emit-ttd-copy-tmp-den : CodegenState -> CodegenState
+  emit-ttd-copy-tmp-den (st) =
+    let a0 = st-append-code st (mov-load reg-rax reg-rbx 64)
+   in let a1 = st-append-code a0 (mov-store reg-rbx reg-rax 0)
+   in let a2 = st-append-code a1 (mov-load reg-rax reg-rbx 72)
+   in let a3 = st-append-code a2 (mov-store reg-rbx reg-rax 8)
+   in let a4 = st-append-code a3 (mov-load reg-rax reg-rbx 80)
+   in let a5 = st-append-code a4 (mov-store reg-rbx reg-rax 16)
+   in let a6 = st-append-code a5 (mov-load reg-rax reg-rbx 88)
+   in st-append-code a6 (mov-store reg-rbx reg-rax 24)
+
+ Normalise so that den <= R < 2*den, tracking exp (r12).
+
+  emit-ttd-normalise2 : CodegenState -> CodegenState
+  emit-ttd-normalise2 (st) =
+    let a0 = st-append-code st (lea reg-rdi reg-rbx 32)
+   in let a1 = st-append-code a0 (lea reg-rsi reg-rbx 0)
+   in let a2 = emit-call-to a1 "__ttd_cmp_ge"
+   in let a3 = st-append-code a2 (test-rr reg-rax reg-rax)
+   in let small-pos = a3.code-len
+   in let a4 = st-append-code a3 (jcc cc-e 0)
+   in let bigloop = a4.code-len
+   in let b0 = emit-ttd-copy-den-tmp a4
+   in let b1 = st-append-code b0 (lea reg-rdi reg-rbx 64)
+   in let b2 = emit-call-to b1 "__ttd_shl1"
+   in let b3 = st-append-code b2 (lea reg-rdi reg-rbx 32)
+   in let b4 = st-append-code b3 (lea reg-rsi reg-rbx 64)
+   in let b5 = emit-call-to b4 "__ttd_cmp_ge"
+   in let b6 = st-append-code b5 (test-rr reg-rax reg-rax)
+   in let normdone-pos = b6.code-len
+   in let b7 = st-append-code b6 (jcc cc-e 0)
+   in let b8 = emit-ttd-copy-tmp-den b7
+   in let b9 = st-append-code b8 (add-ri reg-r12 1)
+   in let c0 = st-append-code b9 (jmp (bigloop - (b9.code-len + 5)))
+   in let smallloop = c0.code-len
+   in let c1 = st-append-code c0 (lea reg-rdi reg-rbx 32)
+   in let c2 = st-append-code c1 (lea reg-rsi reg-rbx 0)
+   in let c3 = emit-call-to c2 "__ttd_cmp_ge"
+   in let c4 = st-append-code c3 (test-rr reg-rax reg-rax)
+   in let smalldone-pos = c4.code-len
+   in let c5 = st-append-code c4 (jcc cc-ne 0)
+   in let c6 = st-append-code c5 (lea reg-rdi reg-rbx 32)
+   in let c7 = emit-call-to c6 "__ttd_shl1"
+   in let c8 = st-append-code c7 (sub-ri reg-r12 1)
+   in let c9 = st-append-code c8 (jmp (smallloop - (c8.code-len + 5)))
+   in let normdone = c9.code-len
+   in let p1 = patch-jcc-at c9 small-pos smallloop
+   in let p2 = patch-jcc-at p1 normdone-pos normdone
+   in patch-jcc-at p2 smalldone-pos normdone
+
+ The bit loop: acc = 1 (r14); R -= den; then pull 53 bits. Counter at rbx+104.
+
+  emit-ttd-bitloop : CodegenState -> CodegenState
+  emit-ttd-bitloop (st) =
+    let a0 = st-append-code st (li reg-r14 1)
+   in let a1 = st-append-code a0 (lea reg-rdi reg-rbx 32)
+   in let a2 = st-append-code a1 (lea reg-rsi reg-rbx 0)
+   in let a3 = emit-call-to a2 "__ttd_sub"
+   in let a4 = st-append-code a3 (li reg-rcx 53)
+   in let a5 = st-append-code a4 (mov-store reg-rbx reg-rcx 104)
+   in let bitloop = a5.code-len
+   in let b0 = st-append-code a5 (lea reg-rdi reg-rbx 32)
+   in let b1 = emit-call-to b0 "__ttd_shl1"
+   in let b2 = st-append-code b1 (lea reg-rdi reg-rbx 32)
+   in let b3 = st-append-code b2 (lea reg-rsi reg-rbx 0)
+   in let b4 = emit-call-to b3 "__ttd_cmp_ge"
+   in let b5 = st-append-code b4 (test-rr reg-rax reg-rax)
+   in let bit0-pos = b5.code-len
+   in let b6 = st-append-code b5 (jcc cc-e 0)
+   in let b7 = st-append-code b6 (lea reg-rdi reg-rbx 32)
+   in let b8 = st-append-code b7 (lea reg-rsi reg-rbx 0)
+   in let b9 = emit-call-to b8 "__ttd_sub"
+   in let c0 = st-append-code b9 (shl-ri reg-r14 1)
+   in let c1 = st-append-code c0 (or-ri reg-r14 1)
+   in let bitnext-pos = c1.code-len
+   in let c2 = st-append-code c1 (jmp 0)
+   in let bit0 = c2.code-len
+   in let c3 = patch-jcc-at c2 bit0-pos bit0
+   in let c4 = st-append-code c3 (shl-ri reg-r14 1)
+   in let bitnext = c4.code-len
+   in let c5 = st-append-code c4 (mov-load reg-rcx reg-rbx 104)
+   in let c6 = st-append-code c5 (sub-ri reg-rcx 1)
+   in let c7 = st-append-code c6 (mov-store reg-rbx reg-rcx 104)
+   in let c8 = st-append-code c7 (test-rr reg-rcx reg-rcx)
+   in let c9 = st-append-code c8 (jcc cc-ne (bitloop - (c8.code-len + 6)))
+   in let d0 = patch-jmp-at c9 bitnext-pos bitnext
+   in d0
+
+ Sticky (r8 nonzero if R != 0), round half-even, assemble the normal bits.
+
+  emit-ttd-finish : CodegenState -> CodegenState
+  emit-ttd-finish (st) =
+    let a0 = st-append-code st (mov-load reg-r8 reg-rbx 32)
+   in let a1 = st-append-code a0 (mov-load reg-rax reg-rbx 40)
+   in let a2 = st-append-code a1 (or-rr reg-r8 reg-rax)
+   in let a3 = st-append-code a2 (mov-load reg-rax reg-rbx 48)
+   in let a4 = st-append-code a3 (or-rr reg-r8 reg-rax)
+   in let a5 = st-append-code a4 (mov-load reg-rax reg-rbx 56)
+   in let a6 = st-append-code a5 (or-rr reg-r8 reg-rax)
+   in let a7 = st-append-code a6 (mov-rr reg-rcx reg-r14)
+   in let a8 = st-append-code a7 (and-ri reg-rcx 1)
+   in let a9 = st-append-code a8 (mov-rr reg-rax reg-r14)
+   in let b0 = st-append-code a9 (shr-ri reg-rax 1)
+   in let b1 = st-append-code b0 (mov-rr reg-rdx reg-r12)
+   in let b2 = st-append-code b1 (sub-ri reg-rdx 52)
+   in let b3 = st-append-code b2 (sub-rr reg-rdx reg-r13)
+   in let b4 = st-append-code b3 (test-rr reg-rcx reg-rcx)
+   in let noround-pos = b4.code-len
+   in let b5 = st-append-code b4 (jcc cc-e 0)
+   in let b6 = st-append-code b5 (test-rr reg-r8 reg-r8)
+   in let doround-pos = b6.code-len
+   in let b7 = st-append-code b6 (jcc cc-ne 0)
+   in let b8 = st-append-code b7 (test-ri reg-rax 1)
+   in let noround2-pos = b8.code-len
+   in let b9 = st-append-code b8 (jcc cc-e 0)
+   in let doround = b9.code-len
+   in let c0 = st-append-code b9 (add-ri reg-rax 1)
+   in let c1 = st-append-code c0 (li reg-r9 9007199254740992)
+   in let c2 = st-append-code c1 (cmp-rr reg-rax reg-r9)
+   in let nocarry-pos = c2.code-len
+   in let c3 = st-append-code c2 (jcc cc-ne 0)
+   in let c4 = st-append-code c3 (shr-ri reg-rax 1)
+   in let c5 = st-append-code c4 (add-ri reg-rdx 1)
+   in let noround = c5.code-len
+   in let d0 = st-append-code c5 (add-ri reg-rdx 1075)
+   in let d1 = st-append-code d0 (li reg-r9 4503599627370496)
+   in let d2 = st-append-code d1 (sub-rr reg-rax reg-r9)
+   in let d3 = st-append-code d2 (shl-ri reg-rdx 52)
+   in let d4 = st-append-code d3 (or-rr reg-rax reg-rdx)
+   in let d5 = st-append-code d4 (mov-load reg-r10 reg-rbx 96)
+   in let d6 = st-append-code d5 (test-rr reg-r10 reg-r10)
+   in let fin-pos = d6.code-len
+   in let d7 = st-append-code d6 (jcc cc-e 0)
+   in let d8 = st-append-code d7 (li reg-r9 1)
+   in let d9 = st-append-code d8 (shl-ri reg-r9 63)
+   in let e0 = st-append-code d9 (or-rr reg-rax reg-r9)
+   in let fin = e0.code-len
+   in let p1 = patch-jcc-at e0 noround-pos noround
+   in let p2 = patch-jcc-at p1 doround-pos doround
+   in let p3 = patch-jcc-at p2 noround2-pos noround
+   in let p4 = patch-jcc-at p3 nocarry-pos noround
+   in let p5 = patch-jcc-at p4 fin-pos fin
+   in emit-ttd-epilogue p5
 
   emit-text-to-double : CodegenState -> CodegenState
   emit-text-to-double (st) =
-    let setup = emit-text-to-double-setup st
-   in let st0 = emit-text-to-double-parse (setup.cg)
-   in let st1 = st-append-code st0 (test-rr reg-rsi reg-rsi)
-   in let no-neg-pos = st1.code-len
-   in let st2 = st-append-code st1 (jcc cc-e 0)
-   in let st3 = st-append-code st2 (neg-r reg-rax)
-   in let st4 = patch-jcc-at st3 no-neg-pos (st3.code-len)
-   in let st5 = st-append-code st4 (cvtsi2sd 0 reg-rax)
-   in let st6 = st-append-code st5 (test-rr reg-r8 reg-r8)
-   in let no-div-pos = st6.code-len
-   in let st7 = st-append-code st6 (jcc cc-e 0)
-   in let st8 = st-append-code st7 (li reg-rdx 4621819117588971520)
-   in let st9 = st-append-code st8 (movq-to-xmm 2 reg-rdx)
-   in let st9a = st-append-code st9 (li reg-rdx 4607182418800017408)
-   in let st9b = st-append-code st9a (movq-to-xmm 1 reg-rdx)
-   in let pow-loop = st9b.code-len
-   in let st10 = st-append-code st9b (mulsd-xmm 1 2)
-   in let st11 = st-append-code st10 (sub-ri reg-r8 1)
-   in let st12 = st-append-code st11 (jcc cc-ne (pow-loop - (st11.code-len + 6)))
-   in let st12a = st-append-code st12 (divsd-xmm 0 1)
-   in let st13 = patch-jcc-at st12a no-div-pos (st12a.code-len)
-   in let st14 = st-append-code st13 (movq-from-xmm reg-rax 0)
-   in let st15 = patch-jcc-at st14 (setup.p1) (st14.code-len)
-   in st-append-code st15 x86-ret
+    let s0 = emit-ttd-shl1 st
+   in let s1 = emit-ttd-cmp-ge s0
+   in let s2 = emit-ttd-sub s1
+   in let s3 = emit-ttd-mul5 s2
+   in let st0 = emit-ttd-prologue s3
+   in let pr = emit-ttd-parse2 st0
+   in let z0 = st-append-code (pr.cg) (test-rr reg-rax reg-rax)
+   in let nz-pos = z0.code-len
+   in let z1 = st-append-code z0 (jcc cc-ne 0)
+   in let zeroret-pos = z1.code-len
+   in let z2 = emit-ttd-zero-ret z1
+   in let nz = z2.code-len
+   in let m0 = emit-ttd-init-bufs z2
+   in let m1 = emit-ttd-pow5 m0
+   in let m2 = emit-ttd-normalise2 m1
+   in let m3 = emit-ttd-bitloop m2
+   in let m4 = emit-ttd-finish m3
+   in let p1 = patch-jcc-at m4 (pr.empty) zeroret-pos
+   in patch-jcc-at p1 nz-pos nz
 
 Section: __real_to_text
   emit-number-to-text-setup : CodegenState -> HelpResult2
@@ -35895,6 +36515,8 @@ Section: Parser
 
   cdx-wrapping-band-not-hw-width : Integer = 1073
 
+  cdx-binary-crosses-prose : Integer = 1074
+
   cdx-prose-function-name-mismatch : Integer = 1101
   cdx-prose-parameter-mismatch : Integer = 1102
   cdx-prose-record-field-mismatch : Integer = 1103
@@ -36173,6 +36795,7 @@ Section: Registry
     mk-cdx cdx-unknown-pattern-ctor "UnknownPatternCtor" sev-error phase-type-checker "A pattern names a constructor that is not in scope; the arm could never match and the when would fall through silently at runtime. Check the constructor names of the scrutinee's type.",
     mk-cdx cdx-nothing-as-value "NothingAsValue" sev-error phase-type-checker "'Nothing' is a type, not a value. The empty Maybe value is 'None' (cite Foreword chapter Maybe); 'Nothing' is only the return type of effectful procedures such as [Console] Nothing.",
     mk-cdx cdx-leading-dot-continuation "LeadingDotContinuation" sev-error phase-parser "A line begins with '.', continuing a field access from the previous line. Field access must follow its receiver on the same line (receiver.field) or be bound with a let; otherwise the continuation is silently dropped.",
+    mk-cdx cdx-binary-crosses-prose "BinaryCrossesProse" sev-warning phase-parser "A binary expression crosses a column-2 prose line. Parsing is unchanged; keep intended arithmetic together or indent every prose line at column 2.",
     mk-cdx cdx-capability-not-granted "CapabilityNotGranted" sev-error phase-capability-checker "The opening function declares an effect outside the capability vocabulary, so no manifest entry, boot grant, or policy could ever cover it.",
     mk-cdx cdx-scope-violation "ScopeViolation" sev-error phase-capability-checker "An effect operation's argument is outside the granted scope for that capability.",
     mk-cdx cdx-bounds-proven "BoundsProven" sev-info phase-codegen "Value range fits within bounded-integer field range; runtime bounds check elided.",
@@ -36656,6 +37279,7 @@ Section: Primitive Types
    | TypeApply (CodexType) (CodexType)
    | ForAllEff (Integer between 0 and 4294967295) (CodexType)
    | LinearTy (CodexType)
+   | SizedVecTy (Integer) (CodexType)
 
   SumCtor = record {
    name : Name,
@@ -36857,7 +37481,7 @@ Section: Pointer Classification
   is-pointer-type (ty) =
    when ty
     is IntegerTy (lo) (hi) (mode) | RealTy (rw) (rm) | BooleanTy | CharTy | VoidTy | NothingTy | ErrorTy | NoExpectTy | ProofTy | PropEqTy (a) (b) -> False
-    is TextTy | ListTy (e) | LinkedListTy (e) | RecordTy (n) (a) (f) | SumTy (n) (a) (c) | ConstructedTy (n) (a) | FunTy (p) (row) (r) | VectorTy (vn) (vt) | VectorMaskTy (mn) -> True
+    is TextTy | ListTy (e) | LinkedListTy (e) | RecordTy (n) (a) (f) | SumTy (n) (a) (c) | ConstructedTy (n) (a) | FunTy (p) (row) (r) | VectorTy (vn) (vt) | VectorMaskTy (mn) | SizedVecTy (sn) (st) -> True
     is EffectfulTy (e) (s) (r) -> is-pointer-type r
     is ForAllTy (i) (b) -> is-pointer-type b
     is ForAllEff (i) (b) -> is-pointer-type b
@@ -37349,6 +37973,7 @@ Page 1
 
 
 Chapter: Parsmi--Lexer
+  cites Codex chapter Syntax Nodes (copy-sx-diag)
 
 Section: Character Code Constants
   cc-newline : Integer = char-code '\n'
@@ -38042,6 +38667,7 @@ Page 1
 Chapter: Parsmi--Syntax Nodes
 
   cites Foreword chapter Maybe
+  cites Foreword chapter ListUtils (map-list)
 
 Section: Expressions
   Expr =
@@ -39365,21 +39991,54 @@ Section: Expression Parsing
    in if prec < min-prec then ExprOk left st1
    else let op = current st1
    in let st2 = skip-newlines (advance st1)
+   in let warned = warn-binary-prose st1 st2
    in let next-min = if is-right-assoc (op.kind) then prec else prec + 1
-   in let right-result = parse-binary st2 next-min min-col
+   in let right-result = parse-binary warned next-min min-col
    in unwrap-expr-ok right-result (continue-binary left op min-prec min-col)
+
+  binary-previous-token : List Token, Integer -> Integer
+  binary-previous-token (tokens) (pos) =
+   if pos < 0 then pos
+   else when (list-at tokens pos).kind
+    is Newline | Indent | Dedent -> binary-previous-token tokens (pos - 1)
+    is otherwise -> pos
+
+  binary-prose-line : Text, Integer, Integer, Integer, Integer -> Integer
+  binary-prose-line (source) (start) (stop) (pos) (line) =
+   if pos < start then 0
+   else let c = char-code-at source pos
+   in if c == char-code '\n' then binary-prose-line source start stop (pos - 1) (line - 1)
+   else if c == char-code ' ' & pos + 1 < stop then
+    let line-start = if pos == 0 then True else char-code-at source (pos - 1) == char-code '\n'
+    in if line-start then
+     let next = char-code-at source (pos + 1)
+     in if next /= char-code ' ' & next /= char-code '\n' then line
+        else binary-prose-line source start stop (pos - 1) line
+    else binary-prose-line source start stop (pos - 1) line
+   else binary-prose-line source start stop (pos - 1) line
+
+  binary-gap-prose : Token, Token -> Integer
+  binary-gap-prose (before) (after) =
+   if before.file-id /= after.file-id | before.line >= after.line then 0
+   else let start = before.offset + before.length
+   in if start >= after.offset | after.offset > text-length (after.source) then 0
+   else binary-prose-line (after.source) start (after.offset) (after.offset - 1) (after.line)
+
+  warn-binary-prose : ParseState, ParseState -> ParseState
+  warn-binary-prose (op-state) (rhs-state) =
+   let op = current op-state
+   in let previous = binary-previous-token (op-state.tokens) (op-state.pos - 1)
+   in let left-line = if previous < 0 then 0 else binary-gap-prose (list-at (op-state.tokens) previous) op
+   in let prose-line = if left-line > 0 then left-line else binary-gap-prose op (current rhs-state)
+   in if prose-line <= 0 then rhs-state
+   else let distance = if prose-line < op.line then op.line - prose-line else prose-line - op.line
+   in let direction = if prose-line < op.line then " before" else " after"
+   in __record-set rhs-state "bag" (bag-add (rhs-state.bag) (make-warning cdx-binary-crosses-prose ("Binary expression crosses prose " & integer-to-text distance & " line(s)" & direction & " the operator. The operator remains part of the expression. Keep intended arithmetic together or indent every prose line at column 2.") (token-to-span op)))
 
   continue-binary : Expr, Token, Integer, Integer, Expr, ParseState -> ParseExprResult
   continue-binary (left) (op) (min-prec) (min-col) (right) (st) =
    parse-binary-loop (deck-record (BinExpr left op right)) st min-prec min-col
 
- `not` TAKES A WHOLE COMPARISON AND MINUS DOES NOT, and the difference is
- deliberate. `-x + y` is `(-x) + y`, because negation belongs to the value it
- sits on. `not a == b` is `not (a == b)`, because the other reading --
- `(not a) == b` -- is a sentence nobody means and it type-checks perfectly,
- which makes it the worst kind of surprise. So `not` parses its operand at
- comparison precedence: it swallows `==`, `<`, and everything tighter, and
- stops before `and`, `xor` and `or`, giving `not a and b` as `(not a) and b`.
 
   prec-comparison : Integer = 5
 
@@ -39451,10 +40110,6 @@ Section: Expression Parsing
   continue-app (app-col) (func) (arg) (st) =
    parse-app-loop app-col (deck-record (AppExpr func arg)) st
 
- A negated argument wraps ONE atom. Handing the minus to parse-unary would
- read a whole application after it, so `f a -b c` would come out as
- `f a (-(b c))` and quietly lose an argument. The negation binds exactly as
- tightly as the atom it abuts.
 
   continue-neg-app : Integer, Expr, Token, Expr, ParseState -> ParseExprResult
   continue-neg-app (app-col) (func) (op) (atom) (st) =
@@ -39821,24 +40476,7 @@ Section: Compound Expression Parsing
    in let tok = current st2
    in parse-match-branches s [] (tok.column) (tok.line) st2
 
- An arm continues the match when it starts on the same line as the arm
- before it, or at the column the arms are aligned on. `ln` therefore
- means THE LINE OF THE ARM WE ARE CONTINUING FROM, and every accepted arm
- becomes the new `ln` -- which is why `tok.line` is passed on below and
- not the `ln` we were called with.
 
- It used to pass `ln` straight through, so `ln` stayed pinned to the line
- the match STARTED on and `tok.line == ln` could never hold again once
- the arms moved to a second line. The result was not "one arm per line"
- as the entry had it: every arm on the FIRST line parsed (they all match
- that line), the first arm of the SECOND line parsed (it matches the
- column), and the second arm of the second line matched neither and
- SILENTLY ENDED THE MATCH -- taking every later line with it, including
- an `is otherwise`. Measured on a probe: `is 1 .. is 2 / is 3 .. is 4 /
- is 5 .. is 6 / is otherwise` kept 1, 2, 3 and dropped the rest with no
- diagnostic. Exhaustiveness is the only thing that ever caught it, and
- only on a closed variant; an `Integer` match, or one carrying the
- `is otherwise` that just got dropped, mis-dispatched at runtime forever.
 
   parse-match-branches : Expr, LinkedList MatchArm, Integer, Integer, ParseState -> ParseExprResult
   parse-match-branches (scrut) (acc) (col) (ln) (st) =
@@ -40221,14 +40859,6 @@ Section: Compound Expression Parsing
   finish-lambda (lam-tok) (params) (body) (st) =
    ExprOk (deck-record (LambdaExpr lam-tok params body)) st
 
- The failure arm CONSUMES the dot, and that is the whole point of it. It
- used to return the state it was handed, un-advanced, wearing an ExprOk:
- the caller believed a statement had been parsed, looped, met the same
- dot, and called back here forever. Every turn allocated an ErrExpr and a
- statement node, so the heap climbed while the stack sank, and the compile
- double-faulted with no diagnostic rather than reporting anything.
- Any arm that reports ExprOk without moving the position
- is that bug again -- a parser must consume a token or say why.
 
   parse-selector-expr : ParseState -> ParseExprResult
   parse-selector-expr (st) =
@@ -41847,13 +42477,20 @@ Section: Chapter Pagination
   empty-class-instance-scan : ClassDefsResult
   empty-class-instance-scan = ClassDefsResult { class-defs = [], instance-defs = [] }
 
-  scan-class-instance-defs : ParseState, LinkedList ClassDef, LinkedList InstanceDef -> ClassDefsResult
+  begins-line : ParseState -> Boolean
+  begins-line (st) =
+   if st.pos == 0 then True
+   else when (list-at (st.tokens) (st.pos - 1)).kind
+    is Newline -> True
+    is otherwise -> False
+
+  scan-class-instance-defs :ParseState, LinkedList ClassDef, LinkedList InstanceDef -> ClassDefsResult
   scan-class-instance-defs (st) (cacc) (iacc) =
    if is-done st then ClassDefsResult {
     class-defs = deck-record (__linked-list-to-list cacc),
     instance-defs = deck-record (__linked-list-to-list iacc)
    }
-   else if is-class-keyword (current-kind st) & (is-ident (peek-kind st 1) | is-type-ident (peek-kind st 1)) then let st1 = advance st
+   else if is-class-keyword (current-kind st) & begins-line st & (is-ident (peek-kind st 1) | is-type-ident (peek-kind st 1)) then let st1 = advance st
     in let name-tok = current st1
     in let st2 = advance st1
     in if is-ident (current-kind st2) & is-fat-arrow (peek-kind st2 1) then
@@ -41869,7 +42506,7 @@ Section: Chapter Pagination
     in let (ops-list, ops-st) = parse-effect-ops st3 []
     in let cd = deck-record (ClassDef { name = name-tok, methods = ops-list, superclass = "" })
     in scan-class-instance-defs (skip-newlines ops-st) (__linked-list-push cacc cd) iacc
-   else if is-instance-keyword (current-kind st) & is-type-ident (peek-kind st 1) then let st1 = advance st
+   else if is-instance-keyword (current-kind st) & begins-line st & is-type-ident (peek-kind st 1) then let st1 = advance st
     in let class-tok = current st1
     in let st2 = advance st1
     in let (it-head, it-st) = parse-instance-type-head st2
@@ -43784,16 +44421,51 @@ Section: Document Desugaring
  is the author asking for equality, and dropping the helper under them would be
  a silent refusal rather than the diagnostic they get today.
 
+ A RECORD GETS ONE TOO, on the same terms as a sum. Until COMPILER-75 this
+ answered False for a record body, so a sum was structural by default and a
+ record was compared by POINTER unless its author wrote `deriving Eq`: two
+ identical records answered False, and no diagnostic said why. The asymmetry
+ was not a decision anybody recorded, and a record has no argument against a
+ helper that a sum does not also have, because a field naming the record's own
+ type reaches the same helper-call path that makes the recursive sum terminate.
+
   td-eq-safe : TypeDef -> Boolean
   td-eq-safe (td) =
    when td.body
     is VariantBody (ctors) -> ctors-eq-safe ctors 0 (list-length ctors)
+    is RecordBody (fields) -> record-fields-eq-safe fields
     is otherwise -> False
+
+ TWO type names make a field uncomparable, and the second is a bound in the
+ compiler rather than a property of the type. `Real` refuses `==` outright with
+ CDX2085. `Vector n T` ANSWERS `==`, with a `VectorMask n` rather than a
+ Boolean, and the fold that would turn a mask into a Boolean is declared at
+ arity 2 (`mask-all`, `mask-any`, `mask-none`, `VectorMaskTy 2` in
+ `Builtins.codex`) and the unifier compares vector arities exactly, so nothing
+ in the language can compare a vector wider than 2 today, by hand or here.
+ Without this guard the AND chain takes the mask and the unit fails with
+ CDX2001 on a span nobody wrote, whether or not anything compares the type:
+ measured 2026-09-09, `codex/test/type-name-existence` went red at head the day
+ record bodies were widened into this gate, and a variant carrying a vector
+ field had been red since sums were widened. A type refused here compares by
+ POINTER, which is what every record did before that widening. The wider gap is
+ COMPILER-77.
+
+  field-types-eq-safe : List TypeExpr -> Boolean
+  field-types-eq-safe (tys) =
+   if fields-name-type tys "Real" 0 (list-length tys) then False
+   else if fields-name-type tys "Vector" 0 (list-length tys) then False
+   else if fields-name-type tys "SizedVec" 0 (list-length tys) then False
+   else True
+
+  record-fields-eq-safe : List RecordFieldDef -> Boolean
+  record-fields-eq-safe (fs) =
+   field-types-eq-safe (for f in fs -> f.type-expr)
 
   ctors-eq-safe : List VariantCtorDef, Integer, Integer -> Boolean
   ctors-eq-safe (ctors) (i) (len) =
    if i >= len then True
-   else if fields-name-type ((list-at ctors i).fields) "Real" 0 (list-length ((list-at ctors i).fields)) then False
+   else if field-types-eq-safe ((list-at ctors i).fields) == False then False
    else ctors-eq-safe ctors (i + 1) len
 
   fields-name-type : List TypeExpr, Text, Integer, Integer -> Boolean
@@ -46192,6 +46864,7 @@ Section: Children Map
     is PropEqTy (a) (b) -> deck-record (PropEqTy (f a) (f b))
     is VectorTy (n) (t) -> deck-record (VectorTy n (f t))
     is VectorMaskTy (n) -> ty
+    is SizedVecTy (n) (t) -> deck-record (SizedVecTy n (f t))
     is TypeApply (tf) (ta) -> deck-record (TypeApply (f tf) (f ta))
     is LinearTy (inner) -> deck-record (LinearTy (f inner))
     is otherwise -> ty
@@ -46211,6 +46884,7 @@ Section: Children Fold
     is PropEqTy (a) (b) -> f b (f a acc)
     is VectorTy (n) (t) -> f t acc
     is VectorMaskTy (n) -> acc
+    is SizedVecTy (n) (t) -> f t acc
     is TypeApply (tf) (ta) -> f ta (f tf acc)
     is LinearTy (inner) -> f inner acc
     is otherwise -> acc
@@ -46896,6 +47570,9 @@ Section: Unify
     is VectorMaskTy (na) -> when b
      is VectorMaskTy (nb) -> na == nb
      is otherwise -> False
+    is SizedVecTy (na) (ta) -> when b
+     is SizedVecTy (nb) (tb) -> na == nb & types-equal ta tb
+     is otherwise -> False
     is TypeCon (na) -> when b
      is TypeCon (nb) -> na.value == nb.value
      is otherwise -> False
@@ -47066,13 +47743,19 @@ Section: Unify
      is otherwise -> unify-at st inner-a b span (depth + 1) inv
     is VectorTy (na) (ta) -> when b
      is VectorTy (nb) (tb) ->
-      if na == nb | na < 0 | nb < 0 then unify-at st ta tb span (depth + 1) True
+      if na == nb then unify-at st ta tb span (depth + 1) True
       else unify-mismatch st a b span
      is ErrorTy -> (True, st)
      is otherwise -> unify-mismatch st a b span
     is VectorMaskTy (na) -> when b
      is VectorMaskTy (nb) ->
       if na == nb then (True, st)
+      else unify-mismatch st a b span
+     is ErrorTy -> (True, st)
+     is otherwise -> unify-mismatch st a b span
+    is SizedVecTy (na) (ta) -> when b
+     is SizedVecTy (nb) (tb) ->
+      if na == nb | na < 0 | nb < 0 then unify-at st ta tb span (depth + 1) True
       else unify-mismatch st a b span
      is ErrorTy -> (True, st)
      is otherwise -> unify-mismatch st a b span
@@ -47148,7 +47831,34 @@ Section: Unify
   unify-mismatch : UnificationState, CodexType, CodexType, SourceSpan -> (Boolean, UnificationState)
   unify-mismatch (st) (a) (b) (span) =
    let base = "Type mismatch: " & type-desc a & " vs " & type-desc b
-   in (False, add-unify-error st cdx-type-mismatch (base & (ctor-as-type-hint a & ctor-as-type-hint b)) span)
+   in (False, add-unify-error st cdx-type-mismatch (base & (ctor-as-type-hint a & ctor-as-type-hint b) & vec-family-hint a b) span)
+
+  vec-family-hint : CodexType, CodexType -> Text
+  vec-family-hint (a) (b) =
+   when a
+    is VectorTy (na) (ta) ->
+     when b
+      is VectorTy (nb) (tb) -> if na == nb then "" else vec-width-note
+      is SizedVecTy (nb) (tb) -> vec-family-note
+      is otherwise -> ""
+    is VectorMaskTy (na) ->
+     when b
+      is VectorMaskTy (nb) -> if na == nb then "" else vec-mask-note
+      is otherwise -> ""
+    is SizedVecTy (na) (ta) ->
+     when b
+      is VectorTy (nb) (tb) -> vec-family-note
+      is otherwise -> ""
+    is otherwise -> ""
+
+  vec-width-note : Text
+  vec-width-note = " (note: the vec- builtins are declared over Vector 2 and emit two lanes, so a wider vector is refused here rather than read past its second lane at runtime. The four-lane family, all of it Real approximate, is vec4-splat, vec4-extract, vec4-select and vec4-reduce-add; arithmetic and comparison at four lanes are the ordinary operators.)"
+
+  vec-mask-note : Text
+  vec-mask-note = " (note: mask-any, mask-all, mask-none, mask-count and vec-select take a VectorMask 2. A comparison of two Vector 4 (Real approximate) makes a VectorMask 4, and its consumers are the four-lane names: mask4-any, mask4-all, mask4-none, mask4-count and vec4-select.)"
+
+  vec-family-note : Text
+  vec-family-note = " (note: Vector is packed SIMD lanes and SizedVec is the growable list-shaped family. vec-empty, vec-singleton, vec-cons, vec-head and vec-length are SizedVec; every other vec- and mask- builtin is packed. The two have different layouts and are deliberately not interchangeable: see DevelopersGuide.md, 'SizedVec N T is the other one'.)"
 
   ctor-as-type-hint : CodexType -> Text
   ctor-as-type-hint (ty) =
@@ -47207,6 +47917,7 @@ Section: Unify
     is UnitTy (name) (inner) -> "Unit:" & name.value
     is VectorTy (vn) (vt) -> "Vector " & integer-to-text vn & " " & type-desc vt
     is VectorMaskTy (n) -> "VectorMask " & integer-to-text n
+    is SizedVecTy (vn) (vt) -> "SizedVec " & integer-to-text vn & " " & type-desc vt
     is TypeCon (name) -> "TCon:" & name.value
     is TypeApply (f) (a) -> "App[" & type-desc f & " " & type-desc a & "]"
     is LinearTy (inner) -> "linear " & type-desc inner
@@ -47893,6 +48604,7 @@ Section: Deep Type Copy
     is UnitTy (n) (inner) -> cons-mix (cons-mix 23 (address-of (mcopy-name n mc))) (address-of (mcopy-type inner (depth + 1) mc))
     is VectorTy (vn) (vt) -> cons-mix (cons-mix 24 vn) (address-of (mcopy-type vt (depth + 1) mc))
     is VectorMaskTy (mn) -> cons-mix 25 mn
+    is SizedVecTy (vn) (vt) -> cons-mix (cons-mix 30 vn) (address-of (mcopy-type vt (depth + 1) mc))
     is TypeCon (n) -> cons-mix 26 (address-of (mcopy-name n mc))
     is TypeApply (tf) (ta) -> cons-mix (cons-mix 27 (address-of (mcopy-type tf (depth + 1) mc))) (address-of (mcopy-type ta (depth + 1) mc))
     is ForAllEff (i) (b) -> cons-mix (cons-mix 28 i) (address-of (mcopy-type b (depth + 1) mc))
@@ -47924,6 +48636,7 @@ Section: Deep Type Copy
     is UnitTy (n) (inner) -> UnitTy (mcopy-name n mc) (mcopy-type inner (depth + 1) mc)
     is VectorTy (vn) (vt) -> VectorTy vn (mcopy-type vt (depth + 1) mc)
     is VectorMaskTy (mn) -> VectorMaskTy mn
+    is SizedVecTy (vn) (vt) -> SizedVecTy vn (mcopy-type vt (depth + 1) mc)
     is TypeCon (n) -> TypeCon (mcopy-name n mc)
     is TypeApply (tf) (ta) -> TypeApply (mcopy-type tf (depth + 1) mc) (mcopy-type ta (depth + 1) mc)
     is ForAllEff (i) (b) -> ForAllEff i (mcopy-type b (depth + 1) mc)
@@ -48050,6 +48763,10 @@ Section: Resolve Type Expression
        let n-text = when (list-at args 0) is ANamedType (nt) (ns) -> nt.value is otherwise -> "0"
        in deck-record (VectorTy (lit-text-to-integer n-text) (resolve-type-expr tdm (list-at args 1)))
        else deck-record (VectorTy 2 ErrorTy)
+      else if name.value == "SizedVec" then if list-length args == 2 then
+       let sn-text = when (list-at args 0) is ANamedType (snt) (sns) -> snt.value is otherwise -> "0"
+       in deck-record (SizedVecTy (lit-text-to-integer sn-text) (resolve-type-expr tdm (list-at args 1)))
+       else deck-record (SizedVecTy 0 ErrorTy)
       else deck-record (ConstructedTy name (for a in args -> resolve-type-expr tdm a))
     is AAppType (inner-ctor) (inner-args) (s) ->
      resolve-applied-type tdm inner-ctor (inner-args & args)
@@ -52310,6 +53027,7 @@ Section: Type Arity Check
    name == "Integer" | name == "Real" | name == "Text" | name == "Boolean"
    | name == "Char" | name == "Nothing" | name == "Proof"
    | name == "List" | name == "LinkedList" | name == "Vector"
+   | name == "SizedVec"
 
   type-name-known : List TypeBinding, Text -> Boolean
   type-name-known (tdm) (name) =
@@ -52815,7 +53533,7 @@ Section: Infer Binary
   infer-comparison : UnificationState, CodexType, CodexType, SourceSpan -> CheckResult
   infer-comparison (st) (lt) (rt) (span) =
    let (_, u-st) = unify st lt rt span
-   in when lt
+   in when deep-resolve u-st lt
     is VectorTy (n) (et) -> CheckResult {
      inferred-type = VectorMaskTy n,
      effect-row = empty-row,
@@ -53363,21 +54081,18 @@ Section: Infer Application
   refine-vec-result (st) (func) (arg-ty) (ret-ty) =
    let rr = deep-resolve st ret-ty
    in when rr
-    is VectorTy (rn) (rt) -> if rn >= 0 then ret-ty else refine-vec-op st func arg-ty rt ret-ty
+    is SizedVecTy (rn) (rt) -> if rn >= 0 then ret-ty else refine-vec-op st func arg-ty rt ret-ty
     is otherwise -> ret-ty
 
   refine-vec-op : UnificationState, AExpr, CodexType, CodexType, CodexType -> CodexType
   refine-vec-op (st) (func) (arg-ty) (elem-ty) (fallback) =
    let ra = deep-resolve st arg-ty
-   in let arg-len = when ra is VectorTy (an) (at) -> an is otherwise -> 0 - 1
+   in let arg-len = when ra is SizedVecTy (an) (at) -> an is otherwise -> 0 - 1
    in when func
-    is ANameExpr (n) (s) ->
-     if n.value == "vec-tail" & arg-len > 0 then deck-record (VectorTy (arg-len - 1) elem-ty)
-     else if n.value == "vec-map" & arg-len >= 0 then deck-record (VectorTy arg-len elem-ty)
-     else fallback
+    is ANameExpr (n) (s) -> fallback
     is AApplyExpr (inner) (first-arg) (s) ->
      let inner-name = when inner is ANameExpr (n2) (s2) -> n2.value is otherwise -> ""
-     in if inner-name == "vec-cons" & arg-len >= 0 then deck-record (VectorTy (arg-len + 1) elem-ty)
+     in if inner-name == "vec-cons" & arg-len >= 0 then deck-record (SizedVecTy (arg-len + 1) elem-ty)
      else fallback
     is otherwise -> fallback
 
@@ -54622,6 +55337,7 @@ Section: Type Substitution
     is ConstructedTy (pn) (pargs) -> when arg-ty is ConstructedTy (an) (aargs) -> subst-from-named (pn.value) (an.value) pargs aargs target is otherwise -> target
     is LinkedListTy (pe) -> when arg-ty is LinkedListTy (ae) -> subst-type-vars-from-arg pe ae target is otherwise -> target
     is VectorTy (pw) (pe) -> when arg-ty is VectorTy (aw) (ae) -> subst-type-vars-from-arg pe ae target is otherwise -> target
+    is SizedVecTy (pw) (pe) -> when arg-ty is SizedVecTy (aw) (ae) -> subst-type-vars-from-arg pe ae target is otherwise -> target
     is UnitTy (pn) (pe) -> when arg-ty is UnitTy (an) (ae) -> if pn.value == an.value then subst-type-vars-from-arg pe ae target else target is otherwise -> target
     is LinearTy (pe) -> when arg-ty is LinearTy (ae) -> subst-type-vars-from-arg pe ae target is otherwise -> target
     is otherwise -> target
@@ -55463,12 +56179,42 @@ Section: Expression Lowering
   eq-op-for : Boolean -> BinaryOp
   eq-op-for (positive) = if positive then OpEq else OpNotEq
 
+ A LIST TAKES THE INSTANTIATED HELPER WITHOUT AN EXISTENCE PROBE. There is no
+ declared `List` for the desugarer to mint `__eq_List` from, so the probe below
+ can never find one and every list comparison fell through to `IrBinary OpEq`,
+ which for a heap value compares the two POINTERS: two structurally equal lists
+ answered False, and so did a sum or record holding one, with no diagnostic.
+ COMPILER-74. The element is concrete at the comparison site, so the name
+ carries it and each backend mints one helper per element type; a generic sum's
+ field is NOT concrete there, which is why that gap stands (`X86_64.codex`, the
+ note beside `eq-helper-field-eq`).
+
+  eq-ty-is-list : CodexType -> Boolean
+  eq-ty-is-list (ty) =
+   when ty
+    is ListTy (e) -> True
+    is otherwise -> False
+
   lower-eq-dispatch : CodexType, IRExpr, IRExpr, CodexType, LowerCtx, SourceSpan, Boolean -> IRExpr
   lower-eq-dispatch (left-ty) (left-ir) (right-ir) (ty) (ctx) (s) (positive) =
    let resolved-left = deep-resolve (ctx.ust) left-ty
    in let tn = type-name-of resolved-left
    in let stripped = strip-unit-ty resolved-left
-   in let has-args = eq-type-has-args stripped
+   in if eq-ty-is-list stripped
+   then lower-eq-helper-call stripped (eq-helper-name-inst "List" (eq-site-actuals stripped)) left-ir right-ir s positive
+   else lower-eq-dispatch-named left-ty tn stripped left-ir right-ir ty ctx s positive
+
+  lower-eq-helper-call : CodexType, Text, IRExpr, IRExpr, SourceSpan, Boolean -> IRExpr
+  lower-eq-helper-call (opty) (hname) (left-ir) (right-ir) (s) (positive) =
+   let fty = deck-record (FunTy opty empty-row (deck-record (FunTy opty empty-row BooleanTy)))
+   in let inner = deck-record (IrApply (deck-record (IrName hname fty s)) left-ir (peel-fun-return fty) s)
+   in let call = deck-record (IrApply inner right-ir BooleanTy s)
+   in if positive then call
+      else deck-record (IrIf call (deck-record (IrBoolLit False s)) (deck-record (IrBoolLit True s)) BooleanTy s)
+
+  lower-eq-dispatch-named : CodexType, Text, CodexType, IRExpr, IRExpr, CodexType, LowerCtx, SourceSpan, Boolean -> IRExpr
+  lower-eq-dispatch-named (left-ty) (tn) (stripped) (left-ir) (right-ir) (ty) (ctx) (s) (positive) =
+   let has-args = eq-type-has-args stripped
    in let probe = if text-length tn == 0 then ErrorTy
     else lookup-type-split (ctx.overlay) (ctx.base) ("__eq_" & tn)
    in when probe
@@ -56258,7 +57004,8 @@ Section: Collections and Act
    in let actual-ty = when record-ty
       is ErrorTy | NoExpectTy -> ty
       is otherwise -> record-ty
-   in let lowered-fields = lower-record-fields-typed fields actual-ty ctx 0 (list-length fields)
+   in let applied-ty = prefer-applied-record-ty (expected-or-recorded-ty ty ctx sp) actual-ty (ctx.local-type-vars)
+   in let lowered-fields = lower-record-fields-typed fields actual-ty applied-ty ctx 0 (list-length fields)
    in let refined-actual = refine-record-ty-from-fields actual-ty lowered-fields ctx 0 (list-length lowered-fields)
    in let emit-ty = prefer-applied-record-ty ty refined-actual (ctx.local-type-vars)
    in deck-record (IrRecord (name.value) lowered-fields emit-ty sp)
@@ -56310,18 +57057,18 @@ Section: Collections and Act
    else if list-at xs i == target then True
    else list-contains-int-loop xs target (i + 1) len
 
-  lower-record-fields-typed : List AFieldExpr, CodexType, LowerCtx, Integer, Integer -> List IRFieldVal
-  lower-record-fields-typed (fields) (record-ty) (ctx) (i) (len) =
-   lower-record-fields-acc fields record-ty ctx i len []
+  lower-record-fields-typed : List AFieldExpr, CodexType, CodexType, LowerCtx, Integer, Integer -> List IRFieldVal
+  lower-record-fields-typed (fields) (record-ty) (applied-ty) (ctx) (i) (len) =
+   lower-record-fields-acc fields record-ty applied-ty ctx i len []
 
-  lower-record-fields-acc : List AFieldExpr, CodexType, LowerCtx, Integer, Integer, List IRFieldVal -> List IRFieldVal
-  lower-record-fields-acc (fields) (record-ty) (ctx) (i) (len) (acc) =
+  lower-record-fields-acc : List AFieldExpr, CodexType, CodexType, LowerCtx, Integer, Integer, List IRFieldVal -> List IRFieldVal
+  lower-record-fields-acc (fields) (record-ty) (applied-ty) (ctx) (i) (len) (acc) =
    if i == len then acc
    else let f = list-at fields i
    in let field-expected = when record-ty
-       is RecordTy (rname) (rargs) (rfields) -> lookup-record-field rfields (f.name.value)
+       is RecordTy (rname) (rargs) (rfields) -> subst-type-vars-from-arg record-ty applied-ty (lookup-record-field rfields (f.name.value))
        is otherwise -> ErrorTy
-   in lower-record-fields-acc fields record-ty ctx (i + 1) len (list-push acc (deck-record (IRFieldVal {
+   in lower-record-fields-acc fields record-ty applied-ty ctx (i + 1) len (list-push acc (deck-record (IRFieldVal {
     name = f.name.value,
     value = lower-expr (f.value) field-expected ctx,
     span = f.span
@@ -56962,6 +57709,7 @@ Section: Leaf Inlining
    il-name : Text,
    il-params : List Text,
    il-ptys : List CodexType,
+   il-rty : CodexType,
    il-body : IRExpr
   }
 
@@ -57001,7 +57749,7 @@ Section: Leaf Inlining
       else if np >= 1 & np <= 3 then leaf-body-ok (d.body) pnames 12
       else 0 - 1
    in if ok >= 0
-      then collect-leaf-defs defs (i + 1) (list-push acc (deck-record (InlineLeaf { il-name = d.name, il-params = pnames, il-ptys = for p in (d.params) -> p.type-val, il-body = d.body })))
+      then collect-leaf-defs defs (i + 1) (list-push acc (deck-record (InlineLeaf { il-name = d.name, il-params = pnames, il-ptys = for p in (d.params) -> p.type-val, il-rty = peel-applied-return (d.type-val) (list-length (d.params)), il-body = d.body })))
    else collect-leaf-defs defs (i + 1) acc
 
  A function with a bounded parameter or return is enforced by
@@ -57532,7 +58280,7 @@ Section: Single-Caller Inlining
       else if np > 4 then False
       else once-binder-free (d.body)
    in if ok
-      then collect-once-defs defs (i + 1) (list-push acc (deck-record (InlineLeaf { il-name = d.name, il-params = pnames, il-ptys = for p in (d.params) -> p.type-val, il-body = d.body })))
+      then collect-once-defs defs (i + 1) (list-push acc (deck-record (InlineLeaf { il-name = d.name, il-params = pnames, il-ptys = for p in (d.params) -> p.type-val, il-rty = peel-applied-return (d.type-val) (list-length (d.params)), il-body = d.body })))
    else collect-once-defs defs (i + 1) acc
 
   keep-single-caller : List InlineLeaf, List Integer, Integer, List InlineLeaf -> List InlineLeaf
@@ -57553,8 +58301,12 @@ Section: Single-Caller Inlining
    in if list-length args /= list-length (cand.il-params) then e
    else if leaf-args-simple args 0 == False then e
    else if once-free-escapes (cand.il-body) (cand.il-params) bound then e
-   else if any-tyvar-param (cand.il-ptys) 0 == False then subst-once (cand.il-body) (cand.il-params) args [] []
-   else subst-once (cand.il-body) (cand.il-params) args (cand.il-ptys) (for a in args -> ir-expr-type a)
+   else if once-signature-generic cand == False then subst-once (cand.il-body) (cand.il-params) args [] []
+   else subst-once (cand.il-body) (cand.il-params) args (list-push (for p in (cand.il-ptys) -> p) (cand.il-rty)) (list-push (for a in args -> ir-expr-type a) (ir-expr-type e))
+
+  once-signature-generic : InlineLeaf -> Boolean
+  once-signature-generic (cand) =
+   if any-tyvar-param (cand.il-ptys) 0 then True else ty-has-typevars (cand.il-rty)
 
   any-tyvar-param : List CodexType, Integer -> Boolean
   any-tyvar-param (ps) (i) =
@@ -57696,7 +58448,7 @@ Section: Cost-Based Inlining
       else if ir-body-mentions (d.body) (d.name) then False
       else ir-cost-expr (d.body) <= inline-cost-ceiling
    in if ok
-      then collect-cost-defs defs (i + 1) (list-push acc (deck-record (InlineLeaf { il-name = d.name, il-params = pnames, il-ptys = for p in (d.params) -> p.type-val, il-body = d.body })))
+      then collect-cost-defs defs (i + 1) (list-push acc (deck-record (InlineLeaf { il-name = d.name, il-params = pnames, il-ptys = for p in (d.params) -> p.type-val, il-rty = peel-applied-return (d.type-val) (list-length (d.params)), il-body = d.body })))
    else collect-cost-defs defs (i + 1) acc
 
   keep-multi-caller : List InlineLeaf, List Integer, Integer, List InlineLeaf -> List InlineLeaf
@@ -57990,6 +58742,7 @@ Section: CodexType Emission
     is EffectfulTy (effs) (sc) (ret) -> ir-tvars-of-type ret acc
     is VectorTy (vn) (vt) -> ir-tvars-of-type vt acc
     is VectorMaskTy (n) -> acc
+    is SizedVecTy (sn) (st) -> ir-tvars-of-type st acc
     is LinearTy (linner) -> ir-tvars-of-type linner acc
     is otherwise -> acc
 
@@ -58098,6 +58851,7 @@ Section: CodexType Emission
     is UnitTy (name) (inner) -> "(unit " & ir-quote (name.value) & " " & ir-emit-type inner & ")"
     is VectorTy (n) (t) -> "(vector " & integer-to-text n & " " & ir-emit-type t & ")"
     is VectorMaskTy (n) -> "(vector-mask " & integer-to-text n & ")"
+    is SizedVecTy (n) (t) -> "(sized-vec " & integer-to-text n & " " & ir-emit-type t & ")"
     is LinearTy (linner) -> ir-emit-type linner
     is ProofTy -> "proof"
     is PropEqTy (a) (b) -> "(propeq " & ir-emit-type a & " " & ir-emit-type b & ")"
@@ -58493,6 +59247,47 @@ Section: IR Dead Code Elimination
    if i == len then acc
    else if list-at visited i then ir-dce-filter defs visited (i + 1) len (list-push acc (list-at defs i))
    else ir-dce-filter defs visited (i + 1) len acc
+
+  ir-declared-exports : IRChapter -> List Text
+  ir-declared-exports (m) = ir-declared-exports-loop (m.defs) 0 (list-length (m.defs))
+
+  ir-declared-exports-loop : List IRDef, Integer, Integer -> List Text
+  ir-declared-exports-loop (defs) (i) (n) =
+   if i == n then []
+   else let d = list-at defs i
+   in if (d.name) == "wasm-exports"
+      then list-push (ir-export-names (ir-text-lit-value (d.body))) "wasm-exports"
+      else ir-declared-exports-loop defs (i + 1) n
+
+  ir-text-lit-value : IRExpr -> Text
+  ir-text-lit-value (e) =
+   when e
+    is IrTextLit (s) (sp) -> s
+    is otherwise -> ""
+
+  ir-export-names : Text -> List Text
+  ir-export-names (s) = ir-export-names-loop s 0 (text-length s) [] []
+
+  ir-export-names-loop : Text, Integer, Integer, List Text, List Text -> List Text
+  ir-export-names-loop (s) (i) (len) (cur) (acc) =
+   if i == len then ir-export-flush cur acc
+   else let c = char-code-at s i
+   in if c == char-code-at "|" 0
+      then ir-export-names-loop s (i + 1) len [] (ir-export-flush cur acc)
+      else ir-export-names-loop s (i + 1) len (list-push cur (char-to-text (code-to-char c))) acc
+
+  ir-export-flush : List Text, List Text -> List Text
+  ir-export-flush (cur) (acc) =
+   if list-length cur == 0 then acc else list-push acc (text-concat-list cur)
+
+  ir-roots-with-declared : IRChapter, List Text -> List Text
+  ir-roots-with-declared (m) (fixed) =
+   ir-roots-append (ir-declared-exports m) 0 (ir-roots-append fixed 0 [])
+
+  ir-roots-append : List Text, Integer, List Text -> List Text
+  ir-roots-append (xs) (i) (acc) =
+   if i == list-length xs then acc
+   else ir-roots-append xs (i + 1) (list-push acc (list-at xs i))
 
   ir-prune-unreachable : IRChapter, Text -> IRChapter
   ir-prune-unreachable (m) (root) = ir-prune-unreachable-roots m [root]
@@ -61017,6 +61812,7 @@ Section: CodexType Emission
     is UnitTy (name) (inner) -> name.value
     is VectorTy (n) (t) -> "Vector " & integer-to-text n & " " & wrap-complex t
     is VectorMaskTy (n) -> "VectorMask " & integer-to-text n
+    is SizedVecTy (n) (t) -> "SizedVec " & integer-to-text n & " " & wrap-complex t
     is LinearTy (linner) -> "linear " & wrap-complex linner
     is otherwise -> "Unknown"
 
@@ -62005,6 +62801,7 @@ Section: CodexType
    else if head == "vector" then VectorTy (sexp-int (list-at xs 1)) (ir-parse-type (list-at xs 2))
    else if head == "unit" then UnitTy (make-name (sexp-str (list-at xs 1))) (ir-parse-type (list-at xs 2))
    else if head == "vector-mask" then VectorMaskTy (sexp-int (list-at xs 1))
+   else if head == "sized-vec" then SizedVecTy (sexp-int (list-at xs 1)) (ir-parse-type (list-at xs 2))
    else if head == "propeq" then PropEqTy (ir-parse-type (list-at xs 1)) (ir-parse-type (list-at xs 2))
    else if head == "tycon" then TypeCon (make-name (sexp-str (list-at xs 1)))
    else if head == "tyapply" then TypeApply (ir-parse-type (list-at xs 1)) (ir-parse-type (list-at xs 2))
@@ -62142,6 +62939,9 @@ Section: Type Def Resolution
      else if name.value == "Vector" then
       (if list-length args == 2 then VectorTy (atype-vector-len (list-at args 0)) (atype-to-codex-type (list-at args 1))
        else VectorTy 2 ErrorTy)
+     else if name.value == "SizedVec" then
+      (if list-length args == 2 then SizedVecTy (atype-vector-len (list-at args 0)) (atype-to-codex-type (list-at args 1))
+       else SizedVecTy 0 ErrorTy)
      else ConstructedTy name (atypes-to-codex-types args 0 [])
     is AAppType (inner-ctor) (inner-args) (s) -> atype-app-to-codex-type inner-ctor (inner-args & args)
     is otherwise -> atype-to-codex-type ctor
@@ -62592,6 +63392,24 @@ Section: IRDef + Chapter
   parse-unique (xs) (i) (acc) =
    if i >= list-length xs then acc
    else parse-unique xs (i + 1) (list-push acc (sexp-str (list-at xs i)))
+
+  ir-text-is-chapter : Text -> Boolean
+  ir-text-is-chapter (s) =
+   let len = text-length s
+   in ir-prefix-at s "(chapter" (ir-skip-space s 0 len) 0 len
+
+  ir-skip-space : Text, Integer, Integer -> Integer
+  ir-skip-space (s) (i) (len) =
+   if i >= len then i
+   else if is-sexp-space (char-code-at s i) then ir-skip-space s (i + 1) len
+   else i
+
+  ir-prefix-at : Text, Text, Integer, Integer, Integer -> Boolean
+  ir-prefix-at (s) (p) (i) (j) (len) =
+   if j >= text-length p then True
+   else if i + j >= len then False
+   else if char-code-at s (i + j) == char-code-at p j then ir-prefix-at s p i (j + 1) len
+   else False
 
   parse-ir-chapter : Text -> ParsedIR
   parse-ir-chapter (s) =
@@ -65422,7 +66240,7 @@ Chapter: Parsmi--Opening
   cites Foreword chapter FactDisk
 
   cites Emit chapter Codex Emitter (codex-emit-text-chapter, codex-emit-type-defs, codex-emit-def, codex-emit-grounds-line)
-  cites Emit chapter IR Text Emitter (emit-ir-chapter, emit-ir-chapter-prefix, ir-defs-wire-size, ir-print-defs, ir-trace-def-sizes, ir-trace-dce-cost, ir-prune-unreachable, ir-prune-unreachable-roots, ir-dropped-budgeted-punctuals)
+  cites Emit chapter IR Text Emitter (emit-ir-chapter, emit-ir-chapter-prefix, ir-defs-wire-size, ir-print-defs, ir-trace-def-sizes, ir-trace-dce-cost, ir-prune-unreachable, ir-prune-unreachable-roots, ir-roots-with-declared, ir-dropped-budgeted-punctuals)
   cites Emit chapter Emit Allocator (emit-build)
   cites Emit chapter X86-64 Code Generator (x86-64-emit-cdx, x86-64-emit-cdx-with-exit-mode, ir-chapter-with-proofs, keep-proof-defs, X86_64ExitMode, ExitRepl, Exit, X86_64WatchdogMode, WatchdogProgress, WatchdogPet, pmap-self-test, pmap-escape-count, pmap-escape-count-quiet, pmap-escape-list-quiet, pmap-escape-reached, utf8-to-cce, lir-target-x86)
   cites Semantics chapter Name Resolution (resolve-chapter, check-entry-point-duplicate, check-duplicate-cites, check-cites-resolve, count-typecheck-units)
@@ -65475,31 +66293,28 @@ Section: Compile Flags
    let v = mode-flag-value mode "decks=" 0
    in if v < 1 then 0 else v
 
- deck-scale-anchor is the compiler's own concatenated unit, measured 2026-08-04
- (`build/concat-codex-self.ps1 -CodexDir codex/compiler`). This said it is the
- length that maps to a scale of 100. It is not: deck-scale-margin doubles the
- estimate, so a unit of exactly this length derives 200 and is clamped, and the
- length that actually maps to 100 is HALF the anchor, 1,496,788. Everything
- above that gets the same reservation, so the derivation stops tracking length
- at half the anchor rather than at the anchor.
+ deck-scale-anchor is the length of the compiler's own concatenated unit
+ (`build/concat-codex-self.ps1 -CodexDir codex/compiler`), 2,993,576 as
+ measured 2026-08-04. It is NOT the length that maps to a scale of 100:
+ deck-scale-margin doubles the estimate, so a unit of exactly the anchor's
+ length derives 200 and is clamped, and the length that actually maps to 100 is
+ HALF the anchor, 1,496,788. Every unit above that half receives the same
+ reservation.
 
- Staleness is not safe in both directions either, though this said it was. The
- argument covered only the compiler growing. An anchor LARGER than the true
- unit divides every estimate down and hands the linear band less room, and that
- is the direction that happened: measured 2026-08-09 the unit is 2,746,259
- bytes, 247,317 below the anchor. It costs nothing today because the linear
- band holds 15 of 2814 measurable entry points and the other 2799 are at the
- floor or the clamp, neither of which the anchor touches.
+ The anchor drifts as the compiler grows and the direction decides whether that
+ matters. An anchor LARGER than the true unit divides estimates down and hands
+ the linear band less room; SMALLER multiplies them up, which the clamp then
+ absorbs. Measured 2026-09-08 the unit is 3,166,466 bytes, 172,890 ABOVE the
+ anchor, so the drift currently runs in the harmless direction. Re-measure
+ before relying on that.
 
- deck-scale-margin is headroom over the linear estimate, and 2 is measured
- rather than chosen for roundness. Across 29 units above 150 KB the binding
- phase is DESUGAR and the ratio of the linear estimate to the scale actually
- required ran from 1.24 to 1.71, so the bare estimate clears the requirement by
- as little as a quarter. Doubling it puts the tightest observed case at 2.5x.
- The reason margin is needed at all is that phase usage is NOT reliably linear
- in unit length below that size: CHECK usage per unit byte was measured between
- 21x and 167x and is not monotonic, so a bare linear estimate is a line through
- points that do not lie on one.
+ deck-scale-margin is 2 because a bare linear estimate does not clear the
+ requirement. Across 29 units above 150 KB the binding phase is DESUGAR and the
+ ratio of the linear estimate to the scale actually required ran from 1.24 to
+ 1.71 (measured 2026-08-09), so doubling puts the tightest observed case at
+ 2.5x. Margin is needed at all because phase usage is not linear in unit
+ length: CHECK usage per unit byte measured between 21x and 167x and is not
+ monotonic.
 
  deck-scale-min is what 99 per cent of the corpus actually receives: measured
  2026-08-09 over every quire, 2798 of 2814 measurable entry points derive the
@@ -65507,71 +66322,45 @@ Section: Compile Flags
  not a fallback, it IS the derivation, and the linear term between them governs
  fifteen units.
 
- It is set from density rather than from length, because density is where a
- length-derived scale fails. It was set from the two worst-density units known
- in 2026-08-04, and THOSE ARE NO LONGER THE BINDING CASE. Bisected 2026-08-09
- against seed A66E54F57CBAEBFD, the 46 units of the Shell quire (`codex/build`,
- 70 to 102 KB each) need 34 to 43, the worst being `vmconfigScript`, which
- refuses at 42 and compiles at 43. `codex/test/shell-build-keep` needs 30. The
- Shell quire is what the floor must now clear, and 43 against 64 is 1.49x.
- Outside those 46 and the compiler, nothing in the tree is closer than 2.13x.
+ The floor is set from DENSITY rather than length, because density is where a
+ length-derived scale fails. What it must clear is the Shell quire
+ (`codex/build`, 46 units of 70 to 102 KB): measured 2026-08-09 those need 34
+ to 43, the worst being `vmconfigScript`, which refuses at 42 and compiles at
+ 43. So 64 against 43 is 1.49x. Outside those 46 and the compiler, nothing in
+ the tree measured closer than 2.13x.
 
- The floor was 32, and at 32 a short deck fails BOTH ways. Measured 2026-08-05
- against seed 52E0A3A00218E19F, on `codex/build`, every unit of which derives
- the floor exactly:
+ A FLOOR CANNOT BE CERTIFIED BY THE ABSENCE OF CDX9002, because a short deck
+ fails silently as well as loudly: at the old floor of 32, `checkappsScript`
+ compiled CLEAN and its output carried the intermediate states of a string
+ concatenation, while `BuildScript` refused with CDX9002 in CHECK. A sweep that
+ raises no diagnostic says nothing about the silent half. Certify a floor by
+ OUTPUT EQUALITY over a corpus that names its scope; `build/deck-headroom.ps1`
+ re-measures the requirement.
 
- - **Silently.** `checkappsScript.codex` compiles clean at 32 and its output
-   carries the intermediate states of a string concatenation, each with its
-   length byte. At 33 and above it is byte-identical to the same unit at 150.
-   Deterministic across three compiles, with a byte-identical CDX. This is the
-   defect that was bisected to a seed change and read as a Text or rope fault.
-   The seed is not at fault; the knob is.
- - **Loudly.** `BuildScript.codex`, `vmconfigScript.codex` and
-   `comparecodexsemanticScript.codex` all refuse at 32 with `CDX9002: Deck
-   overflow in CHECK` and compile at 64.
-
- The claim that certified 32 was that a sweep of all 1674 entry points at this
- setting raises no CDX9002. `BuildScript.codex` raises exactly that at 32, so
- the sweep's corpus did not cover the units that fail -- the Shell quire is not
- in the seed's reach and nothing gated compiles it. **A sweep cannot certify a
- floor for a quire it does not enumerate, and CDX9002 cannot certify one at
- all**, because the silent arm above raises nothing. Certify a floor by OUTPUT
- EQUALITY over a corpus that names its scope.
-
- 64 was double the value known to break when it was chosen. It is 1.49x it now,
- because the Shell quire needs 43 and needed 33 four days earlier: measured
- 2026-08-09, `checkappsScript` refuses at 34 and compiles at 36 where
- 2026-08-05 recorded it byte-identical at 33. The compiler is not what moved.
- The same unit's CHECK deck usage is byte-identical under seeds
- AEB5ED2B5043C7C1, 065D92E60292492D and A66E54F57CBAEBFD, so the requirement is
- growing with the units and the floor is a constant that does not follow them.
- `build/deck-headroom.ps1` is the runner that re-measures this.
+ The requirement grows with the units and the floor is a constant that does not
+ follow them, so it is re-measured rather than assumed: the Shell quire needed
+ 33 on 2026-08-05 and 43 on 2026-08-09, with the same unit's CHECK deck usage
+ byte-identical under three different seeds, so what moved was the units.
 
  The ceiling on the cost is that `derive-deck-scale` clamps at 100 and 100 is
  what every unit received before this derivation existed, so 64 cannot reserve
  more than the arrangement it replaced.
 
  The clamp is a ceiling on the CURE as well as on the cost, and one unit is
- already past it. `codex/test/apps/foreword-all-compile` needs at least 131:
- measured 2026-08-09 at decks=200 its LOWER deck uses 437,990,744 bytes, and
- -Measure runs no IR pipeline so the shipping LOWER is larger again. It
- compiles only because a `.flags` sidecar overrides the derivation with 200.
- At the 100 it would derive, the CDX path refuses with CDX9002 naming LOWER,
- which is the right answer, and the -Measure path faults in `bag-add` instead
- of raising, which is C2's open item reproduced on a real unit.
+ already past it: `codex/test/apps/foreword-all-compile` needs at least 131,
+ and compiles only because a `.flags` sidecar sets decks=200. RULED 2026-09-08
+ (root, COMPILER-50): the clamp STAYS and the flag carries the rare unit that
+ outgrows it. Decks are reserved eagerly, so raising the clamp would raise real
+ memory on every unit above half the anchor, including the compiler's own
+ self-compile, to serve one unit an 11-byte sidecar already serves.
 
- **The mechanism this paragraph called unnamed is CHECK-KEEP, and `mc-sat` WAS
- it.** `mcopy-sat` read `let z = __record-set mc "mc-sat" 1 in x` and `MemoCtx`
- is not `mutable`, so the set built a record that was bound to `z` and
- discarded; the caller's `mc.mc-sat` was 0 on every path ever taken. When the
- keep frontier passes `mc-ceiling` the copy hands back the ORIGINAL pointer,
- which is scratch the caller reclaims a moment later, and the flag that was
- supposed to turn that into CDX9002 could not be set. A dangling `CodexType`
- then reaches `lookup-expr-type`, an append over it classifies as neither text
- nor list, and the program is miscompiled rather than refused. The flag is
- deleted and the caller now compares the keep deck's measured end against
- `mc-ceiling`, which is sound because the keep frontier is monotonic across
- these copies.
+ A unit that outgrows the clamp refuses with CDX9002 naming the phase. What no
+ longer happens is the overflow itself: measured 2026-09-08, neither
+ `foreword-all-compile` nor the compiler's own 3.1 MB unit provokes it at
+ decks=64, and the first compiles at 64 and at 100 with byte-identical output.
+ So the clamp binds nothing in the tree today, and either the reservation or
+ the estimate is not what this prose describes. The `-Measure` path faults in
+ `bag-add` rather than raising, which is C2's open item.
 
   deck-scale-anchor : Integer = 2993576
   deck-scale-margin : Integer = 2
@@ -66791,7 +67580,7 @@ Section: Binary Compilation
    if bag-has-errors (fe.bag) then EmitChapterResult { header-bytes = [], content-buf = 0, content-len = 0, tail-bytes = [], bag = fe.bag, symbol-map = [] }
    else let all-defs = (fe.cdx-ir).defs
     in let proofs = keep-proof-defs [] all-defs 0
-    in let pruned = ir-prune-unreachable-roots (fe.cdx-ir) cdx-emit-roots
+    in let pruned = ir-prune-unreachable-roots (fe.cdx-ir) (ir-roots-with-declared (fe.cdx-ir) cdx-emit-roots)
     in let dropped = ir-dropped-budgeted-punctuals all-defs (pruned.defs)
     in let emit-result = x86-64-emit-cdx-with-exit-mode (ir-chapter-with-proofs pruned proofs) (fe.sorted-type-defs) exit-mode poison trace wd-mode dropped hosted-target
     in EmitChapterResult {
@@ -67212,13 +68001,23 @@ Section: Entry Point
  the comparison. Suppressing the lift there preserves exactly the arm that
  shipped before this change.
 
+ The reservation is made on BOTH arms, and `build` sits outside the `if` for
+ that reason. `eq-attach-helpers` runs on this function's result and allocates
+ under `deck-record`, so it lands on whatever deck is current; the arm that
+ returns `ir` unchanged still owes it one. When `no-lift` returned early past
+ `build`, those allocations took the deck-pos cell left by the previous phase
+ and marched back down over that phase's live type bindings, which is
+ COMPILER-79. The lift arm reserves this height and then hosts the same
+ `eq-attach-helpers` work inside it, so the no-lift arm allocates a strict
+ subset of what this height already covers.
+
   lift-ir-for-emit : IRChapter, CompileFlags -> IRChapter
   lift-ir-for-emit (ir) (flags) =
-   if flags.no-lift then ir
-   else let lift-deck-height = scaled-floor (flags.deck-scale) demand-lift-floor demand-lift-guard-band
+   let lift-deck-height = scaled-floor (flags.deck-scale) demand-lift-floor demand-lift-guard-band
    in let lift-base = build lift-deck-height
    in let lift-ceiling = lift-base + lift-deck-height
-   in deck-record (lift-lambdas ir lift-ceiling)
+   in if flags.no-lift then ir
+      else deck-record (lift-lambdas ir lift-ceiling)
 
  COMPILER-44. The x86 path attaches the instantiated equality helpers at
  `X86_64Chapter`, and the plugs never went through it: they received a bare
@@ -67248,7 +68047,7 @@ Section: Entry Point
     else let lifted-ir = eq-attach-helpers (lift-ir-for-emit (fe.ir) flags) (fe.type-defs)
      in act
      print-line-uni "IR-BEGIN"
-     print-line-uni (emit-ir-chapter (ir-prune-unreachable-roots lifted-ir ir-emit-roots) (fe.text-meta) (fe.type-defs))
+     print-line-uni (emit-ir-chapter (ir-prune-unreachable-roots lifted-ir (ir-roots-with-declared lifted-ir ir-emit-roots)) (fe.text-meta) (fe.type-defs))
      print-line-uni "IR-END"
     end
     let h-post-emit = __heap-save
@@ -67274,7 +68073,7 @@ Section: Entry Point
      in let raw-defs = lifted-ir.defs
      in act
       if flags.wire-trace then ir-trace-dce-cost raw-defs 0 (list-length raw-defs) else print-text ""
-      let ir = ir-prune-unreachable-roots lifted-ir ir-emit-roots
+      let ir = ir-prune-unreachable-roots lifted-ir (ir-roots-with-declared lifted-ir ir-emit-roots)
       in let defs-len = list-length (ir.defs)
       in act
        if flags.wire-trace then ir-trace-def-sizes (ir.defs) 0 defs-len else print-text ""
@@ -69144,24 +69943,17 @@ Section: Expression Emission
   emit-wat-ctor-pat (ctx) (name) (subs) (guard) (body) (branches) (i) (depth) =
    let tag = find-ctor-in-typedefs (ctx.type-defs) name 0
    in let bind-subs = emit-wat-bind-ctor-subs ctx subs 0
-   in if (i == list-length branches - 1) & wat-guard-trivial guard & (wat-ctor-has-lit-subs subs 0 == False) then
+   in if (i == list-length branches - 1) & wat-guard-trivial guard & (wat-ctor-has-test-subs subs 0 == False) then
     emit-wat-arm-block "" "(i32.const 1)" bind-subs (emit-wat-expr ctx body)
    else emit-wat-arm-block "" (wat-ctor-arm-cond ctx tag subs guard bind-subs) bind-subs (emit-wat-expr ctx body)
 
- A LITERAL inside a constructor pattern is a TEST, not a binding, and
- `emit-wat-bind-ctor-subs` had no arm for one: it bound a variable sub-pattern
- and sent everything else to `is otherwise`, so `BInt (0)` matched every `BInt`
- and every arm answered the first one's body. The tests fold onto the tag test
- rather than beside it, because a payload load on an object of the wrong tag can
- address past the object and trap, which is the reason the guard is already
- gated this way.
-
-  wat-ctor-has-lit-subs : List IRPat, Integer -> Boolean
-  wat-ctor-has-lit-subs (subs) (i) =
+  wat-ctor-has-test-subs : List IRPat, Integer -> Boolean
+  wat-ctor-has-test-subs (subs) (i) =
    if i >= list-length subs then False
    else when list-at subs i
     is IrLitPat (t) (ty) (sp) -> True
-    is otherwise -> wat-ctor-has-lit-subs subs (i + 1)
+    is IrCtorPat (n) (ss) (ty) (sp) -> True
+    is otherwise -> wat-ctor-has-test-subs subs (i + 1)
 
   wat-and-tests : Text, Text -> Text
   wat-and-tests (acc) (t) =
@@ -69169,35 +69961,53 @@ Section: Expression Emission
 
   wat-ctor-sub-tests : WasmCtx, List IRPat, Integer, Text -> Text
   wat-ctor-sub-tests (ctx) (subs) (i) (acc) =
+   wat-ctor-sub-tests-at ctx subs i acc ("(local.get " & wat-scrut ctx & ")")
+
+  wat-ctor-sub-tests-at : WasmCtx, List IRPat, Integer, Text, Text -> Text
+  wat-ctor-sub-tests-at (ctx) (subs) (i) (acc) (base) =
    if i >= list-length subs then acc
-   else let fld = "(i64.load (i32.add (i32.wrap_i64 (local.get " & wat-scrut ctx & ")) (i32.const " & integer-to-text (8 + i * 8) & ")))"
+   else let fld = "(i64.load (i32.add (i32.wrap_i64 " & base & ") (i32.const " & integer-to-text (8 + i * 8) & ")))"
    in when list-at subs i
+    is IrCtorPat (n) (ss) (ty) (sp) ->
+     let tag = find-ctor-in-typedefs (ctx.type-defs) n 0
+     in let tag-test = "(i64.eq (i64.load (i32.wrap_i64 " & fld & ")) (i64.const " & integer-to-text tag & "))"
+     in let binds = emit-wat-bind-ctor-subs-at ctx ss 0 fld
+     in let inner = wat-ctor-sub-tests-at ctx ss 0 "" fld
+     in let under = if text-length inner == 0 then "(i32.const 1)" else inner
+     in let whole = if (text-length inner == 0) & (text-length binds == 0) then tag-test
+        else "(if (result i32) " & tag-test & " (then " & binds & under & ") (else (i32.const 0)))"
+     in wat-ctor-sub-tests-at ctx subs (i + 1) (wat-and-tests acc whole) base
     is IrLitPat (t) (ty) (sp) ->
-     wat-ctor-sub-tests ctx subs (i + 1) (wat-and-tests acc
+     wat-ctor-sub-tests-at ctx subs (i + 1) (wat-and-tests acc
       (if wat-is-text-type ty
        then "(i32.wrap_i64 (call $text_eq " & fld & " " & wat-strtab-ref (ctx.strings) t & "))"
-       else "(i64.eq " & fld & " (i64.const " & wat-lit-pat-const t & "))"))
-    is otherwise -> wat-ctor-sub-tests ctx subs (i + 1) acc
+       else "(i64.eq " & fld & " (i64.const " & wat-lit-pat-const t & "))")) base
+    is otherwise -> wat-ctor-sub-tests-at ctx subs (i + 1) acc base
 
   wat-ctor-arm-cond : WasmCtx, Integer, List IRPat, IRExpr, Text -> Text
   wat-ctor-arm-cond (ctx) (tag) (subs) (guard) (bind-subs) =
    let tag-test = "(i64.eq (i64.load (i32.wrap_i64 (local.get " & wat-scrut ctx & "))) (i64.const " & integer-to-text tag & "))"
    in let subt = wat-ctor-sub-tests ctx subs 0 ""
    in let inner = if wat-guard-trivial guard then subt
-      else wat-and-tests subt (emit-wat-guard-test ctx guard)
+      else if text-length subt == 0 then emit-wat-guard-test ctx guard
+      else "(if (result i32) " & subt & " (then " & emit-wat-guard-test ctx guard & ") (else (i32.const 0)))"
    in if text-length inner == 0 then tag-test
       else "(if (result i32) " & tag-test & " (then " & bind-subs & inner & ") (else (i32.const 0)))"
 
   emit-wat-bind-ctor-subs : WasmCtx, List IRPat, Integer -> Text
   emit-wat-bind-ctor-subs (ctx) (subs) (i) =
+   emit-wat-bind-ctor-subs-at ctx subs i ("(local.get " & wat-scrut ctx & ")")
+
+  emit-wat-bind-ctor-subs-at : WasmCtx, List IRPat, Integer, Text -> Text
+  emit-wat-bind-ctor-subs-at (ctx) (subs) (i) (base) =
    if i >= list-length subs then ""
-   else let off = 8 + i * 8
+   else let fld = "(i64.load (i32.add (i32.wrap_i64 " & base & ") (i32.const " & integer-to-text (8 + i * 8) & ")))"
    in let sub = list-at subs i
    in (when sub
-    is IrVarPat (name) (ty) (sp) -> "(local.set $" & wat-sanitize name & " (i64.load (i32.add (i32.wrap_i64 (local.get " & wat-scrut ctx & ")) (i32.const " & integer-to-text off & ")))) "
+    is IrVarPat (name) (ty) (sp) -> "(local.set $" & wat-sanitize name & " " & fld & ") "
     is IrWildPat (sp) -> ""
     is IrVecPat (pats) (ty) (sp) -> ""
-    is otherwise -> "") & emit-wat-bind-ctor-subs ctx subs (i + 1)
+    is otherwise -> "") & emit-wat-bind-ctor-subs-at ctx subs (i + 1) base
 
   emit-wat-act : WasmCtx, List IRActStmt -> Text
   emit-wat-act (ctx) (stmts) =
@@ -69538,6 +70348,14 @@ Section: Apply Emission
       else if n == "mask-none" then "(i64.extend_i32_u (i32.eqz " & bits & "))"
       else "(call $cx_mask_count " & emit-wat-expr ctx m & ")"
 
+  wat-emit-mask4-query : WasmCtx, Text, IRExpr -> Text
+  wat-emit-mask4-query (ctx) (n) (m) =
+   let bits = "(call $cx_mask4_bits " & emit-wat-expr ctx m & ")"
+   in if n == "mask4-any" then "(i64.extend_i32_u (i32.ne " & bits & " (i32.const 0)))"
+      else if n == "mask4-all" then "(i64.extend_i32_u (i32.eq " & bits & " (i32.const 15)))"
+      else if n == "mask4-none" then "(i64.extend_i32_u (i32.eqz " & bits & "))"
+      else "(call $cx_mask4_count " & emit-wat-expr ctx m & ")"
+
   wat-emit-vec-select : WasmCtx, List IRExpr -> Text
   wat-emit-vec-select (ctx) (args) =
    "(call $cx_vec_box (v128.bitselect (v128.load (i32.wrap_i64 " & emit-wat-expr ctx (list-at args 1) & ")) (v128.load (i32.wrap_i64 " & emit-wat-expr ctx (list-at args 2) & ")) (v128.load (i32.wrap_i64 " & emit-wat-expr ctx (list-at args 0) & "))))"
@@ -69783,8 +70601,10 @@ Section: Apply Emission
    else if n == "vec-reduce-add" then wat-emit-vec-reduce ctx (list-at args 0)
    else if n == "vec-load-at" then "(call $cx_vec_box (v128.load (i32.wrap_i64 " & emit-wat-expr ctx (list-at args 0) & ")))"
    else if n == "vec-store-at" then "(call $cx_vec_store " & emit-wat-expr ctx (list-at args 0) & " " & emit-wat-expr ctx (list-at args 1) & ")"
-   else if n == "vec-select" then wat-emit-vec-select ctx args
+   else if n == "vec-select" | n == "vec4-select" then wat-emit-vec-select ctx args
    else if n == "mask-any" | n == "mask-all" | n == "mask-none" | n == "mask-count" then wat-emit-mask-query ctx n (list-at args 0)
+   else if n == "mask4-any" | n == "mask4-all" | n == "mask4-none" | n == "mask4-count" then wat-emit-mask4-query ctx n (list-at args 0)
+   else if n == "vec4-reduce-add" then wat-emit-vec-reduce ctx (list-at args 0)
    else if n == "real-approx-to-bits" then "(i64.extend_i32_u (i32.reinterpret_f32 (f32.demote_f64 " & wat-f64-in (emit-wat-expr ctx (list-at args 0)) & ")))"
    else if n == "bits-to-real-approx" then wat-f64-out ("(f64.promote_f32 (f32.reinterpret_i32 (i32.wrap_i64 " & emit-wat-expr ctx (list-at args 0) & ")))")
    else if n == "blit-framebuf" then "(call $blit_framebuf (i32.wrap_i64 " & emit-wat-expr ctx (list-at args 0) & ")) (i64.const 0)"
@@ -69977,7 +70797,7 @@ Section: Tail Call Optimization
   emit-wat-ctor-arm-tco (ctx) (name) (subs) (guard) (body) (bs) (i) =
    let tag = find-ctor-in-typedefs (ctx.type-defs) name 0
    in let bind-subs = emit-wat-bind-ctor-subs ctx subs 0
-   in if (i == list-length bs - 1) & wat-guard-trivial guard & (wat-ctor-has-lit-subs subs 0 == False) then
+   in if (i == list-length bs - 1) & wat-guard-trivial guard & (wat-ctor-has-test-subs subs 0 == False) then
     emit-wat-arm-block "" "(i32.const 1)" bind-subs body
    else emit-wat-arm-block "" (wat-ctor-arm-cond ctx tag subs guard bind-subs) bind-subs body
 
@@ -70523,6 +71343,12 @@ Section: WASI Runtime Helpers
    "    (local $b i32)\n" &
    "    (local.set $b (call $cx_mask_bits (local.get $m)))\n" &
    "    (i64.extend_i32_u (i32.add (i32.and (local.get $b) (i32.const 1)) (i32.shr_u (local.get $b) (i32.const 1)))))\n\n" &
+   "  (func $cx_mask4_bits (param $m i64) (result i32)\n" &
+   "    (i32x4.bitmask (v128.load (i32.wrap_i64 (local.get $m)))))\n\n" &
+   "  (func $cx_mask4_count (param $m i64) (result i64)\n" &
+   "    (local $b i32)\n" &
+   "    (local.set $b (call $cx_mask4_bits (local.get $m)))\n" &
+   "    (i64.extend_i32_u (i32.add (i32.add (i32.and (local.get $b) (i32.const 1)) (i32.and (i32.shr_u (local.get $b) (i32.const 1)) (i32.const 1))) (i32.add (i32.and (i32.shr_u (local.get $b) (i32.const 2)) (i32.const 1)) (i32.shr_u (local.get $b) (i32.const 3))))))\n\n" &
    "  (func $cx_vec_sum_f64x2 (param $v i64) (result i64)\n" &
    "    (local $p i32)\n" &
    "    (local.set $p (i32.wrap_i64 (local.get $v)))\n" &
@@ -70535,8 +71361,8 @@ Section: WASI Runtime Helpers
    "    (local $p i32)\n" &
    "    (local.set $p (i32.wrap_i64 (local.get $v)))\n" &
    "    (i64.reinterpret_f64 (f64.promote_f32 (f32.add\n" &
-   "      (f32.add (f32.load (local.get $p)) (f32.load offset=4 (local.get $p)))\n" &
-   "      (f32.add (f32.load offset=8 (local.get $p)) (f32.load offset=12 (local.get $p)))))))\n\n" &
+   "      (f32.add (f32.add (f32.load (local.get $p)) (f32.load offset=4 (local.get $p))) (f32.load offset=8 (local.get $p)))\n" &
+   "      (f32.load offset=12 (local.get $p))))))\n\n" &
    "  (func $cx_vec_sum_i32x4 (param $v i64) (result i64)\n" &
    "    (local $p i32)\n" &
    "    (local.set $p (i32.wrap_i64 (local.get $v)))\n" &
@@ -71499,21 +72325,19 @@ Section: WASI Runtime Helpers
   wat-rt-text-to-double : Text =
    "  (func $text_to_double (param $s i64) (result i64)\n" &
    "    (local $p i32) (local $len i32) (local $i i32) (local $ch i32)\n" &
-   "    (local $neg i32) (local $frac i32) (local $seen i32)\n" &
-   "    (local $acc i64) (local $v f64) (local $pow f64)\n" &
+   "    (local $neg i64) (local $frac i32) (local $seen i32) (local $exp i32)\n" &
+   "    (local $acc i64) (local $x i64) (local $hi i64) (local $carry i64) (local $borrow i64)\n" &
+   "    (local $d0 i64) (local $d1 i64) (local $d2 i64) (local $d3 i64)\n" &
+   "    (local $r0 i64) (local $r1 i64) (local $r2 i64) (local $r3 i64)\n" &
+   "    (local $t0 i64) (local $t1 i64) (local $t2 i64) (local $t3 i64)\n" &
    "    (local.set $p (i32.wrap_i64 (local.get $s)))\n" &
    "    (local.set $len (i32.load (local.get $p)))\n" &
    "    (if (i32.eqz (local.get $len)) (then (return (i64.const 0))))\n" &
    "    (local.set $p (i32.add (local.get $p) (i32.const 4)))\n" &
-   "    (local.set $i (i32.const 0))\n" &
-   "    (local.set $acc (i64.const 0))\n" &
-   "    (local.set $neg (i32.const 0))\n" &
-   "    (local.set $frac (i32.const 0))\n" &
-   "    (local.set $seen (i32.const 0))\n" &
    "    (if (i32.eq (i32.load8_u (local.get $p)) (i32.const " & integer-to-text cce-minus & "))\n" &
-   "      (then (local.set $neg (i32.const 1)) (local.set $i (i32.const 1))))\n" &
-   "    (block $ttd (loop $ttc\n" &
-   "      (br_if $ttd (i32.ge_s (local.get $i) (local.get $len)))\n" &
+   "      (then (local.set $neg (i64.const -9223372036854775808)) (local.set $i (i32.const 1))))\n" &
+   "    (block $parsed (loop $parse\n" &
+   "      (br_if $parsed (i32.ge_u (local.get $i) (local.get $len)))\n" &
    "      (local.set $ch (i32.load8_u (i32.add (local.get $p) (local.get $i))))\n" &
    "      (if (i32.eq (local.get $ch) (i32.const " & integer-to-text cce-dot & "))\n" &
    "        (then (local.set $seen (i32.const 1)))\n" &
@@ -71522,18 +72346,111 @@ Section: WASI Runtime Helpers
    "            (i64.extend_i32_s (i32.sub (local.get $ch) (i32.const " & integer-to-text cce-digit-zero & ")))))\n" &
    "          (local.set $frac (i32.add (local.get $frac) (local.get $seen)))))\n" &
    "      (local.set $i (i32.add (local.get $i) (i32.const 1)))\n" &
-   "      (br $ttc)))\n" &
-   "    (if (local.get $neg) (then (local.set $acc (i64.sub (i64.const 0) (local.get $acc)))))\n" &
-   "    (local.set $v (f64.convert_i64_s (local.get $acc)))\n" &
-   "    (if (local.get $frac) (then\n" &
-   "      (local.set $pow (f64.const 1))\n" &
-   "      (block $pwd (loop $pwc\n" &
-   "        (br_if $pwd (i32.eqz (local.get $frac)))\n" &
-   "        (local.set $pow (f64.mul (local.get $pow) (f64.const 10)))\n" &
-   "        (local.set $frac (i32.sub (local.get $frac) (i32.const 1)))\n" &
-   "        (br $pwc)))\n" &
-   "      (local.set $v (f64.div (local.get $v) (local.get $pow)))))\n" &
-   "    (i64.reinterpret_f64 (local.get $v)))\n\n"
+   "      (br $parse)))\n" &
+   "    (if (i64.eqz (local.get $acc)) (then (return (local.get $neg))))\n" &
+   "    (if (i32.gt_u (local.get $frac) (i32.const 108)) (then unreachable))\n" &
+   "    (local.set $r0 (local.get $acc))\n" &
+   "    (local.set $d0 (i64.const 1))\n" &
+   "    (local.set $i (local.get $frac))\n" &
+   "    (block $powered (loop $power\n" &
+   "      (br_if $powered (i32.eqz (local.get $i)))\n" &
+   "      (local.set $carry (i64.const 0))\n" &
+   "      (local.set $x (i64.add (i64.mul (i64.and (local.get $d0) (i64.const 4294967295)) (i64.const 5)) (local.get $carry)))\n" &
+   "      (local.set $hi (i64.add (i64.mul (i64.shr_u (local.get $d0) (i64.const 32)) (i64.const 5)) (i64.shr_u (local.get $x) (i64.const 32))))\n" &
+   "      (local.set $d0 (i64.or (i64.and (local.get $x) (i64.const 4294967295)) (i64.shl (local.get $hi) (i64.const 32))))\n" &
+   "      (local.set $carry (i64.shr_u (local.get $hi) (i64.const 32)))\n" &
+   "      (local.set $x (i64.add (i64.mul (i64.and (local.get $d1) (i64.const 4294967295)) (i64.const 5)) (local.get $carry)))\n" &
+   "      (local.set $hi (i64.add (i64.mul (i64.shr_u (local.get $d1) (i64.const 32)) (i64.const 5)) (i64.shr_u (local.get $x) (i64.const 32))))\n" &
+   "      (local.set $d1 (i64.or (i64.and (local.get $x) (i64.const 4294967295)) (i64.shl (local.get $hi) (i64.const 32))))\n" &
+   "      (local.set $carry (i64.shr_u (local.get $hi) (i64.const 32)))\n" &
+   "      (local.set $x (i64.add (i64.mul (i64.and (local.get $d2) (i64.const 4294967295)) (i64.const 5)) (local.get $carry)))\n" &
+   "      (local.set $hi (i64.add (i64.mul (i64.shr_u (local.get $d2) (i64.const 32)) (i64.const 5)) (i64.shr_u (local.get $x) (i64.const 32))))\n" &
+   "      (local.set $d2 (i64.or (i64.and (local.get $x) (i64.const 4294967295)) (i64.shl (local.get $hi) (i64.const 32))))\n" &
+   "      (local.set $carry (i64.shr_u (local.get $hi) (i64.const 32)))\n" &
+   "      (local.set $x (i64.add (i64.mul (i64.and (local.get $d3) (i64.const 4294967295)) (i64.const 5)) (local.get $carry)))\n" &
+   "      (local.set $hi (i64.add (i64.mul (i64.shr_u (local.get $d3) (i64.const 32)) (i64.const 5)) (i64.shr_u (local.get $x) (i64.const 32))))\n" &
+   "      (local.set $d3 (i64.or (i64.and (local.get $x) (i64.const 4294967295)) (i64.shl (local.get $hi) (i64.const 32))))\n" &
+   "      (local.set $carry (i64.shr_u (local.get $hi) (i64.const 32)))\n" &
+   "      (local.set $i (i32.sub (local.get $i) (i32.const 1)))\n" &
+   "      (br $power)))\n" &
+   "    (block $large_done (loop $large\n" &
+   "    (local.set $t3 (i64.or (i64.shl (local.get $d3) (i64.const 1)) (i64.shr_u (local.get $d2) (i64.const 63))))\n" &
+   "    (local.set $t2 (i64.or (i64.shl (local.get $d2) (i64.const 1)) (i64.shr_u (local.get $d1) (i64.const 63))))\n" &
+   "    (local.set $t1 (i64.or (i64.shl (local.get $d1) (i64.const 1)) (i64.shr_u (local.get $d0) (i64.const 63))))\n" &
+   "    (local.set $t0 (i64.shl (local.get $d0) (i64.const 1)))\n" &
+   "      (br_if $large_done (i32.eqz (i32.or (i64.gt_u (local.get $r3) (local.get $t3)) (i32.and (i64.eq (local.get $r3) (local.get $t3)) (i32.or (i64.gt_u (local.get $r2) (local.get $t2)) (i32.and (i64.eq (local.get $r2) (local.get $t2)) (i32.or (i64.gt_u (local.get $r1) (local.get $t1)) (i32.and (i64.eq (local.get $r1) (local.get $t1)) (i64.ge_u (local.get $r0) (local.get $t0))))))))))\n" &
+   "      (local.set $d0 (local.get $t0))\n" &
+   "      (local.set $d1 (local.get $t1))\n" &
+   "      (local.set $d2 (local.get $t2))\n" &
+   "      (local.set $d3 (local.get $t3))\n" &
+   "      (local.set $exp (i32.add (local.get $exp) (i32.const 1)))\n" &
+   "      (br $large)))\n" &
+   "    (block $small_done (loop $small\n" &
+   "      (br_if $small_done (i32.or (i64.gt_u (local.get $r3) (local.get $d3)) (i32.and (i64.eq (local.get $r3) (local.get $d3)) (i32.or (i64.gt_u (local.get $r2) (local.get $d2)) (i32.and (i64.eq (local.get $r2) (local.get $d2)) (i32.or (i64.gt_u (local.get $r1) (local.get $d1)) (i32.and (i64.eq (local.get $r1) (local.get $d1)) (i64.ge_u (local.get $r0) (local.get $d0)))))))))\n" &
+   "    (local.set $r3 (i64.or (i64.shl (local.get $r3) (i64.const 1)) (i64.shr_u (local.get $r2) (i64.const 63))))\n" &
+   "    (local.set $r2 (i64.or (i64.shl (local.get $r2) (i64.const 1)) (i64.shr_u (local.get $r1) (i64.const 63))))\n" &
+   "    (local.set $r1 (i64.or (i64.shl (local.get $r1) (i64.const 1)) (i64.shr_u (local.get $r0) (i64.const 63))))\n" &
+   "    (local.set $r0 (i64.shl (local.get $r0) (i64.const 1)))\n" &
+   "      (local.set $exp (i32.sub (local.get $exp) (i32.const 1)))\n" &
+   "      (br $small)))\n" &
+   "    (local.set $acc (i64.const 1))\n" &
+   "    (local.set $borrow (i64.const 0))\n" &
+   "    (local.set $x (i64.sub (local.get $r0) (local.get $d0)))\n" &
+   "    (local.set $carry (i64.extend_i32_u (i32.or (i64.lt_u (local.get $r0) (local.get $d0)) (i64.lt_u (local.get $x) (local.get $borrow)))))\n" &
+   "    (local.set $r0 (i64.sub (local.get $x) (local.get $borrow)))\n" &
+   "    (local.set $borrow (local.get $carry))\n" &
+   "    (local.set $x (i64.sub (local.get $r1) (local.get $d1)))\n" &
+   "    (local.set $carry (i64.extend_i32_u (i32.or (i64.lt_u (local.get $r1) (local.get $d1)) (i64.lt_u (local.get $x) (local.get $borrow)))))\n" &
+   "    (local.set $r1 (i64.sub (local.get $x) (local.get $borrow)))\n" &
+   "    (local.set $borrow (local.get $carry))\n" &
+   "    (local.set $x (i64.sub (local.get $r2) (local.get $d2)))\n" &
+   "    (local.set $carry (i64.extend_i32_u (i32.or (i64.lt_u (local.get $r2) (local.get $d2)) (i64.lt_u (local.get $x) (local.get $borrow)))))\n" &
+   "    (local.set $r2 (i64.sub (local.get $x) (local.get $borrow)))\n" &
+   "    (local.set $borrow (local.get $carry))\n" &
+   "    (local.set $x (i64.sub (local.get $r3) (local.get $d3)))\n" &
+   "    (local.set $carry (i64.extend_i32_u (i32.or (i64.lt_u (local.get $r3) (local.get $d3)) (i64.lt_u (local.get $x) (local.get $borrow)))))\n" &
+   "    (local.set $r3 (i64.sub (local.get $x) (local.get $borrow)))\n" &
+   "    (local.set $borrow (local.get $carry))\n" &
+   "    (local.set $i (i32.const 53))\n" &
+   "    (loop $bits\n" &
+   "    (local.set $r3 (i64.or (i64.shl (local.get $r3) (i64.const 1)) (i64.shr_u (local.get $r2) (i64.const 63))))\n" &
+   "    (local.set $r2 (i64.or (i64.shl (local.get $r2) (i64.const 1)) (i64.shr_u (local.get $r1) (i64.const 63))))\n" &
+   "    (local.set $r1 (i64.or (i64.shl (local.get $r1) (i64.const 1)) (i64.shr_u (local.get $r0) (i64.const 63))))\n" &
+   "    (local.set $r0 (i64.shl (local.get $r0) (i64.const 1)))\n" &
+   "      (local.set $acc (i64.shl (local.get $acc) (i64.const 1)))\n" &
+   "      (if (i32.or (i64.gt_u (local.get $r3) (local.get $d3)) (i32.and (i64.eq (local.get $r3) (local.get $d3)) (i32.or (i64.gt_u (local.get $r2) (local.get $d2)) (i32.and (i64.eq (local.get $r2) (local.get $d2)) (i32.or (i64.gt_u (local.get $r1) (local.get $d1)) (i32.and (i64.eq (local.get $r1) (local.get $d1)) (i64.ge_u (local.get $r0) (local.get $d0)))))))) (then\n" &
+   "    (local.set $borrow (i64.const 0))\n" &
+   "    (local.set $x (i64.sub (local.get $r0) (local.get $d0)))\n" &
+   "    (local.set $carry (i64.extend_i32_u (i32.or (i64.lt_u (local.get $r0) (local.get $d0)) (i64.lt_u (local.get $x) (local.get $borrow)))))\n" &
+   "    (local.set $r0 (i64.sub (local.get $x) (local.get $borrow)))\n" &
+   "    (local.set $borrow (local.get $carry))\n" &
+   "    (local.set $x (i64.sub (local.get $r1) (local.get $d1)))\n" &
+   "    (local.set $carry (i64.extend_i32_u (i32.or (i64.lt_u (local.get $r1) (local.get $d1)) (i64.lt_u (local.get $x) (local.get $borrow)))))\n" &
+   "    (local.set $r1 (i64.sub (local.get $x) (local.get $borrow)))\n" &
+   "    (local.set $borrow (local.get $carry))\n" &
+   "    (local.set $x (i64.sub (local.get $r2) (local.get $d2)))\n" &
+   "    (local.set $carry (i64.extend_i32_u (i32.or (i64.lt_u (local.get $r2) (local.get $d2)) (i64.lt_u (local.get $x) (local.get $borrow)))))\n" &
+   "    (local.set $r2 (i64.sub (local.get $x) (local.get $borrow)))\n" &
+   "    (local.set $borrow (local.get $carry))\n" &
+   "    (local.set $x (i64.sub (local.get $r3) (local.get $d3)))\n" &
+   "    (local.set $carry (i64.extend_i32_u (i32.or (i64.lt_u (local.get $r3) (local.get $d3)) (i64.lt_u (local.get $x) (local.get $borrow)))))\n" &
+   "    (local.set $r3 (i64.sub (local.get $x) (local.get $borrow)))\n" &
+   "    (local.set $borrow (local.get $carry))\n" &
+   "        (local.set $acc (i64.or (local.get $acc) (i64.const 1)))))\n" &
+   "      (local.set $i (i32.sub (local.get $i) (i32.const 1)))\n" &
+   "      (br_if $bits (local.get $i)))\n" &
+   "    (local.set $x (i64.shr_u (local.get $acc) (i64.const 1)))\n" &
+   "    (if (i32.and (i64.ne (i64.and (local.get $acc) (i64.const 1)) (i64.const 0))\n" &
+   "      (i64.ne (i64.or (i64.and (local.get $x) (i64.const 1))\n" &
+   "        (i64.or (i64.or (local.get $r0) (local.get $r1)) (i64.or (local.get $r2) (local.get $r3)))) (i64.const 0)))\n" &
+   "      (then\n" &
+   "        (local.set $x (i64.add (local.get $x) (i64.const 1)))\n" &
+   "        (if (i64.eq (local.get $x) (i64.const 9007199254740992)) (then\n" &
+   "          (local.set $x (i64.shr_u (local.get $x) (i64.const 1)))\n" &
+   "          (local.set $exp (i32.add (local.get $exp) (i32.const 1)))))))\n" &
+   "    (i64.or (local.get $neg)\n" &
+   "      (i64.or (i64.sub (local.get $x) (i64.const 4503599627370496))\n" &
+   "        (i64.shl (i64.extend_i32_s (i32.add (i32.sub (local.get $exp) (local.get $frac)) (i32.const 1023))) (i64.const 52)))))\n"
 
   wat-rt-extra : Text =
    "  (func $__approx_eq (param $a i64) (param $b i64) (param $tol i64) (result i64)\n" &
@@ -71734,6 +72651,16 @@ Section: Chapter Emission
 
   wat-emit-exports : List IRDef, Integer -> Text
   wat-emit-exports (defs) (i) =
+   let declared = wat-declared-exports defs 0 (list-length defs)
+   in if declared < 0 then wat-exports-allowed defs i
+      else let d = list-at defs declared
+      in if list-length (d.params) > 0 then "(wasm-exports-requires-text-literal)\n"
+         else when d.body
+          is IrTextLit (s) (sp) -> wat-exports-declared (wat-export-names s) 0
+          is otherwise -> "(wasm-exports-requires-text-literal)\n"
+
+  wat-exports-allowed : List IRDef, Integer -> Text
+  wat-exports-allowed (defs) (i) =
    if i >= list-length defs then ""
    else let d = list-at defs i
    in let sn = wat-sanitize (d.name)
@@ -71741,7 +72668,35 @@ Section: Chapter Emission
    in let ex = if text-contains wasm-export-list needle
                then "  (export \"" & sn & "\" (func $" & sn & "))\n"
                else ""
-   in ex & wat-emit-exports defs (i + 1)
+   in ex & wat-exports-allowed defs (i + 1)
+
+  wat-exports-declared : List Text, Integer -> Text
+  wat-exports-declared (names) (i) =
+   if i >= list-length names then ""
+   else let sn = wat-sanitize (list-at names i)
+   in "  (export \"" & sn & "\" (func $" & sn & "))\n" & wat-exports-declared names (i + 1)
+
+  wat-declared-exports : List IRDef, Integer, Integer -> Integer
+  wat-declared-exports (defs) (i) (n) =
+   if i == n then -1
+   else let d = list-at defs i
+   in if (d.name) == "wasm-exports" then i
+      else wat-declared-exports defs (i + 1) n
+
+  wat-export-names : Text -> List Text
+  wat-export-names (s) = wat-export-names-loop s 0 (text-length s) [] []
+
+  wat-export-names-loop : Text, Integer, Integer, List Text, List Text -> List Text
+  wat-export-names-loop (s) (i) (len) (cur) (acc) =
+   if i == len then wat-export-flush cur acc
+   else let c = char-code-at s i
+   in if c == char-code-at "|" 0
+      then wat-export-names-loop s (i + 1) len [] (wat-export-flush cur acc)
+      else wat-export-names-loop s (i + 1) len (list-push cur (char-to-text (code-to-char c))) acc
+
+  wat-export-flush : List Text, List Text -> List Text
+  wat-export-flush (cur) (acc) =
+   if list-length cur == 0 then acc else list-push acc (text-concat-list cur)
 
  An `opening` that answers a CONSTRUCTOR prints `Name field field`, one space
  before each field and a newline at the end, which is `emit-opening-print-sum`
