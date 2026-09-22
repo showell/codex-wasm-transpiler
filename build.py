@@ -78,11 +78,8 @@ SUBJECT = GEN / 'codexwasm-subject.codex'
 WAT = GEN / 'codexwasm.wat'          # THE artifact, and it is readable
 WASM = GEN / 'codexwasm.wasm'        # the same thing, assembled
 # Beside generation 2's, and gitignored with it. This file is the emitter's
-# stdout for whichever road ran -- the native binary prints CX-DECK telemetry
-# and the module does not -- so its content is a function of the ROAD and not
-# of the source. Tracked, it made `git diff generated/` report a 396-line
-# change for choosing a different flag. It is read within the run, by
-# refuse_halt, and is evidence of nothing afterwards.
+# stdout for whichever road ran, so it describes a run and not the source. It is
+# read within the run, by refuse_halt, and is evidence of nothing afterwards.
 DIAG = LOCAL / 'codexwasm.diag'
 
 GEN2_WAT = LOCAL / 'codexwasm.gen2.wat'
