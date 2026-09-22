@@ -5,22 +5,22 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-09-13T15:49:38Z
+built            2026-09-22T17:11:18Z
 road             both
 host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
 
-COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-u60rel
-  revision       9fff850c  Update 60, native nested patterns, declared exports as native roots, concrete generic equa
+COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-u61rel
+  revision       3af67f99  Update 61, compiler type resolution, contributor fixes, crypto validation, proven release 
 
-subject          codexwasm-subject.codex  3493315 bytes
-  sha256         1fceab767d1fd1cabf0809d587b4d7107e239b86a47d0cad1b323a35ce09c39d
-artifact         codexwasm.wat  8412266 bytes
-  sha256         278fe12925922f663a17dd3f09bb1efca9259926fd44691fe5e6a9b82616a1ea
-assembled        codexwasm.wasm  1063889 bytes
-  sha256         a73bb5b5d28bd352b840670592b6657fd448ee038a2d88a05d79e158202878f7
+subject          codexwasm-subject.codex  3498234 bytes
+  sha256         35756bb349e800e869129c754f1357ba39f714dae0cdfeee1010953680028482
+artifact         codexwasm.wat  8421508 bytes
+  sha256         31945433a36e4a618dcfaa8c3951dc8f2ca17d29d417239e0ef21ee93028da5a
+assembled        codexwasm.wasm  1064967 bytes
+  sha256         51b25dc020ee5a650b6d2ae4414ebeb7c8ee55484bf66df45dbcc21ec90e2414
 
 codexzig         /home/steve/showell_repos/codex-zig-transpiler/generated/local/codexzig
-  sha256         8169dac4b831adaa775bce7a0d514108d4f8d8cf96246359408f806dfce11b11
+  sha256         c5d831dd371debedfddf7d53c9ff7509885a95f3ac087686c9e65ed53544cbc7
   NOTE           the zig road puts codexzig in the trusted base. Its own
                  provenance is its repository's; this records only which
                  binary ran.
