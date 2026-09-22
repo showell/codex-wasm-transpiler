@@ -41,7 +41,7 @@ def root():
         raise NoCheckout(
             'COBBLESTONE_ROOT is unset. Point it at a Cobblestone checkout '
             'that stays put -- not the ladder\'s, whose HEAD moves:\n'
-            '    export COBBLESTONE_ROOT=~/showell_repos/cobblestone-pin')
+            '    export COBBLESTONE_ROOT=~/showell_repos/cobblestone-u61rel')
     path = pathlib.Path(named).expanduser().resolve()
     if not (path / MARKER).is_file():
         raise NoCheckout(f'COBBLESTONE_ROOT={named} holds no {MARKER}')
