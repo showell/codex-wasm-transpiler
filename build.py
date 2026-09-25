@@ -208,7 +208,11 @@ def borrowed_pin(binary):
     for i, line in enumerate(lines):
         if line.startswith('checkout') and i + 1 < len(lines):
             tok = lines[i + 1].split()
-            if tok and 8 <= len(tok[0]) <= 40 and all(c in '0123456789abcdef' for c in tok[0]):
+            # 7, not 8: git abbreviates to as few characters as are unique in
+            # the repository, never fewer than 7. A full-history checkout said
+            # `9fff850c`; the depth-1 clone U62 was processed from says
+            # `3eac167`, and at 8 this read that as no receipt at all.
+            if tok and 7 <= len(tok[0]) <= 40 and all(c in '0123456789abcdef' for c in tok[0]):
                 return tok[0]
     return None
 

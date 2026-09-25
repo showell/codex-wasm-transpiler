@@ -1,12 +1,12 @@
 Chapter: CodexWasmHarness
 
- THE NATIVE FOURTH ARM. This is `CodexZigHarness` with one line changed: where
- that one ends `print-text (emit-zig-chapter ...)`, this one ends
- `emit-wasm-chapter-stream ...`. Everything above the last line -- the front
- end, the IR pipeline, the lambda lift, the halt gate, the roots, and the trip
- out through the IR TEXT WIRE and back -- is the ladder's, verbatim, because
- the property that makes it worth having is that this program runs the same
- code in the same order as the pipeline it stands in for.
+ THE NATIVE FOURTH ARM. Since Update 62 this runs the driver's IR front door,
+ `compile-frontend-ir` then `prepare-method-ir` (opening.codex), and hands
+ what it prepared to `emit-wasm-chapter-stream`, where codex-zig-transpiler's
+ CodexZigHarness hands the same thing to the zig emitter by way of the text.
+ The property that makes it worth having is that this program runs the same
+ code in the same order as the pipeline it stands in for, and the surest way
+ to keep that is to CALL the pipeline rather than copy it.
 
  THE WIRE ROUND TRIP IS GONE, and this is the record of what it was doing.
 
@@ -36,9 +36,17 @@ Chapter: CodexWasmHarness
  no longer step-for-step comparable. The byte comparison above is what stands
  in for that, and it is a stronger check than the resemblance was.
 
- A COPY, and copies go stale. `PROVENANCE.md` names the commit. If the
- compiler's front end changes shape, this breaks loudly at the transpile --
- which is the honest direction, and is why nothing here is paraphrased.
+ IT USED TO BE A COPY, of the driver's tail -- lift, prune to a copied roots
+ list, and our own reading of declared exports -- and copies go stale without
+ breaking loudly. By U62 it had drifted three ways: it never attached the
+ equality helpers the driver has attached on the IR path since Update 56
+ (COMPILER-44); it had no `method-materialize` (U62); and it read
+ `wasm-exports` as a LIST of Text, a shape upstream's emitter has refused since
+ Update 59 in favour of one Text literal, `"|name|name|"`, so for every valid
+ declaration it rooted no export and the exported functions were pruned.
+ Nothing here declares exports, so the fixed point could not see it.
+ `prepare-method-ir` prunes with `ir-roots-with-declared`, which is upstream's
+ reading of the same declaration, and all three are the driver's now.
 
 Section: Halt
 
@@ -102,80 +110,15 @@ Section: Halt
    else body & cwm-line-bytes ("codexwasm: " & show n & " info diagnostics not shown")
 
 
-Section: Roots
-
- opening.codex:1316, copied because that chapter cannot ride along.
-
-  cwm-emit-roots : List Text
-  cwm-emit-roots = ["opening", "vb-capacity-auto", "vb-read-auto", "vb-write-auto", "fat16-servicer-read", "fat16-servicer-write"]
-
- A DECLARED EXPORT IS A ROOT, and until this it was not.
-
- `wasm-exports` lets a chapter name the functions it means to be called from
- outside. The emitter reads that list -- but it reads it AFTER pruning, and a
- function written to be called from JavaScript has no callers inside the
- chapter, which is exactly what `ir-prune-unreachable-roots` deletes. The
- declaration survived and the function it named did not, so the module
- carried a comment saying the export was missing and nothing else.
-
- A root is precisely "this is live because something outside calls it", so
- the export list belongs in the roots and this reads it out of the IR before
- pruning. `wasm-exports` itself is rooted too, or the pruner removes the
- declaration before the emitter can read it.
-
- `opening` STAYS FIRST. `ir-prune-roots-indexed` returns the chapter unpruned
- when the FIRST root names no definition, so the head of this list has to be
- one that always exists; the five after it are inherited from opening.codex's
- own list and name nothing in this subject, which is harmless only because
- they are not first.
-
- IT SAVES THE ONE-CALLER CASE TOO, which was not the prediction. Reading
- `keep-single-caller` suggested that a definition with exactly one caller is
- folded into it and lost before any root can help. Measured, it is not:
- INLINING SUBSTITUTES AND PRUNING DELETES. The pass copies the body into the
- call site, which leaves the definition with no references, and it is the
- pruner that then removes it -- so a root prevents exactly that. A chapter
- whose `opening` calls `twice` once now emits an `$opening` that calls
- `$greet` directly, an unreferenced `$twice` that is kept and exported, and
- `twice(5) = 20` when JavaScript calls it.
-
- Zero, one and two-plus callers all survive. The prediction was wrong in the
- cheap direction and the reason is worth keeping: two passes were read as one
- mechanism because they have the same effect on the common case.
-
-  cwm-text-list-of : IRExpr -> List Text
-  cwm-text-list-of (e) =
-   when e
-    is IrList (es) (ty) (sp) -> cwm-text-list-elems es 0 []
-    is otherwise -> []
-
-  cwm-text-list-elems : List IRExpr, Integer, List Text -> List Text
-  cwm-text-list-elems (es) (i) (acc) =
-   if i >= list-length es then acc
-   else when list-at es i
-    is IrTextLit (s) (sp) -> cwm-text-list-elems es (i + 1) (list-push acc s)
-    is otherwise -> cwm-text-list-elems es (i + 1) acc
-
-  cwm-declared-exports : List IRDef, Integer -> List Text
-  cwm-declared-exports (defs) (i) =
-   if i >= list-length defs then []
-   else let d = list-at defs i
-   in if (d.name) == "wasm-exports" then cwm-text-list-of (d.body)
-      else cwm-declared-exports defs (i + 1)
-
 Section: Driver
 
- The lift is opening.codex:1713-1720, and it is on that path only since
- Update 50 -- the release names it in four words, "the DDC witness holds
- after the lambda-lift break". Before that a plug never received a
- `__lam_N`, which is also why nothing noticed these harnesses had none: the
- codexzig fixed point held because NEITHER arm lifted, so the property was
- never tested against a subject carrying a lifted lambda, and the first
- time it was, it failed. It goes between the IR pipeline and
- ir-prune-unreachable-roots, where the driver puts it -- pruning first drops
- the lifted definitions, which are reachable only from the bodies the lift
- rewrote. The ceiling is 0 and emit_harness.py says why it is not the
- driver's.
+ The deck prologue is this harness's own and stays: the hosted reservation in
+ front of the driver's phases, as CodexZigHarness carries.
+
+ NOT the IR text. `prepare-method-ir` returns the pruned IRChapter and its
+ type-defs, and nothing on that path renders the wire, so the round trip this
+ driver dropped (above) stays dropped. `prepared.meta` is the wire's metadata
+ and has no reader here.
 
   opening : [Console, FileSystem] Nothing = act
     src <- read-file-uni "/dev/stdin"
@@ -183,13 +126,11 @@ Section: Driver
     in let deck-base = __heap-save
     in let deck-set = __deck-set deck-base
     in let deck-adv = __heap-advance 536870912
-    in let fe = compile-frontend-cdx src "Codex_Codex" compile-flags-default
-    in if bag-has-errors (fe.bag) then print-text (cwm-halted (bag-errors (fe.bag)))
-    else let cwm-exports = cwm-declared-exports ((fe.cdx-ir).defs) 0
-    in let cwm-roots = cwm-emit-roots & list-push cwm-exports "wasm-exports"
-    in let pruned = ir-prune-unreachable-roots (fe.cdx-ir) cwm-roots
-    in act
-      write-binary (cwm-report (fe.bag))
-      emit-wasm-chapter-stream pruned (fe.type-defs)
+    in let fe = compile-frontend-ir src "Program" compile-flags-default
+    in let prepared = prepare-method-ir fe compile-flags-default
+    in if bag-has-errors (prepared.bag) then print-text (cwm-halted (bag-errors (prepared.bag)))
+    else act
+      write-binary (cwm-report (prepared.bag))
+      emit-wasm-chapter-stream (prepared.chapter) (prepared.type-defs)
     end
   end
