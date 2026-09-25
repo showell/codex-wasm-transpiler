@@ -5,29 +5,29 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-09-22T17:11:18Z
+built            2026-09-25T12:14:34Z
 road             both
-host             ubuntu-s-2vcpu-8gb-160gb-intel-nyc1  node v22.23.2
+host             vm  node v22.22.2
 
-COBBLESTONE_ROOT /home/steve/showell_repos/cobblestone-u61rel
-  revision       3af67f99  Update 61, compiler type resolution, contributor fixes, crypto validation, proven release 
+COBBLESTONE_ROOT /root/showell_repos/cobblestone-u62rel
+  revision       3eac167  Update 62, Steve Howell's empty-list and Zig plug reports, shared literal tables, checked m
 
-subject          codexwasm-subject.codex  3498234 bytes
-  sha256         35756bb349e800e869129c754f1357ba39f714dae0cdfeee1010953680028482
-artifact         codexwasm.wat  8421508 bytes
-  sha256         31945433a36e4a618dcfaa8c3951dc8f2ca17d29d417239e0ef21ee93028da5a
-assembled        codexwasm.wasm  1064967 bytes
-  sha256         51b25dc020ee5a650b6d2ae4414ebeb7c8ee55484bf66df45dbcc21ec90e2414
+subject          codexwasm-subject.codex  3649682 bytes
+  sha256         744816f85dd7fc224b2c4de9270a8efd84c017a6e7f58d22870a1d2639723b50
+artifact         codexwasm.wat  8713721 bytes
+  sha256         193a98679204899574d6c76d58500cf3ca56ccbf9fc9cfaf8a3a9a5cb9b36b84
+assembled        codexwasm.wasm  1109039 bytes
+  sha256         d146b3328dd31139a7ff5479f7b3c83a4ebec41f33db5987df1eb2036553b762
 
-codexzig         /home/steve/showell_repos/codex-zig-transpiler/generated/local/codexzig
-  sha256         c5d831dd371debedfddf7d53c9ff7509885a95f3ac087686c9e65ed53544cbc7
+codexzig         /home/user/codex-zig-transpiler/generated/local/codexzig
+  sha256         9682f8d53ffcf7763adef814358d292efa42a2a2259ce509b11161b6038572e8
   NOTE           the zig road puts codexzig in the trusted base. Its own
                  provenance is its repository's; this records only which
                  binary ran.
 
 MEMORY -- the first priority, measured rather than estimated.
-  peak           1656.4 MB of linear memory
-  ceiling        40.4% of wasm32's hard 4 GiB
+  peak           1659.1 MB of linear memory
+  ceiling        40.5% of wasm32's hard 4 GiB
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
   bank           1736048640
