@@ -63,6 +63,19 @@ foreach ($ch in $order) {
     Add-PlugChapter -Lines $lines -Path (Join-Path $repo $ch) -Quire 'Parsmi'
 }
 Add-PlugChapter -Lines $lines -Path (Join-Path $repo 'codex/plugs/common/IRTextParser.codex') -Quire 'Parsmi'
+# The wasm plug's shared chapters, read from upstream's own build line rather
+# than listed here. U63 moved the effect-handler helpers (`wh-op-arity` and
+# the rest) out of WasmEmitter into plugs/common/HandlerLift.codex and named it
+# with -CommonChapters; a bundle without it was eight CDX3002s at codexzig.
+$wasmBuild = Get-Content -Raw (Join-Path $repo 'codex/plugs/wasm/build.ps1')
+if ($wasmBuild -notmatch 'Build-TranspilerPlug\s[^\n]*-Chapters\s+@\(') {
+    throw "codex/plugs/wasm/build.ps1 no longer calls Build-TranspilerPlug; read it before bundling"
+}
+if ($wasmBuild -match '-CommonChapters\s+@\(([^)]*)\)') {
+    foreach ($cc in [regex]::Matches($Matches[1], "'([^']+)'")) {
+        Add-PlugChapter -Lines $lines -Path (Join-Path $repo "codex/plugs/common/$($cc.Groups[1].Value).codex") -Quire 'Parsmi'
+    }
+}
 # -Emitter is for probe_emit.py, which bundles an INSTRUMENTED copy of the
 # emitter. It defaults to the checkout's, so nothing that does not pass it can
 # accidentally measure or ship a probe.

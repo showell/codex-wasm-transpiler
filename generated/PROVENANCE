@@ -5,29 +5,29 @@ named here. A build that cannot say what it measured is not evidence, and
 the fixed point cannot supply the difference -- it holds just as well
 against the wrong source.
 
-built            2026-09-25T12:14:34Z
+built            2026-09-26T10:17:29Z
 road             both
 host             vm  node v22.22.2
 
-COBBLESTONE_ROOT /root/showell_repos/cobblestone-u62rel
-  revision       3eac167  Update 62, Steve Howell's empty-list and Zig plug reports, shared literal tables, checked m
+COBBLESTONE_ROOT /root/showell_repos/cobblestone-u64rel
+  revision       82cb77a  Update 64, the QEMU serial-input stall Steve Howell reported fixed at its cause (the timer 
 
-subject          codexwasm-subject.codex  3649682 bytes
-  sha256         744816f85dd7fc224b2c4de9270a8efd84c017a6e7f58d22870a1d2639723b50
-artifact         codexwasm.wat  8713721 bytes
-  sha256         193a98679204899574d6c76d58500cf3ca56ccbf9fc9cfaf8a3a9a5cb9b36b84
-assembled        codexwasm.wasm  1109039 bytes
-  sha256         d146b3328dd31139a7ff5479f7b3c83a4ebec41f33db5987df1eb2036553b762
+subject          codexwasm-subject.codex  3763753 bytes
+  sha256         b8c7d7d7aee670f3ee86343c57fcdadc9cdd5a10b91b273b5f69eb9682474e74
+artifact         codexwasm.wat  9299476 bytes
+  sha256         97a4969490df0f22ea49600d4ea724c42363236f93d91e5aabc5afafdd323fe9
+assembled        codexwasm.wasm  1178610 bytes
+  sha256         67ede3bf5bcdff931d245cc345e0ddd733738b14c5358a68bd9caca1b9e7a10f
 
 codexzig         /home/user/codex-zig-transpiler/generated/local/codexzig
-  sha256         9682f8d53ffcf7763adef814358d292efa42a2a2259ce509b11161b6038572e8
+  sha256         6d1afe199ef5bf76288105a13261ebc07f31f0304c961d7e68ca65606da8a273
   NOTE           the zig road puts codexzig in the trusted base. Its own
                  provenance is its repository's; this records only which
                  binary ran.
 
 MEMORY -- the first priority, measured rather than estimated.
-  peak           1659.1 MB of linear memory
-  ceiling        40.5% of wasm32's hard 4 GiB
+  peak           1677.6 MB of linear memory
+  ceiling        41.0% of wasm32's hard 4 GiB
   ceiling gate   refuse above 95.0% -- will it die
   ratchet        refuse more than 2.0% over MEMORY.bank -- did it get worse
   bank           1736048640

@@ -436,6 +436,33 @@
       (br $c2)))
     (i64.extend_i32_u (local.get $dst)))
 
+  (func $text_own (param $a i64)
+    (local $p i32)
+    (local.set $p (i32.wrap_i64 (local.get $a)))
+    (if (i32.eq (i32.add (i32.add (local.get $p) (i32.const 4)) (i32.load (local.get $p))) (global.get $heap_ptr))
+      (then (drop (call $bump_alloc (i32.const 16))))))
+
+  (func $text_append_inplace (param $a i64) (param $b i64) (result i64)
+    (local $pa i32) (local $pb i32) (local $la i32) (local $lb i32) (local $dst i32) (local $idx i32)
+    (local.set $pa (i32.wrap_i64 (local.get $a)))
+    (local.set $la (i32.load (local.get $pa)))
+    (if (i32.and (i32.ge_u (local.get $pa) (global.get $heap_start))
+                 (i32.eq (i32.add (i32.add (local.get $pa) (i32.const 4)) (local.get $la)) (global.get $heap_ptr)))
+      (then
+        (local.set $pb (i32.wrap_i64 (local.get $b)))
+        (local.set $lb (i32.load (local.get $pb)))
+        (local.set $dst (call $bump_alloc (local.get $lb)))
+        (local.set $idx (i32.const 0))
+        (block $d (loop $c
+          (br_if $d (i32.ge_s (local.get $idx) (local.get $lb)))
+          (i32.store8 (i32.add (local.get $dst) (local.get $idx))
+            (i32.load8_u (i32.add (i32.add (local.get $pb) (i32.const 4)) (local.get $idx))))
+          (local.set $idx (i32.add (local.get $idx) (i32.const 1)))
+          (br $c)))
+        (i32.store (local.get $pa) (i32.add (local.get $la) (local.get $lb)))
+        (return (local.get $a))))
+    (call $text_append (local.get $a) (local.get $b)))
+
   (func $i64_to_text (param $val i64) (result i64)
     (local $abs i64) (local $neg i32) (local $buf i32) (local $pos i32)
     (local $digit i32) (local $numlen i32) (local $result i32) (local $idx i32)
